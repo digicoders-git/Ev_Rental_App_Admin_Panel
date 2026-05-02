@@ -1,0 +1,176 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { 
+  Car, Zap, IndianRupee, CheckCircle, Clock,
+  ArrowUpRight, ArrowDownRight, Loader2, Activity
+} from 'lucide-react';
+import { 
+  XAxis, YAxis, CartesianGrid, Tooltip, 
+  ResponsiveContainer, AreaChart, Area
+} from 'recharts';
+import { getDashboardStats, getRevenueReport } from '../services/apiServices';
+import './Dashboard.css';
+
+const Dashboard = () => {
+  const [stats, setStats] = useState(null);
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [statsRes, reportRes] = await Promise.all([
+        getDashboardStats(),
+        getRevenueReport('weekly')
+      ]);
+      setStats(statsRes.data.data);
+      setChartData(reportRes.data.data.chartData || []);
+    } catch (error) {
+      console.error("Dashboard data fetch failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading || !stats) {
+    return (
+      <div className="cp-page-loading">
+        <Loader2 className="spinner" size={40} />
+        <p>Loading Dashboard...</p>
+      </div>
+    );
+  }
+
+  const kpis = [
+    { title: 'Total Vehicles', value: stats.fleet.total, icon: Car, color: 'blue', sub: 'Across all hubs' },
+    { title: 'Active Rides', value: stats.bookings.active, icon: Zap, color: 'green', sub: 'In progress now' },
+    { title: 'Total Revenue', value: `₹${stats.revenue.toLocaleString()}`, icon: IndianRupee, color: 'emerald', sub: 'Lifetime earnings' },
+    { title: 'Available Fleet', value: stats.fleet.available, icon: Activity, color: 'orange', sub: 'Ready for booking' },
+    { title: 'Pending KYC', value: stats.users.kyc_pending, icon: Clock, color: 'purple', sub: 'Verification required' },
+  ];
+
+  return (
+    <div className="dashboard-page">
+      <div className="page-header">
+        <div>
+          <h1>Dashboard Overview</h1>
+          <p>Real-time analytics and operations monitoring.</p>
+        </div>
+        <div className="header-actions">
+          <Link to="/bookings" className="btn btn-outline">Manage Bookings</Link>
+          <Link to="/vehicles" className="btn btn-primary">Add Vehicle</Link>
+        </div>
+      </div>
+
+      <div className="kpi-grid">
+        {kpis.map((kpi, index) => (
+          <div key={index} className="card kpi-card">
+            <div className={`kpi-icon-wrapper ${kpi.color}`}>
+              <kpi.icon size={22} />
+            </div>
+            <div className="kpi-info">
+              <span className="kpi-title">{kpi.title}</span>
+              <h2 className="kpi-value">{kpi.value}</h2>
+              <div className="kpi-subtext">
+                {kpi.sub}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="dashboard-content-grid">
+        <div className="card chart-card">
+          <div className="card-header">
+            <h3>Revenue Trends (Weekly)</h3>
+            <select className="period-select" disabled>
+              <option>Last 7 Days</option>
+            </select>
+          </div>
+          <div className="chart-container" style={{ width: '100%', minHeight: '300px' }}>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="period" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fill: '#94a3b8', fontSize: 10}} 
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fill: '#94a3b8', fontSize: 10}} 
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    borderRadius: '8px', 
+                    border: 'none', 
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+                  }} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#10b981" 
+                  strokeWidth={3} 
+                  fillOpacity={1} 
+                  fill="url(#colorRevenue)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card table-card">
+          <div className="card-header">
+            <h3>Recent Bookings</h3>
+            <Link to="/bookings" className="btn-text">View All</Link>
+          </div>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>User</th>
+                  <th>Vehicle</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recentBookings.map((b) => (
+                  <tr key={b.id}>
+                    <td className="font-medium">{b.id}</td>
+                    <td>{b.user}</td>
+                    <td>{b.vehicle}</td>
+                    <td>
+                      <span className={`badge badge-${
+                        b.status === 'Active' || b.status === 'Ongoing' ? 'success' : 
+                        b.status === 'Completed' ? 'info' : 
+                        b.status === 'Pending' ? 'warning' : 'danger'
+                      }`}>
+                        {b.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;

@@ -1,0 +1,359 @@
+.revenue-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* ── Period Tabs ── */
+.rev-period-tabs {
+  display: flex;
+  gap: 0.2rem;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 0.2rem;
+}
+
+.rev-period-btn {
+  padding: 0.3rem 0.9rem;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.rev-period-btn.active { background: var(--primary); color: white; font-weight: 600; }
+.rev-period-btn:not(.active):hover { background: var(--border-light); color: var(--text); }
+
+/* ── Stats ── */
+.rev-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 1.25rem;
+}
+
+.rev-stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.rev-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rev-stat-icon.green  { background: #f0fdf4; color: #10b981; }
+.rev-stat-icon.blue   { background: #eff6ff; color: #3b82f6; }
+.rev-stat-icon.red    { background: #fef2f2; color: #ef4444; }
+.rev-stat-icon.purple { background: #f5f3ff; color: #7c3aed; }
+.rev-stat-icon.orange { background: #fff7ed; color: #f97316; }
+
+.rev-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  display: block;
+}
+
+.rev-stat-card h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: 0.1rem;
+}
+
+.rev-stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+.rev-stat-trend.up   { color: #10b981; }
+.rev-stat-trend.down { color: #ef4444; }
+
+/* ── Card Header ── */
+.rev-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.rev-card-header h3 { font-size: 1rem; font-weight: 700; }
+
+.rev-period-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+}
+
+.btn-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-text:hover { text-decoration: underline; }
+
+/* ── Mid Grid ── */
+.rev-mid-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) { .rev-mid-grid { grid-template-columns: 1fr; } }
+
+/* Pie */
+.rev-pie-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rev-pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0 0.5rem;
+}
+
+.rev-pie-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.83rem;
+}
+
+.rev-pie-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rev-pie-name { flex: 1; color: var(--text); font-weight: 500; }
+.rev-pie-val  { font-weight: 700; color: var(--text); }
+
+/* ── Bottom Grid ── */
+.rev-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 800px) { .rev-bottom-grid { grid-template-columns: 1fr; } }
+
+/* Plan Revenue */
+.rev-plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.rev-plan-item { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.rev-plan-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rev-plan-name { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+.rev-plan-amt  { font-size: 0.875rem; font-weight: 700; color: var(--text); }
+
+.rev-plan-bar-wrap {
+  width: 100%;
+  height: 8px;
+  background: var(--border-light);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.rev-plan-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.rev-plan-count { font-size: 0.72rem; color: var(--text-muted); }
+
+/* Franchise Leaderboard */
+.rev-franchise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.rev-franchise-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+  transition: var(--transition);
+}
+
+.rev-franchise-row:hover { border-color: var(--primary); background: var(--surface); }
+
+.rev-rank {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.rev-franchise-info { flex: 1; min-width: 0; }
+
+.rev-franchise-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rev-franchise-meta { font-size: 0.72rem; color: var(--text-muted); }
+
+.rev-franchise-right { text-align: right; flex-shrink: 0; }
+
+.rev-franchise-amt {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.rev-franchise-share { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ── Recent Transactions Table ── */
+.rev-tx-table {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.rev-tx-table::-webkit-scrollbar { display: none; }
+
+.rev-tx-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 700px;
+}
+
+.rev-tx-table thead th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  white-space: nowrap;
+}
+
+.rev-tx-table tbody td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: middle;
+}
+
+.rev-tx-table tbody tr:last-child td { border-bottom: none; }
+.rev-tx-table tbody tr:hover td { background: var(--surface); }
+
+.td-muted { color: var(--text-muted); font-size: 0.82rem; }
+
+.rev-tx-id {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: monospace;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.cell-fw { font-weight: 600; font-size: 0.875rem; color: var(--text); }
+
+.rev-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  color: var(--text);
+}
+
+.rev-type {
+  font-size: 0.73rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+}
+
+.rev-type.payment { background: #f0fdf4; color: #15803d; }
+.rev-type.refund  { background: #fef2f2; color: #dc2626; }
+
+.rev-pos { font-weight: 700; color: #10b981; }
+.rev-neg { font-weight: 700; color: #ef4444; }
+
+/* ── Loading State ── */
+.rev-page-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+
+.spinner {
+  animation: rotate 1s linear infinite;
+  color: var(--primary);
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

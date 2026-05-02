@@ -1,0 +1,508 @@
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import {
+  Search, Edit2, Trash2, Eye, X, UserPlus,
+  CheckCircle, XCircle, ShieldCheck, ShieldOff,
+  Phone, Mail, MapPin, Calendar, Clock,
+  Lock, EyeOff, Users as UsersIcon, UserCheck, UserX, Ban, Loader2
+} from 'lucide-react';
+import { getAllUsers, addRider, updateUser, deleteUser } from '../services/apiServices';
+import useApi from '../services/useApi';
+import './Users.css';
+
+const initialUsers = [
+  { id: 1, name: 'Rahul Sharma',  email: 'rahul@example.com',  phone: '+91 98765 43210', city: 'Bangalore', kyc: 'Approved', status: 'Active',  joined: '12 Apr 2024', totalRides: 24, totalSpent: 8450  },
+  { id: 2, name: 'Priya Patel',   email: 'priya@example.com',  phone: '+91 87654 32109', city: 'Mumbai',    kyc: 'Pending',  status: 'Active',  joined: '10 Apr 2024', totalRides: 8,  totalSpent: 2300  },
+  { id: 3, name: 'Amit Verma',    email: 'amit@example.com',   phone: '+91 76543 21098', city: 'Pune',      kyc: 'Rejected', status: 'Blocked', joined: '08 Apr 2024', totalRides: 3,  totalSpent: 900   },
+  { id: 4, name: 'Suresh Raina',  email: 'suresh@example.com', phone: '+91 65432 10987', city: 'Hyderabad', kyc: 'Approved', status: 'Active',  joined: '05 Apr 2024', totalRides: 41, totalSpent: 15200 },
+  { id: 5, name: 'Deepa Singh',   email: 'deepa@example.com',  phone: '+91 54321 09876', city: 'Bangalore', kyc: 'Pending',  status: 'Active',  joined: '02 Apr 2024', totalRides: 12, totalSpent: 4100  },
+  { id: 6, name: 'Karan Mehta',   email: 'karan@example.com',  phone: '+91 88776 65544', city: 'Delhi',     kyc: 'Approved', status: 'Active',  joined: '28 Mar 2024', totalRides: 19, totalSpent: 6700  },
+  { id: 7, name: 'Neha Joshi',    email: 'neha@example.com',   phone: '+91 76543 32198', city: 'Chennai',   kyc: 'Approved', status: 'Active',  joined: '25 Mar 2024', totalRides: 7,  totalSpent: 2100  },
+  { id: 8, name: 'Rohit Das',     email: 'rohit@example.com',  phone: '+91 65432 21087', city: 'Kolkata',   kyc: 'Rejected', status: 'Blocked', joined: '20 Mar 2024', totalRides: 1,  totalSpent: 450   },
+];
+
+const KYC_CONFIG = {
+  Approved: { cls: 'badge-success', icon: <CheckCircle size={11} /> },
+  Pending:  { cls: 'badge-warning', icon: <Clock size={11} /> },
+  Rejected: { cls: 'badge-danger',  icon: <XCircle size={11} /> },
+};
+
+const TABS     = ['All', 'Active', 'Blocked'];
+const PAGE_SIZE = 6;
+
+const emptyForm = {
+  name: '', email: '', phone: '', city: '',
+  kyc: 'Pending', status: 'Active', password: '', confirmPassword: '',
+};
+
+const Users = () => {
+  const [users, setUsers]         = useState([]);
+  const [activeTab, setActiveTab] = useState('All');
+  const [search, setSearch]       = useState('');
+  const [page, setPage]           = useState(1);
+  const [viewUser, setViewUser]   = useState(null);
+  const [deleteId, setDeleteId]   = useState(null);
+  const [showAdd, setShowAdd]     = useState(false);
+  const [form, setForm]           = useState(emptyForm);
+  const [showPwd, setShowPwd]     = useState(false);
+  const [showCPwd, setShowCPwd]   = useState(false);
+  const { loading, error, call }  = useApi();
+
+  /* ── fetch users on mount ── */
+  useEffect(() => {
+    call(
+      () => getAllUsers(),
+      (data) => {
+        const mapped = (data.users || data.data || data).map(u => ({
+          id: u._id,
+          name: u.name || '',
+          email: u.email || '',
+          phone: u.mobile || u.phone || '',
+          city: u.city || '',
+          kyc: u.isKycVerified ? 'Approved' : 'Pending',
+          status: u.status === 'blocked' ? 'Blocked' : 'Active',
+          joined: new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          totalRides: u.totalRides || 0,
+          totalSpent: u.totalSpent || 0,
+        }));
+        setUsers(mapped);
+      }
+    );
+  }, []);
+
+  /* ── counts ── */
+  const counts = {
+    All:     users.length,
+    Active:  users.filter((u) => u.status === 'Active').length,
+    Blocked: users.filter((u) => u.status === 'Blocked').length,
+  };
+  const kycApproved = users.filter((u) => u.kyc === 'Approved').length;
+
+  /* ── filter ── */
+  const filtered = users.filter((u) => {
+    const matchTab = activeTab === 'All' || u.status === activeTab;
+    const q = search.toLowerCase();
+    const matchSearch =
+      (u.name || '').toLowerCase().includes(q)  ||
+      (u.email || '').toLowerCase().includes(q) ||
+      (u.phone || '').toLowerCase().includes(q) ||
+      (u.city || '').toLowerCase().includes(q);
+    return matchTab && matchSearch;
+  });
+
+  /* ── pagination ── */
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const goPage     = (p) => setPage(Math.max(1, Math.min(p, totalPages)));
+
+  const handleTabChange = (t) => { setActiveTab(t); setPage(1); };
+  const handleSearch    = (e) => { setSearch(e.target.value); setPage(1); };
+
+  /* ── block / unblock ── */
+  const toggleBlock = (id) => {
+    const user = users.find(u => u.id === id);
+    const newStatus = user.status === 'Active' ? 'blocked' : 'active';
+    call(
+      () => updateUser(id, { status: newStatus }),
+      () => {
+        setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus === 'blocked' ? 'Blocked' : 'Active' } : u));
+        setViewUser(prev => prev?.id === id ? { ...prev, status: newStatus === 'blocked' ? 'Blocked' : 'Active' } : prev);
+      }
+    );
+  };
+
+  /* ── delete ── */
+  const handleDelete = (id) => {
+    call(
+      () => deleteUser(id),
+      () => {
+        setUsers(prev => prev.filter(u => u.id !== id));
+        setDeleteId(null);
+        if (viewUser?.id === id) setViewUser(null);
+      }
+    );
+  };
+
+  /* ── add user ── */
+  const f = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
+
+  const handleAdd = () => {
+    if (!form.name || !form.email) return;
+    call(
+      () => addRider({ name: form.name, email: form.email, mobile: form.phone, password: form.password }),
+      (data) => {
+        const u = data.user || data;
+        setUsers(prev => [...prev, {
+          id: u._id || Date.now(),
+          name: form.name, email: form.email, phone: form.phone,
+          city: form.city, kyc: 'Pending', status: 'Active',
+          joined: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          totalRides: 0, totalSpent: 0,
+        }]);
+        setForm(emptyForm);
+        setShowAdd(false);
+      }
+    );
+  };
+
+  const initials = (name) => (name || 'U').split(' ').map((n) => n ? n[0] : '').join('').slice(0, 2).toUpperCase();
+
+  return (
+    <div className="users-page">
+
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <h1>User Management</h1>
+          <p>Manage all registered users and their access.</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => { setForm(emptyForm); setShowAdd(true); }}>
+          <UserPlus size={17} /> Add New User
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="usr-stats">
+        <div className="card usr-stat-card">
+          <div className="usr-stat-icon total"><UsersIcon size={19} /></div>
+          <div>
+            <span className="usr-stat-label">Total Users</span>
+            <h3>{users.length}</h3>
+          </div>
+        </div>
+        <div className="card usr-stat-card">
+          <div className="usr-stat-icon active"><UserCheck size={19} /></div>
+          <div>
+            <span className="usr-stat-label">Active</span>
+            <h3>{counts.Active}</h3>
+          </div>
+        </div>
+        <div className="card usr-stat-card">
+          <div className="usr-stat-icon blocked"><UserX size={19} /></div>
+          <div>
+            <span className="usr-stat-label">Blocked</span>
+            <h3>{counts.Blocked}</h3>
+          </div>
+        </div>
+        <div className="card usr-stat-card">
+          <div className="usr-stat-icon kyc"><ShieldCheck size={19} /></div>
+          <div>
+            <span className="usr-stat-label">KYC Approved</span>
+            <h3>{kycApproved}</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Card */}
+      <div className="card">
+
+        {/* Toolbar */}
+        <div className="usr-toolbar">
+          <div className="filter-tabs">
+            {TABS.map((t) => (
+              <button
+                key={t}
+                className={`filter-tab ${activeTab === t ? 'active' : ''}`}
+                onClick={() => handleTabChange(t)}
+              >
+                {t} <span className="tab-count">{counts[t]}</span>
+              </button>
+            ))}
+          </div>
+          <div className="search-wrapper">
+            <Search size={15} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search name, email, phone, city..."
+              value={search}
+              onChange={handleSearch}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>User</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th>KYC</th>
+                <th>Total Rides</th>
+                <th>Total Spent</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={10} className="usr-empty-row"><Loader2 size={24} className="spin" /><p>Loading users...</p></td></tr>
+              ) : error ? (
+                <tr><td colSpan={10} className="usr-empty-row" style={{ color: '#ef4444' }}><p>{error}</p></td></tr>
+              ) : paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="usr-empty-row">
+                    <UsersIcon size={28} /><p>No users found.</p>
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((u, i) => (
+                  <tr key={u.id}>
+                    <td className="td-muted">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                    <td>
+                      <div className="usr-name-cell">
+                        <div className={`usr-avatar ${u.status === 'Blocked' ? 'blocked' : ''}`}>
+                          {initials(u.name)}
+                        </div>
+                        <div>
+                          <span className="cell-main">{u.name}</span>
+                          <span className="cell-sub">{u.email}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="td-muted">{u.phone}</td>
+                    <td className="td-muted">{u.city}</td>
+                    <td>
+                      <span className={`badge badge-icon ${KYC_CONFIG[u.kyc].cls}`}>
+                        {KYC_CONFIG[u.kyc].icon} {u.kyc}
+                      </span>
+                    </td>
+                    <td className="cell-main" style={{ textAlign: 'center' }}>{u.totalRides}</td>
+                    <td><span className="usr-spent">₹{u.totalSpent.toLocaleString()}</span></td>
+                    <td className="td-muted">{u.joined}</td>
+                    <td>
+                      <span className={`badge badge-icon ${u.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                        {u.status === 'Active' ? <CheckCircle size={11} /> : <Ban size={11} />}
+                        {u.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="usr-actions">
+                        <button className="btn-icon" title="View Details" onClick={() => setViewUser(u)}>
+                          <Eye size={15} />
+                        </button>
+                        <button
+                          className={`btn-icon ${u.status === 'Active' ? 'block' : 'unblock'}`}
+                          title={u.status === 'Active' ? 'Block User' : 'Unblock User'}
+                          onClick={() => toggleBlock(u.id)}
+                        >
+                          {u.status === 'Active' ? <ShieldOff size={15} /> : <ShieldCheck size={15} />}
+                        </button>
+                        <button className="btn-icon delete" title="Delete User" onClick={() => setDeleteId(u.id)}>
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {filtered.length > PAGE_SIZE && (
+          <div className="usr-pagination">
+            <span className="pg-info">
+              Showing {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} users
+            </span>
+            <div className="pg-btns">
+              <button className="btn btn-outline btn-sm" disabled={page === 1} onClick={() => goPage(page - 1)}>Previous</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button key={p} className={`page-num-btn ${page === p ? 'active' : ''}`} onClick={() => goPage(p)}>{p}</button>
+              ))}
+              <button className="btn btn-outline btn-sm" disabled={page === totalPages} onClick={() => goPage(page + 1)}>Next</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {viewUser && createPortal(
+        <div className="modal-overlay" onClick={() => setViewUser(null)}>
+          <div className="modal-content usr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="usr-modal-head">
+                <div className={`usr-avatar lg ${viewUser.status === 'Blocked' ? 'blocked' : ''}`}>
+                  {initials(viewUser.name)}
+                </div>
+                <div>
+                  <h3>{viewUser.name}</h3>
+                  <span className="td-muted">ID: USR-{String(viewUser.id).padStart(4, '0')}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+                <span className={`badge badge-icon ${viewUser.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                  {viewUser.status === 'Active' ? <CheckCircle size={11} /> : <Ban size={11} />}
+                  {viewUser.status}
+                </span>
+                <button className="btn-icon" onClick={() => setViewUser(null)}><X size={20} /></button>
+              </div>
+            </div>
+
+            <div className="modal-body">
+              <div className="usr-detail-grid">
+
+                <div className="usr-detail-section">
+                  <div className="usr-detail-title"><Mail size={13} /> Contact Info</div>
+                  <div className="usr-detail-rows">
+                    <div className="usr-detail-row"><span>Email</span><span>{viewUser.email}</span></div>
+                    <div className="usr-detail-row"><span>Phone</span><span>{viewUser.phone}</span></div>
+                    <div className="usr-detail-row"><span>City</span><span>{viewUser.city}</span></div>
+                    <div className="usr-detail-row"><span>Joined</span><span>{viewUser.joined}</span></div>
+                  </div>
+                </div>
+
+                <div className="usr-detail-section">
+                  <div className="usr-detail-title"><ShieldCheck size={13} /> KYC & Activity</div>
+                  <div className="usr-detail-rows">
+                    <div className="usr-detail-row">
+                      <span>KYC Status</span>
+                      <span className={`badge badge-icon ${KYC_CONFIG[viewUser.kyc].cls}`} style={{ fontSize: '0.72rem' }}>
+                        {KYC_CONFIG[viewUser.kyc].icon} {viewUser.kyc}
+                      </span>
+                    </div>
+                    <div className="usr-detail-row"><span>Total Rides</span><span>{viewUser.totalRides}</span></div>
+                    <div className="usr-detail-row"><span>Total Spent</span><span className="usr-spent">₹{viewUser.totalSpent.toLocaleString()}</span></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className={`btn ${viewUser.status === 'Active' ? 'btn-block' : 'btn-unblock'}`}
+                onClick={() => toggleBlock(viewUser.id)}
+                disabled={loading}
+              >
+                {loading ? <Loader2 size={15} className="spinner" /> : (
+                  viewUser.status === 'Active'
+                    ? <><ShieldOff size={15} /> Block User</>
+                    : <><ShieldCheck size={15} /> Unblock User</>
+                )}
+              </button>
+              <button className="btn btn-danger-outline" onClick={() => { setDeleteId(viewUser.id); setViewUser(null); }}>
+                <Trash2 size={15} /> Delete
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showAdd && createPortal(
+        <div className="modal-overlay" onClick={() => setShowAdd(false)}>
+          <div className="modal-content usr-add-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Add New User</h3>
+              <button className="btn-icon" onClick={() => setShowAdd(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <form className="user-form">
+
+                <div className="form-section-title"><UsersIcon size={13} /> Personal Details</div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" placeholder="Enter full name" value={form.name} onChange={f('name')} />
+                  </div>
+                  <div className="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" placeholder="user@example.com" value={form.email} onChange={f('email')} />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={f('phone')} />
+                  </div>
+                  <div className="form-group">
+                    <label>City</label>
+                    <input type="text" placeholder="e.g. Bangalore" value={form.city} onChange={f('city')} />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>KYC Status</label>
+                    <select value={form.kyc} onChange={f('kyc')}>
+                      <option>Pending</option>
+                      <option>Approved</option>
+                      <option>Rejected</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Account Status</label>
+                    <select value={form.status} onChange={f('status')}>
+                      <option>Active</option>
+                      <option>Blocked</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-section-title" style={{ marginTop: '0.5rem' }}><Lock size={13} /> Login Credentials</div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Password</label>
+                    <div className="pwd-wrap">
+                      <input type={showPwd ? 'text' : 'password'} placeholder="Create password" value={form.password} onChange={f('password')} />
+                      <button type="button" className="pwd-toggle" onClick={() => setShowPwd(!showPwd)}>
+                        {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Confirm Password</label>
+                    <div className="pwd-wrap">
+                      <input type={showCPwd ? 'text' : 'password'} placeholder="Re-enter password" value={form.confirmPassword} onChange={f('confirmPassword')} />
+                      <button type="button" className="pwd-toggle" onClick={() => setShowCPwd(!showCPwd)}>
+                        {showCPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setShowAdd(false)} disabled={loading}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleAdd} disabled={loading}>
+                {loading ? <Loader2 size={16} className="spinner" /> : 'Create User'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {deleteId && createPortal(
+        <div className="modal-overlay" onClick={() => setDeleteId(null)}>
+          <div className="modal-content delete-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Delete User</h3>
+              <button className="btn-icon" onClick={() => setDeleteId(null)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="delete-body">
+                <div className="delete-icon-wrap"><Trash2 size={26} /></div>
+                <p>Are you sure you want to delete <strong>{users.find((u) => u.id === deleteId)?.name}</strong>?</p>
+                <p className="delete-sub">All data associated with this user will be permanently removed.</p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setDeleteId(null)} disabled={loading}>Cancel</button>
+              <button className="btn btn-danger" onClick={() => handleDelete(deleteId)} disabled={loading}>
+                {loading ? <Loader2 size={16} className="spinner" /> : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
+
+export default Users;
