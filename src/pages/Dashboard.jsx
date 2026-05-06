@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
-  Car, Zap, IndianRupee, CheckCircle, Clock,
-  ArrowUpRight, ArrowDownRight, Loader2, Activity
+  Car, Zap, IndianRupee, Clock,
+  Loader2, Activity,
+  AlertTriangle, FileWarning, FileText
 } from 'lucide-react';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, 
@@ -51,6 +52,7 @@ const Dashboard = () => {
     { title: 'Total Revenue', value: `₹${stats.revenue.toLocaleString()}`, icon: IndianRupee, color: 'emerald', sub: 'Lifetime earnings' },
     { title: 'Available Fleet', value: stats.fleet.available, icon: Activity, color: 'orange', sub: 'Ready for booking' },
     { title: 'Pending KYC', value: stats.users.kyc_pending, icon: Clock, color: 'purple', sub: 'Verification required' },
+    { title: 'Docs Expiring', value: stats.documents?.expiring || 0, icon: FileWarning, color: 'red', sub: 'Action required' },
   ];
 
   return (
@@ -65,6 +67,33 @@ const Dashboard = () => {
           <Link to="/vehicles" className="btn btn-primary">Add Vehicle</Link>
         </div>
       </div>
+      
+      {/* Document Alerts */}
+      {(stats.documents?.expiring > 0 || stats.documents?.expired > 0) && (
+        <div className="card dashboard-alert-card">
+          <div className="alert-header">
+            <div className="alert-title-wrap">
+              <AlertTriangle className="text-danger" size={20} />
+              <h3>Critical Document Alerts</h3>
+            </div>
+            <Link to="/documents" className="btn btn-outline btn-sm">View All Documents</Link>
+          </div>
+          <div className="alert-content">
+            {stats.documents?.expired > 0 && (
+              <div className="dashboard-alert-item expired">
+                <FileText size={16} />
+                <span>You have <strong>{stats.documents?.expired || 0} expired</strong> documents that need immediate renewal.</span>
+              </div>
+            )}
+            {stats.documents?.expiring > 0 && (
+              <div className="dashboard-alert-item expiring">
+                <FileWarning size={16} />
+                <span><strong>{stats.documents?.expiring || 0} documents</strong> are expiring within the next 30 days.</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="kpi-grid">
         {kpis.map((kpi, index) => (

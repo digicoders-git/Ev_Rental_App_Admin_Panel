@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   FileText, Upload, Eye, Trash2, Plus, Search, X,
   CheckCircle, Clock, AlertTriangle, XCircle,
-  Car, Building2, User, Shield, Calendar,
+  Car, Building2, User, Calendar,
   Download, RefreshCw, FileBadge, FileWarning, Loader2
 } from 'lucide-react';
 import { 
@@ -11,7 +11,9 @@ import {
   createDocument, 
   deleteDocument, 
   renewDocument,
-  updateDocument
+  getAllVehicles,
+  getAllStores,
+  getAllUsers
 } from '../services/apiServices';
 import './Documents.css';
 
@@ -50,10 +52,29 @@ const Documents = () => {
   const [deleteId, setDeleteId]     = useState(null);
   const [form, setForm]             = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [entities, setEntities]     = useState({ Vehicle: [], Franchise: [], User: [] });
 
   useEffect(() => {
     fetchDocs();
+    fetchEntities();
   }, []);
+
+  const fetchEntities = async () => {
+    try {
+      const [vRes, sRes, uRes] = await Promise.all([
+        getAllVehicles(),
+        getAllStores(),
+        getAllUsers()
+      ]);
+      setEntities({
+        Vehicle: vRes.data.data.map(v => ({ id: v.registration_number, name: v.vehicle_name })),
+        Franchise: sRes.data.data.map(s => ({ id: s.store_id || s._id, name: s.store_name })),
+        User: uRes.data.data.map(u => ({ id: u.mobile, name: u.name }))
+      });
+    } catch (error) {
+      console.error("Error fetching entities:", error);
+    }
+  };
 
   const fetchDocs = async () => {
     try {
@@ -405,7 +426,13 @@ const Documents = () => {
                 <div className="form-row">
                   <div className="form-group">
                     <label>Category *</label>
-                    <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value, type: DOC_TYPES[e.target.value][0] }))}>
+                    <select value={form.category} onChange={e => setForm(p => ({ 
+                      ...p, 
+                      category: e.target.value, 
+                      type: DOC_TYPES[e.target.value][0],
+                      entity: '',
+                      entityId: ''
+                    }))}>
                       <option>Vehicle</option>
                       <option>Franchise</option>
                       <option>User</option>
@@ -420,12 +447,29 @@ const Documents = () => {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Entity Name *</label>
-                    <input type="text" placeholder="e.g. Ather 450X / City EV Rentals" value={form.entity} onChange={e => setForm(p => ({ ...p, entity: e.target.value }))} />
+                    <label>Select {form.category} *</label>
+                    <select 
+                      value={`${form.entity}|${form.entityId}`} 
+                      onChange={e => {
+                        const [name, id] = e.target.value.split('|');
+                        setForm(p => ({ ...p, entity: name, entityId: id }));
+                      }}
+                    >
+                      <option value="|">Select an option</option>
+                      {entities[form.category].map(ent => (
+                        <option key={ent.id} value={`${ent.name}|${ent.id}`}>{ent.name} ({ent.id})</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Entity Name (Auto)</label>
+                    <input type="text" readOnly placeholder="Auto-populated" value={form.entity} />
                   </div>
                   <div className="form-group">
-                    <label>Entity ID / Reg No. *</label>
-                    <input type="text" placeholder="e.g. KA 01 EK 1234" value={form.entityId} onChange={e => setForm(p => ({ ...p, entityId: e.target.value }))} />
+                    <label>Entity ID / Reg No. (Auto)</label>
+                    <input type="text" readOnly placeholder="Auto-populated" value={form.entityId} />
                   </div>
                 </div>
                 <div className="form-group">

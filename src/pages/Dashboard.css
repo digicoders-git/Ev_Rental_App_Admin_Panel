@@ -61,6 +61,66 @@
 .kpi-icon-wrapper.emerald { background: #f0fdf4; color: #059669; }
 .kpi-icon-wrapper.orange { background: #fff7ed; color: #f97316; }
 .kpi-icon-wrapper.purple { background: #faf5ff; color: #a855f7; }
+.kpi-icon-wrapper.red { background: #fef2f2; color: #ef4444; }
+
+/* Dashboard Alert Card */
+.dashboard-alert-card {
+  border-left: 4px solid #ef4444;
+  background: #fffafa;
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.alert-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.alert-title-wrap h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #991b1b;
+}
+
+.alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dashboard-alert-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.935rem;
+}
+
+.dashboard-alert-item.expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dashboard-alert-item.expiring {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.text-danger {
+  color: #ef4444;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
 
 .kpi-info {
   display: flex;
