@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  CreditCard, ArrowDownLeft, ArrowUpRight, Search, Download,
-  Eye, X, CheckCircle, Clock, XCircle, RefreshCw,
-  Smartphone, Wallet, Building2, IndianRupee, TrendingUp,
-  User as UserIcon, Calendar, Hash, Filter, Receipt, Loader2,
+  CreditCard, ArrowUpRight, Search, Download,
+  Eye, X, Clock, XCircle, 
+  Smartphone, Wallet, IndianRupee, TrendingUp,
+  User as UserIcon, Receipt, Loader2,
   CircleCheck, Activity
 } from 'lucide-react';
-import { getAllBookings, getDashboardStats, updateBookingStatus, exportBookings, payManual } from '../services/apiServices';
+import { getAllBookings, getDashboardStats, exportBookings, payManual } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Payments.css';
 
