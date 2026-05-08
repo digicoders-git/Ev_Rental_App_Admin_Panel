@@ -135,7 +135,6 @@ const Coupons = () => {
   const handleDelete = async (id) => {
     try {
       setSubmitting(true);
-      console.log("Deleting coupon with ID:", id);
       const res = await deleteOffer(id);
       if (res.data.success) {
         setDeleteId(null);
@@ -153,7 +152,6 @@ const Coupons = () => {
 
   const handleToggle = async (id) => {
     try {
-      console.log("Toggling coupon status for ID:", id);
       await toggleOffer(id);
       fetchCoupons();
     } catch (error) {

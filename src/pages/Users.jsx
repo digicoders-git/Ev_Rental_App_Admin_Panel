@@ -1,25 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Search, Edit2, Trash2, Eye, X, UserPlus,
+  Search, Trash2, Eye, X, UserPlus,
   CheckCircle, XCircle, ShieldCheck, ShieldOff,
-  Phone, Mail, MapPin, Calendar, Clock,
+  Mail, Clock,
   Lock, EyeOff, Users as UsersIcon, UserCheck, UserX, Ban, Loader2
 } from 'lucide-react';
 import { getAllUsers, addRider, updateUser, deleteUser } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Users.css';
-
-const initialUsers = [
-  { id: 1, name: 'Rahul Sharma',  email: 'rahul@example.com',  phone: '+91 98765 43210', city: 'Bangalore', kyc: 'Approved', status: 'Active',  joined: '12 Apr 2024', totalRides: 24, totalSpent: 8450  },
-  { id: 2, name: 'Priya Patel',   email: 'priya@example.com',  phone: '+91 87654 32109', city: 'Mumbai',    kyc: 'Pending',  status: 'Active',  joined: '10 Apr 2024', totalRides: 8,  totalSpent: 2300  },
-  { id: 3, name: 'Amit Verma',    email: 'amit@example.com',   phone: '+91 76543 21098', city: 'Pune',      kyc: 'Rejected', status: 'Blocked', joined: '08 Apr 2024', totalRides: 3,  totalSpent: 900   },
-  { id: 4, name: 'Suresh Raina',  email: 'suresh@example.com', phone: '+91 65432 10987', city: 'Hyderabad', kyc: 'Approved', status: 'Active',  joined: '05 Apr 2024', totalRides: 41, totalSpent: 15200 },
-  { id: 5, name: 'Deepa Singh',   email: 'deepa@example.com',  phone: '+91 54321 09876', city: 'Bangalore', kyc: 'Pending',  status: 'Active',  joined: '02 Apr 2024', totalRides: 12, totalSpent: 4100  },
-  { id: 6, name: 'Karan Mehta',   email: 'karan@example.com',  phone: '+91 88776 65544', city: 'Delhi',     kyc: 'Approved', status: 'Active',  joined: '28 Mar 2024', totalRides: 19, totalSpent: 6700  },
-  { id: 7, name: 'Neha Joshi',    email: 'neha@example.com',   phone: '+91 76543 32198', city: 'Chennai',   kyc: 'Approved', status: 'Active',  joined: '25 Mar 2024', totalRides: 7,  totalSpent: 2100  },
-  { id: 8, name: 'Rohit Das',     email: 'rohit@example.com',  phone: '+91 65432 21087', city: 'Kolkata',   kyc: 'Rejected', status: 'Blocked', joined: '20 Mar 2024', totalRides: 1,  totalSpent: 450   },
-];
 
 const KYC_CONFIG = {
   Approved: { cls: 'badge-success', icon: <CheckCircle size={11} /> },
@@ -48,26 +37,33 @@ const Users = () => {
   const [showCPwd, setShowCPwd]   = useState(false);
   const { loading, error, call }  = useApi();
 
-  /* ── fetch users on mount ── */
-  useEffect(() => {
+  /* ── fetch users ── */
+  const fetchUsers = () => {
     call(
       () => getAllUsers(),
       (data) => {
-        const mapped = (data.users || data.data || data).map(u => ({
-          id: u._id,
-          name: u.name || '',
-          email: u.email || '',
-          phone: u.mobile || u.phone || '',
-          city: u.city || '',
-          kyc: u.isKycVerified ? 'Approved' : 'Pending',
-          status: u.status === 'blocked' ? 'Blocked' : 'Active',
-          joined: new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          totalRides: u.totalRides || 0,
-          totalSpent: u.totalSpent || 0,
-        }));
+        const usersData = data.users || data.data || data;
+        const mapped = usersData
+          .filter(u => u.role !== 'admin') // Double protection: filter admins on frontend too
+          .map(u => ({
+            id: u._id,
+            name: u.name || '',
+            email: u.email || '',
+            phone: u.mobile || u.phone || '',
+            city: u.city || '',
+            kyc: u.isKycVerified ? 'Approved' : 'Pending',
+            status: u.status === 'blocked' ? 'Blocked' : 'Active',
+            joined: new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+            totalRides: u.totalRides || 0,
+            totalSpent: u.totalSpent || 0,
+          }));
         setUsers(mapped);
       }
     );
+  };
+
+  useEffect(() => {
+    fetchUsers();
   }, []);
 
   /* ── counts ── */
@@ -105,8 +101,10 @@ const Users = () => {
     call(
       () => updateUser(id, { status: newStatus }),
       () => {
-        setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus === 'blocked' ? 'Blocked' : 'Active' } : u));
-        setViewUser(prev => prev?.id === id ? { ...prev, status: newStatus === 'blocked' ? 'Blocked' : 'Active' } : prev);
+        fetchUsers();
+        if (viewUser?.id === id) {
+          setViewUser(prev => ({ ...prev, status: newStatus === 'blocked' ? 'Blocked' : 'Active' }));
+        }
       }
     );
   };
@@ -116,9 +114,9 @@ const Users = () => {
     call(
       () => deleteUser(id),
       () => {
-        setUsers(prev => prev.filter(u => u.id !== id));
         setDeleteId(null);
         if (viewUser?.id === id) setViewUser(null);
+        fetchUsers();
       }
     );
   };
@@ -130,17 +128,10 @@ const Users = () => {
     if (!form.name || !form.email) return;
     call(
       () => addRider({ name: form.name, email: form.email, mobile: form.phone, password: form.password }),
-      (data) => {
-        const u = data.user || data;
-        setUsers(prev => [...prev, {
-          id: u._id || Date.now(),
-          name: form.name, email: form.email, phone: form.phone,
-          city: form.city, kyc: 'Pending', status: 'Active',
-          joined: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          totalRides: 0, totalSpent: 0,
-        }]);
+      () => {
         setForm(emptyForm);
         setShowAdd(false);
+        fetchUsers();
       }
     );
   };
@@ -373,17 +364,17 @@ const Users = () => {
             </div>
 
             <div className="modal-footer">
-              <button
-                className={`btn ${viewUser.status === 'Active' ? 'btn-block' : 'btn-unblock'}`}
-                onClick={() => toggleBlock(viewUser.id)}
-                disabled={loading}
-              >
-                {loading ? <Loader2 size={15} className="spinner" /> : (
-                  viewUser.status === 'Active'
-                    ? <><ShieldOff size={15} /> Block User</>
-                    : <><ShieldCheck size={15} /> Unblock User</>
-                )}
-              </button>
+                <button
+                  className={`btn ${viewUser.status === 'Active' ? 'btn-block' : 'btn-unblock'}`}
+                  onClick={() => toggleBlock(viewUser.id)}
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 size={15} className="spinner" /> : (
+                    viewUser.status === 'Active'
+                      ? <><ShieldOff size={15} /> Block User</>
+                      : <><ShieldCheck size={15} /> Unblock User</>
+                  )}
+                </button>
               <button className="btn btn-danger-outline" onClick={() => { setDeleteId(viewUser.id); setViewUser(null); }}>
                 <Trash2 size={15} /> Delete
               </button>

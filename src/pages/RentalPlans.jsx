@@ -150,14 +150,17 @@ const RentalPlans = () => {
   const handleDelete = (id) => {
     call(
       () => deletePlan(id),
-      () => { setPlans(prev => prev.filter(p => p.id !== id)); setDeleteId(null); }
+      () => { 
+        setDeleteId(null);
+        fetchPlans();
+      }
     );
   };
 
   const toggleActive = (id) => {
     call(
       () => togglePlan(id),
-      () => setPlans(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p))
+      () => fetchPlans()
     );
   };
 

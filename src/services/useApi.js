@@ -11,7 +11,7 @@ const useApi = () => {
       const res = await apiFn();
       onSuccess && onSuccess(res.data);
     } catch (err) {
-      const msg = err.response?.data?.message || 'Something went wrong.';
+      const msg = err.response?.data?.message || err.message || 'Something went wrong.';
       setError(msg);
       onError && onError(msg);
     } finally {

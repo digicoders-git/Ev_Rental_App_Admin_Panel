@@ -6,7 +6,7 @@ import {
   IndianRupee, Ban, CircleCheck, Activity,
   Navigation, PackageCheck, Hourglass, TrendingUp, Loader, AlertTriangle
 } from 'lucide-react';
-import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus } from '../services/apiServices';
+import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Bookings.css';
 
@@ -16,6 +16,13 @@ const STATUS_CONFIG = {
   Completed: { cls: 'badge-secondary', icon: <CheckCircle size={12} /> },
   Pending:   { cls: 'badge-warning', icon: <Clock size={12} /> },
   Cancelled: { cls: 'badge-danger',  icon: <Ban size={12} /> },
+};
+
+const PAYMENT_STATUS_CONFIG = {
+  paid:           { cls: 'badge-success', label: 'Paid',    icon: <CheckCircle size={12} /> },
+  partially_paid: { cls: 'badge-info',    label: 'Partial', icon: <Activity size={12} /> },
+  pending:        { cls: 'badge-warning', label: 'Pending', icon: <Clock size={12} /> },
+  failed:         { cls: 'badge-danger',  label: 'Failed',  icon: <XCircle size={12} /> },
 };
 
 const TABS = ['All', 'Active', 'Pending', 'Ongoing', 'Completed', 'Cancelled'];
@@ -42,6 +49,7 @@ const Bookings = () => {
   const [trackError, setTrackError]   = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null); // { id, type, label }
+  const [installmentAmount, setInstallmentAmount] = useState('');
 
   useEffect(() => {
     fetchBookings();
@@ -69,6 +77,9 @@ const Bookings = () => {
         endTime: new Date(b.end_date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
         duration: calculateDuration(b.start_date, b.end_date),
         amount: b.grand_total || 0,
+        total_paid: b.total_paid || 0,
+        due_amount: b.due_amount !== undefined ? b.due_amount : (b.grand_total - (b.total_paid || 0)),
+        payment_status: b.payment_status || 'pending',
         paid: b.payment_status === 'paid',
         pickup: b.pickup_location || 'Hub Pickup',
         raw: b
@@ -136,16 +147,18 @@ const Bookings = () => {
     );
   };
 
-  const handleMarkPaid = (id) => {
+  const handlePayment = (id, amount = null) => {
+    const payload = amount ? { amount: parseFloat(amount) } : {};
     call(
-      () => updateBookingStatus(id, { payment_status: 'paid' }),
+      () => payManual(id, payload),
       () => {
         fetchBookings();
         setSelected(null);
-        alert('Payment marked as PAID successfully');
+        setInstallmentAmount('');
+        alert('Payment recorded successfully');
       },
       (err) => {
-        alert(`Failed to update payment: ${err}`);
+        alert(`Failed to record payment: ${err}`);
       }
     );
   };
@@ -345,10 +358,10 @@ const Bookings = () => {
                 <th>Booking ID</th>
                 <th>Customer</th>
                 <th>Vehicle</th>
-                <th>Plan</th>
-                <th>Duration</th>
-                <th>Amount</th>
-                <th>Payment</th>
+                <th>Plan/Duration</th>
+                <th>Total</th>
+                <th>Paid</th>
+                <th>Due</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -356,7 +369,7 @@ const Bookings = () => {
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="bk-empty-row">
+                  <td colSpan={10} className="bk-empty-row">
                     <Calendar size={28} />
                     <p>No bookings found.</p>
                   </td>
@@ -370,7 +383,7 @@ const Bookings = () => {
                         <div className="bk-avatar">{b.user.split(' ').map((n) => n[0]).join('')}</div>
                         <div>
                           <span className="cell-main">{b.user}</span>
-                          <span className="cell-sub">{b.email}</span>
+                          <span className="cell-sub">{b.phone}</span>
                         </div>
                       </div>
                     </td>
@@ -378,24 +391,22 @@ const Bookings = () => {
                       <span className="cell-main">{b.vehicle}</span>
                       <span className="cell-sub">{b.regNo}</span>
                     </td>
-                    <td className="cell-sub">{b.plan}</td>
                     <td>
-                      <span className="cell-main">{b.duration}</span>
-                      <span className="cell-sub">{b.type}</span>
+                      <span className="cell-main">{b.plan}</span>
+                      <span className="cell-sub">{b.duration}</span>
                     </td>
+                    <td><span className="bk-amount">₹{b.amount.toLocaleString()}</span></td>
+                    <td><span className="text-success" style={{ fontWeight: 600 }}>₹{b.total_paid.toLocaleString()}</span></td>
+                    <td><span className={b.due_amount > 0 ? "text-danger" : "text-success"} style={{ fontWeight: 600 }}>₹{b.due_amount.toLocaleString()}</span></td>
                     <td>
-                      <span className="bk-amount">₹{b.amount.toLocaleString()}</span>
-                    </td>
-                    <td>
-                      <span className={`badge badge-icon ${b.paid ? 'badge-success' : 'badge-warning'}`}>
-                        {b.paid ? <CheckCircle size={11} /> : <Clock size={11} />}
-                        {b.paid ? 'Paid' : 'Unpaid'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge badge-icon ${STATUS_CONFIG[b.status].cls}`}>
-                        {STATUS_CONFIG[b.status].icon} {b.status}
-                      </span>
+                      <div className="bk-status-stack">
+                        <span className={`badge badge-icon ${STATUS_CONFIG[b.status].cls}`}>
+                          {STATUS_CONFIG[b.status].icon} {b.status}
+                        </span>
+                        <span className={`badge badge-icon ${PAYMENT_STATUS_CONFIG[b.payment_status].cls}`} style={{ marginTop: '4px', fontSize: '10px' }}>
+                          {PAYMENT_STATUS_CONFIG[b.payment_status].label}
+                        </span>
+                      </div>
                     </td>
                     <td>
                       <div className="bk-actions">
@@ -507,18 +518,26 @@ const Bookings = () => {
 
                 {/* Payment */}
                 <div className="bk-detail-section">
-                  <div className="bk-detail-section-title"><CreditCard size={13} /> Payment</div>
+                  <div className="bk-detail-section-title"><CreditCard size={13} /> Payment Details</div>
                   <div className="bk-detail-rows">
                     <div className="bk-detail-row">
-                      <span>Amount</span>
+                      <span>Grand Total</span>
                       <span className="bk-amount">₹{selected.amount.toLocaleString()}</span>
                     </div>
                     <div className="bk-detail-row">
+                      <span>Total Paid</span>
+                      <span style={{ color: '#10b981', fontWeight: 600 }}>₹{selected.total_paid.toLocaleString()}</span>
+                    </div>
+                    <div className="bk-detail-row">
+                      <span>Due Amount</span>
+                      <span style={{ color: '#ef4444', fontWeight: 600 }}>₹{selected.due_amount.toLocaleString()}</span>
+                    </div>
+                    <div className="bk-detail-row">
                       <span>Status</span>
-                      <span className={`badge badge-icon ${selected.paid ? 'badge-success' : 'badge-warning'}`}
+                      <span className={`badge badge-icon ${PAYMENT_STATUS_CONFIG[selected.payment_status].cls}`}
                         style={{ fontSize: '0.72rem' }}>
-                        {selected.paid ? <CheckCircle size={11} /> : <Clock size={11} />}
-                        {selected.paid ? 'Paid' : 'Unpaid'}
+                        {PAYMENT_STATUS_CONFIG[selected.payment_status].icon}
+                        {PAYMENT_STATUS_CONFIG[selected.payment_status].label}
                       </span>
                     </div>
                   </div>
@@ -528,15 +547,35 @@ const Bookings = () => {
             </div>
 
             {/* Modal Footer Actions */}
-            {(selected.status === 'Pending' || selected.status === 'Active' || !selected.paid) && (
-              <div className="modal-footer">
-                {!selected.paid && (
-                  <button className="btn btn-outline" style={{ color: '#10b981', borderColor: '#10b981' }}
-                    onClick={() => handleMarkPaid(selected.id)}>
-                    <IndianRupee size={15} /> Mark as Paid
-                  </button>
+            <div className="modal-footer bk-modal-footer">
+              <div className="footer-left">
+                {selected.due_amount > 0 && (
+                  <div className="installment-box">
+                    <div className="installment-input">
+                      <IndianRupee size={14} className="input-icon" />
+                      <input 
+                        type="number" 
+                        placeholder="Pay Installment" 
+                        value={installmentAmount}
+                        onChange={(e) => setInstallmentAmount(e.target.value)}
+                        className="amount-input"
+                      />
+                    </div>
+                    <button className="btn btn-primary btn-sm" 
+                      onClick={() => handlePayment(selected.id, installmentAmount)}
+                      disabled={!installmentAmount || loading}>
+                      Record
+                    </button>
+                    <button className="btn btn-outline btn-sm" 
+                      onClick={() => handlePayment(selected.id)}
+                      disabled={loading}>
+                      Pay All
+                    </button>
+                  </div>
                 )}
-                
+              </div>
+              
+              <div className="footer-right">
                  {selected.status === 'Pending' && (
                   <>
                     <button className="btn btn-outline reject-btn"
@@ -553,16 +592,16 @@ const Bookings = () => {
                   <>
                     <button className="btn btn-outline reject-btn"
                       onClick={() => setConfirmAction({ id: selected.id, type: 'Cancelled', label: 'Cancel' })}>
-                      <Ban size={15} /> Cancel Ride
+                      <Ban size={15} /> Cancel
                     </button>
                     <button className="btn btn-primary"
                       onClick={() => updateStatus(selected.id, 'Completed')}>
-                      <CircleCheck size={15} /> Mark Completed
+                      <CircleCheck size={15} /> Complete
                     </button>
                   </>
                 )}
               </div>
-            )}
+            </div>
           </div>
         </div>,
         document.body

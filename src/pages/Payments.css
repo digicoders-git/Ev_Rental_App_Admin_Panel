@@ -507,3 +507,82 @@
 .refund-confirm-modal{ max-width: 400px !important; width: 92vw !important; }
 .payouts-modal       { max-width: 640px !important; width: 95vw !important; }
 
+.pay-amount-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.pay-hero-item {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  border: 1px solid var(--border);
+}
+
+.pay-hero-item.total { border-left: 4px solid #3b82f6; }
+.pay-hero-item.paid { border-left: 4px solid #10b981; }
+.pay-hero-item.due { border-left: 4px solid #ef4444; }
+
+.pay-hero-item .hero-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.pay-hero-item .hero-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pay-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+}
+
+.installment-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8fafc;
+  padding: 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.installment-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 0.5rem;
+}
+
+.installment-input .input-icon {
+  color: #94a3b8;
+}
+
+.amount-input {
+  border: none !important;
+  width: 100px !important;
+  padding: 0.4rem 0.25rem !important;
+  font-size: 0.85rem !important;
+  outline: none !important;
+}
+
+.text-success { color: #10b981; }
+.text-danger { color: #ef4444; }
+
+@media (max-width: 640px) {
+  .pay-amount-grid {
+    grid-template-columns: 1fr;
+  }
+}

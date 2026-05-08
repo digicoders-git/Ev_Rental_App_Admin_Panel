@@ -46,8 +46,8 @@ const Franchise = () => {
 
   const handleEnquiryAction = (id, status) => {
     call(() => updateEnquiryStatus(id, { status }), () => {
-      setEnquiries(prev => prev.filter(e => e._id !== id));
-      if (status === 'approved') fetchData();
+      fetchData();
+      if (status === 'approved') alert("Enquiry approved and partner onboarded!");
     }, (err) => alert(err.message || "Failed to update enquiry"));
   };
 
@@ -70,7 +70,6 @@ const Franchise = () => {
 
   const handleDeleteStore = (id) => {
     call(() => deleteStore(id), () => {
-      setStores(prev => prev.filter(s => s._id !== id));
       setDeleteId(null);
       fetchData();
     }, (err) => alert(err.message || "Failed to delete franchise"));

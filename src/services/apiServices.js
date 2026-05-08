@@ -131,6 +131,12 @@ export const renewDocument    = (id, data) => api.put(`/documents/${id}/renew`, 
 export const addReview         = (data) => api.post('/reviews', data);
 export const getVehicleReviews = (id)   => api.get(`/reviews/vehicle/${id}`);
 
+/* ── VEHICLE CATEGORIES ── */
+export const getAllCategories = ()     => api.get('/v-categories');
+export const createCategory   = (data) => api.post('/v-categories', data);
+export const updateCategory   = (id, data) => api.put(`/v-categories/${id}`, data);
+export const deleteCategory   = (id)   => api.delete(`/v-categories/${id}`);
+
 /* ── PLATFORM SETTINGS ── */
 export const getPlatformSettings = ()     => api.get('/settings');
 export const updatePlatformSettings = (settings) => api.put('/settings', { settings });

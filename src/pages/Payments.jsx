@@ -5,15 +5,17 @@ import {
   Eye, X, CheckCircle, Clock, XCircle, RefreshCw,
   Smartphone, Wallet, Building2, IndianRupee, TrendingUp,
   User as UserIcon, Calendar, Hash, Filter, Receipt, Loader2,
-  CircleCheck
+  CircleCheck, Activity
 } from 'lucide-react';
-import { getAllBookings, getDashboardStats, updateBookingStatus, exportBookings } from '../services/apiServices';
+import { getAllBookings, getDashboardStats, updateBookingStatus, exportBookings, payManual } from '../services/apiServices';
+import useApi from '../services/useApi';
 import './Payments.css';
 
 const STATUS_CFG = {
-  'paid':    { cls: 'badge-success', icon: <CircleCheck size={11} />, label: 'Success' },
-  'pending': { cls: 'badge-warning', icon: <Clock size={11} />, label: 'Pending' },
-  'failed':  { cls: 'badge-danger',  icon: <XCircle size={11} />, label: 'Failed' },
+  'paid':           { cls: 'badge-success', icon: <CircleCheck size={11} />, label: 'Paid' },
+  'partially_paid': { cls: 'badge-info',    icon: <Activity size={11} />,    label: 'Partial' },
+  'pending':        { cls: 'badge-warning', icon: <Clock size={11} />,       label: 'Pending' },
+  'failed':         { cls: 'badge-danger',  icon: <XCircle size={11} />,      label: 'Failed' },
 };
 
 const METHOD_ICON = {
@@ -36,6 +38,8 @@ const Payments = () => {
   const [page, setPage]             = useState(1);
   const [selected, setSelected]     = useState(null);
   const [exporting, setExporting]   = useState(false);
+  const [installmentAmount, setInstallmentAmount] = useState('');
+  const { call } = useApi();
 
   useEffect(() => {
     fetchData();
@@ -48,13 +52,35 @@ const Payments = () => {
         getAllBookings(),
         getDashboardStats()
       ]);
-      setBookings(bookingsRes.data.data || []);
+      
+      const mapped = (bookingsRes.data.data || []).map(b => ({
+        ...b,
+        due_amount: b.due_amount !== undefined ? b.due_amount : (b.grand_total - (b.total_paid || 0))
+      }));
+
+      setBookings(mapped);
       setStats(statsRes.data.data);
     } catch (error) {
       console.error("Error fetching payment data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePayment = (id, amount = null) => {
+    const payload = amount ? { amount: parseFloat(amount) } : {};
+    call(
+      () => payManual(id, payload),
+      () => {
+        fetchData();
+        setSelected(null);
+        setInstallmentAmount('');
+        alert('Payment recorded successfully');
+      },
+      (err) => {
+        alert(`Failed to record payment: ${err}`);
+      }
+    );
   };
 
   const handleExport = async () => {
@@ -122,7 +148,7 @@ const Payments = () => {
           <div className="pay-stat-icon revenue"><TrendingUp size={19} /></div>
           <div>
             <span className="pay-stat-label">Total Revenue</span>
-            <h3>{fmtINR(stats.revenue)}</h3>
+            <h3>{fmtINR(stats.revenue.total)}</h3>
             <span className="pay-stat-sub up"><ArrowUpRight size={12} /> Real-time tracking</span>
           </div>
         </div>
@@ -170,17 +196,17 @@ const Payments = () => {
                 <th>#</th>
                 <th>Transaction / Booking ID</th>
                 <th>Customer</th>
-                <th>Vehicle</th>
-                <th>Method</th>
-                <th>Amount</th>
-                <th>Date</th>
+                <th>Vehicle / Method</th>
+                <th>Total</th>
+                <th>Paid</th>
+                <th>Due</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {paginated.length === 0 ? (
-                <tr><td colSpan={9} className="pay-empty-row"><Receipt size={28} /><p>No transactions found.</p></td></tr>
+                <tr><td colSpan={10} className="pay-empty-row"><Receipt size={28} /><p>No transactions found.</p></td></tr>
               ) : (
                 paginated.map((tx, i) => (
                   <tr key={tx._id}>
@@ -200,19 +226,13 @@ const Payments = () => {
                     </td>
                     <td>
                       <span className="cell-main">{tx.vehicle?.vehicle_name || 'N/A'}</span>
-                      <span className="cell-sub">{tx.vehicle?.registration_number || ''}</span>
-                    </td>
-                    <td>
-                      <span className="method-badge" style={{ textTransform: 'uppercase' }}>
-                        {METHOD_ICON[tx.payment_method?.toLowerCase()] || <CreditCard size={13} />} {tx.payment_method || 'Online'}
+                      <span className="cell-sub" style={{ textTransform: 'uppercase' }}>
+                         {tx.payment_method || 'Online'}
                       </span>
                     </td>
-                    <td>
-                      <span className="pay-amount" style={{ fontWeight: 700, color: tx.payment_status === 'paid' ? '#10b981' : '#f59e0b' }}>
-                        {fmtINR(tx.grand_total)}
-                      </span>
-                    </td>
-                    <td className="td-muted" style={{ whiteSpace: 'nowrap' }}>{formatDate(tx.createdAt)}</td>
+                    <td><span className="pay-amount">{fmtINR(tx.grand_total)}</span></td>
+                    <td><span className="text-success" style={{ fontWeight: 600 }}>{fmtINR(tx.total_paid)}</span></td>
+                    <td><span className={tx.due_amount > 0 ? "text-danger" : "text-success"} style={{ fontWeight: 600 }}>{fmtINR(tx.due_amount)}</span></td>
                     <td>
                       <span className={`badge badge-icon ${STATUS_CFG[tx.payment_status]?.cls || 'badge-warning'}`}>
                         {STATUS_CFG[tx.payment_status]?.icon || <Clock size={11} />} {STATUS_CFG[tx.payment_status]?.label || tx.payment_status}
@@ -254,10 +274,19 @@ const Payments = () => {
               <button className="btn-icon" onClick={() => setSelected(null)}><X size={20} /></button>
             </div>
             <div className="modal-body">
-              <div className={`pay-amount-hero ${selected.payment_status === 'paid' ? 'payment-hero' : 'pending-hero'}`}>
-                <span className="hero-label">Grand Total</span>
-                <span className="hero-amount">{fmtINR(selected.grand_total)}</span>
-                <span className="hero-date">{formatDate(selected.createdAt)}</span>
+              <div className="pay-amount-grid">
+                <div className="pay-hero-item total">
+                  <span className="hero-label">Grand Total</span>
+                  <span className="hero-amount">{fmtINR(selected.grand_total)}</span>
+                </div>
+                <div className="pay-hero-item paid">
+                  <span className="hero-label">Total Paid</span>
+                  <span className="hero-amount">{fmtINR(selected.total_paid)}</span>
+                </div>
+                <div className="pay-hero-item due">
+                  <span className="hero-label">Due Amount</span>
+                  <span className="hero-amount">{fmtINR(selected.due_amount)}</span>
+                </div>
               </div>
 
               <div className="pay-detail-grid">
@@ -275,13 +304,41 @@ const Payments = () => {
                       <span className="method-badge" style={{ textTransform: 'uppercase' }}>{selected.payment_method}</span>
                     </div>
                     <div className="pay-detail-row"><span>Booking ID</span><span className="bk-ref-badge">{selected.booking_id}</span></div>
-                    <div className="pay-detail-row"><span>Paid Amount</span><span>{fmtINR(selected.total_paid)}</span></div>
-                    <div className="pay-detail-row"><span>Security Deposit</span><span>{fmtINR(selected.security_deposit)}</span></div>
+                    <div className="pay-detail-row"><span>Status</span>
+                      <span className={`badge badge-icon ${STATUS_CFG[selected.payment_status]?.cls}`}>
+                        {STATUS_CFG[selected.payment_status]?.label}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="modal-footer">
+            <div className="modal-footer pay-modal-footer">
+              <div className="footer-left">
+                {selected.due_amount > 0 && (
+                  <div className="installment-box">
+                    <div className="installment-input">
+                      <IndianRupee size={14} className="input-icon" />
+                      <input 
+                        type="number" 
+                        placeholder="Pay Installment" 
+                        value={installmentAmount}
+                        onChange={(e) => setInstallmentAmount(e.target.value)}
+                        className="amount-input"
+                      />
+                    </div>
+                    <button className="btn btn-primary btn-sm" 
+                      onClick={() => handlePayment(selected._id, installmentAmount)}
+                      disabled={!installmentAmount}>
+                      Record
+                    </button>
+                    <button className="btn btn-outline btn-sm" 
+                      onClick={() => handlePayment(selected._id)}>
+                      Pay All
+                    </button>
+                  </div>
+                )}
+              </div>
               <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
             </div>
           </div>

@@ -1,98 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import {
+import { 
   Battery, MapPin, Plus, Search, Edit, Trash2, X, Upload,
   Eye, Car, CheckCircle, Clock, Wrench, IndianRupee,
   BatteryCharging, Shield, ToggleLeft, ToggleRight,
-  AlertTriangle, RefreshCw, SlidersHorizontal, Loader
+  AlertTriangle, RefreshCw, SlidersHorizontal, Loader,
+  Settings, LayoutGrid
 } from 'lucide-react';
-import { getAllVehicles, createVehicle, deleteVehicle, updateVehicle, getAllStores } from '../services/apiServices';
+import { 
+  getAllVehicles, createVehicle, deleteVehicle, updateVehicle, getAllStores,
+  getAllCategories, createCategory, updateCategory, deleteCategory
+} from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Vehicles.css';
 
-const initialVehicles = [
-  {
-    id: 1, name: 'Ather 450X', brand: 'Ather', regNo: 'KA 01 EK 1234',
-    category: 'Electric Scooter', status: 'Available', battery: 85,
-    location: 'Indiranagar, Bangalore', franchise: 'City EV Rentals',
-    range: 146, topSpeed: 90, motorPower: '6 kW', chargingTime: '5.45 hrs',
-    batteryCapacity: '3.7 kWh', year: 2023, color: 'Space Grey',
-    ratePerHour: 40, ratePerDay: 600, insuranceExpiry: '2025-08-15',
-    pucExpiry: '2025-03-10', odometer: 4520,
-  },
-  {
-    id: 2, name: 'Ola S1 Pro', brand: 'Ola Electric', regNo: 'KA 03 HP 5678',
-    category: 'Electric Scooter', status: 'Booked', battery: 42,
-    location: 'Koramangala, Bangalore', franchise: 'ElectroWheel Hub',
-    range: 181, topSpeed: 116, motorPower: '8.5 kW', chargingTime: '6.5 hrs',
-    batteryCapacity: '3.97 kWh', year: 2023, color: 'Jet Black',
-    ratePerHour: 45, ratePerDay: 700, insuranceExpiry: '2025-11-20',
-    pucExpiry: '2025-06-05', odometer: 7830,
-  },
-  {
-    id: 3, name: 'TVS iQube', brand: 'TVS', regNo: 'KA 05 EM 9012',
-    category: 'Electric Scooter', status: 'Maintenance', battery: 12,
-    location: 'Service Center', franchise: 'VoltStation',
-    range: 100, topSpeed: 78, motorPower: '4.4 kW', chargingTime: '5 hrs',
-    batteryCapacity: '3.04 kWh', year: 2022, color: 'Pearl White',
-    ratePerHour: 35, ratePerDay: 550, insuranceExpiry: '2024-12-31',
-    pucExpiry: '2024-11-15', odometer: 12400,
-  },
-  {
-    id: 4, name: 'Ather 450X', brand: 'Ather', regNo: 'KA 01 EK 4321',
-    category: 'Electric Scooter', status: 'Available', battery: 98,
-    location: 'HSR Layout, Bangalore', franchise: 'City EV Rentals',
-    range: 146, topSpeed: 90, motorPower: '6 kW', chargingTime: '5.45 hrs',
-    batteryCapacity: '3.7 kWh', year: 2024, color: 'Green',
-    ratePerHour: 40, ratePerDay: 600, insuranceExpiry: '2026-01-10',
-    pucExpiry: '2025-09-20', odometer: 1200,
-  },
-  {
-    id: 5, name: 'Ola S1 Air', brand: 'Ola Electric', regNo: 'KA 03 HP 8765',
-    category: 'Electric Scooter', status: 'Available', battery: 76,
-    location: 'Whitefield, Bangalore', franchise: 'ElectroWheel Hub',
-    range: 101, topSpeed: 90, motorPower: '6 kW', chargingTime: '4.5 hrs',
-    batteryCapacity: '2.5 kWh', year: 2023, color: 'Coral',
-    ratePerHour: 35, ratePerDay: 550, insuranceExpiry: '2025-07-30',
-    pucExpiry: '2025-04-18', odometer: 5670,
-  },
-  {
-    id: 6, name: 'Bajaj Chetak', brand: 'Bajaj', regNo: 'KA 05 EM 2109',
-    category: 'Electric Scooter', status: 'Booked', battery: 55,
-    location: 'Jayanagar, Bangalore', franchise: 'VoltStation',
-    range: 126, topSpeed: 73, motorPower: '4 kW', chargingTime: '5 hrs',
-    batteryCapacity: '3 kWh', year: 2022, color: 'Indigo Metallic',
-    ratePerHour: 38, ratePerDay: 580, insuranceExpiry: '2025-05-22',
-    pucExpiry: '2025-02-28', odometer: 9100,
-  },
-  {
-    id: 7, name: 'Hero Vida V1', brand: 'Hero', regNo: 'KA 02 EV 3344',
-    category: 'Electric Scooter', status: 'Available', battery: 90,
-    location: 'Indiranagar, Bangalore', franchise: 'City EV Rentals',
-    range: 165, topSpeed: 80, motorPower: '6 kW', chargingTime: '5 hrs',
-    batteryCapacity: '3.94 kWh', year: 2024, color: 'Matte Red',
-    ratePerHour: 42, ratePerDay: 650, insuranceExpiry: '2026-03-15',
-    pucExpiry: '2025-10-10', odometer: 890,
-  },
-  {
-    id: 8, name: 'Revolt RV400', brand: 'Revolt', regNo: 'KA 04 EV 7788',
-    category: 'Electric Bike', status: 'Available', battery: 63,
-    location: 'Whitefield, Bangalore', franchise: 'ElectroWheel Hub',
-    range: 150, topSpeed: 85, motorPower: '3 kW', chargingTime: '4.5 hrs',
-    batteryCapacity: '3.24 kWh', year: 2023, color: 'Rebel Red',
-    ratePerHour: 50, ratePerDay: 800, insuranceExpiry: '2025-09-01',
-    pucExpiry: '2025-05-30', odometer: 6340,
-  },
-];
-
-const statusConfig = {
-  Available:   { cls: 'badge-success', icon: <CheckCircle size={12} /> },
-  Booked:      { cls: 'badge-info',    icon: <Clock size={12} /> },
-  Maintenance: { cls: 'badge-warning', icon: <Wrench size={12} /> },
-};
-
 const emptyForm = {
-  name: '', brand: '', regNo: '', category: 'Electric Scooter', color: '', year: '',
+  name: '', brand: '', regNo: '', category: '', color: '', year: '',
   status: 'Available', battery: '', range: '', topSpeed: '', motorPower: '',
   chargingTime: '', batteryCapacity: '', odometer: '',
   ratePerHour: '', ratePerDay: '',
@@ -100,21 +23,23 @@ const emptyForm = {
   insuranceExpiry: '', pucExpiry: '',
 };
 
-const CATEGORY_MAP = {
-  'Electric Scooter': 'scooter',
-  'Electric Bike':    'bike',
-  'Electric Cycle':   'bike', // Backend only has car, bike, scooter
-  'Electric Auto':    'car'   // Mapping auto to car for now or check backend
+const statusConfig = {
+  Available:   { cls: 'badge-success', icon: <CheckCircle size={12} /> },
+  Booked:      { cls: 'badge-info',    icon: <Clock size={12} /> },
+  Maintenance: { cls: 'badge-warning', icon: <Wrench size={12} /> },
 };
 
 const Vehicles = () => {
   const [vehicles, setVehicles]         = useState([]);
+  const [categories, setCategories]     = useState([]);
   const [showModal, setShowModal]       = useState(false);
+  const [showCatModal, setShowCatModal] = useState(false);
   const [viewVehicle, setViewVehicle]   = useState(null);
   const [manageVehicle, setManageVehicle] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
   const [search, setSearch]             = useState('');
   const [form, setForm]                 = useState(emptyForm);
+  const [catForm, setCatForm]           = useState({ name: '', description: '' });
   const [imagePreview, setImagePreview] = useState(null);
   const [deleteId, setDeleteId]         = useState(null);
   const [avail, setAvail]               = useState({ status: '', battery: '', location: '', reason: '' });
@@ -122,8 +47,16 @@ const Vehicles = () => {
   const fileInputRef = useRef(null);
   const { loading, error, call }        = useApi();
 
-  useEffect(() => {
-    // Fetch Vehicles
+  const fetchCategories = () => {
+    call(() => getAllCategories(), (res) => {
+      console.log("Categories fetched:", res);
+      const catList = res.data || [];
+      setCategories(catList);
+    });
+  };
+
+  /* ── fetch vehicles ── */
+  const fetchVehicles = () => {
     call(
       () => getAllVehicles(),
       (data) => {
@@ -133,7 +66,8 @@ const Vehicles = () => {
           name: v.vehicle_name,
           brand: v.brand,
           regNo: v.registration_number,
-          category: v.vehicle_type,
+          category: v.category?.name || v.vehicle_type || 'N/A',
+          catId: v.category?._id || '',
           status: v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : 'Maintenance'),
           battery: v.battery_level || 100,
           location: v.location || '',
@@ -154,6 +88,11 @@ const Vehicles = () => {
         setVehicles(list);
       }
     );
+  };
+
+  useEffect(() => {
+    fetchVehicles();
+    fetchCategories();
 
     // Fetch Franchises
     getAllStores().then(res => {
@@ -184,7 +123,10 @@ const Vehicles = () => {
     fd.append('vehicle_name', form.name);
     fd.append('brand', form.brand);
     fd.append('registration_number', form.regNo);
-    fd.append('vehicle_type', CATEGORY_MAP[form.category] || 'scooter');
+    if (form.category) fd.append('category', form.category);
+    if (form.franchise) fd.append('franchise', form.franchise);
+    
+    fd.append('vehicle_type', 'scooter'); // Legacy fallback
     fd.append('year', form.year);
     fd.append('color', form.color);
     fd.append('battery_capacity', form.batteryCapacity);
@@ -197,21 +139,20 @@ const Vehicles = () => {
     fd.append('odometer', form.odometer);
     fd.append('status', form.status === 'Available' ? 'active' : form.status.toLowerCase());
     fd.append('location', form.location);
-    if (form.franchise) fd.append('franchise', form.franchise);
     fd.append('insurance_valid_till', form.insuranceExpiry);
     fd.append('puc_valid_till', form.pucExpiry);
     if (form.file) fd.append('thumbnail_image', form.file);
+
     call(
       () => createVehicle(fd),
-      (data) => {
-        const v = data.vehicle || data;
-        setVehicles(prev => [...prev, { ...form, id: v._id || Date.now(), battery: Number(form.battery) || 100 }]);
+      () => {
         setForm(emptyForm);
         setImagePreview(null);
         setShowModal(false);
+        fetchVehicles();
       },
       (err) => {
-        alert(err.message || "Failed to add vehicle. Please check all fields.");
+        alert(err || "Failed to add vehicle. Please check all fields.");
       }
     );
   };
@@ -220,8 +161,8 @@ const Vehicles = () => {
     call(
       () => deleteVehicle(id),
       () => {
-        setVehicles(prev => prev.filter(v => v.id !== id));
         setDeleteId(null);
+        fetchVehicles();
       }
     );
   };
@@ -236,9 +177,8 @@ const Vehicles = () => {
     call(
       () => updateVehicle(manageVehicle.id, { status: apiStatus }),
       () => {
-        setVehicles(prev => prev.map(v => v.id === manageVehicle.id
-          ? { ...v, status: avail.status, battery: Number(avail.battery), location: avail.location } : v));
         setManageVehicle(null);
+        fetchVehicles();
       }
     );
   };
@@ -268,9 +208,14 @@ const Vehicles = () => {
           <h1>Fleet Management</h1>
           <p>Manage and monitor your entire EV fleet.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setForm(emptyForm); setImagePreview(null); setShowModal(true); }}>
-          <Plus size={18} /> Add New Vehicle
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn btn-outline" onClick={() => setShowCatModal(true)}>
+            <LayoutGrid size={18} /> Categories
+          </button>
+          <button className="btn btn-primary" onClick={() => { setForm(emptyForm); setImagePreview(null); setShowModal(true); }}>
+            <Plus size={18} /> Add New Vehicle
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -432,12 +377,12 @@ const Vehicles = () => {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Vehicle Category</label>
-                    <select value={form.category} onChange={f('category')}>
-                      <option>Electric Scooter</option>
-                      <option>Electric Bike</option>
-                      <option>Electric Cycle</option>
-                      <option>Electric Auto</option>
+                    <label>Vehicle Category *</label>
+                    <select value={form.category} onChange={f('category')} required>
+                      <option value="">Select Category</option>
+                      {categories.map(cat => (
+                        <option key={cat._id} value={cat._id}>{cat.name}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="form-group">
@@ -714,6 +659,67 @@ const Vehicles = () => {
                     <div className="veh-detail-row"><span>Insurance Expiry</span><span>{viewVehicle.insuranceExpiry}</span></div>
                     <div className="veh-detail-row"><span>PUC Expiry</span><span>{viewVehicle.pucExpiry}</span></div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── MANAGE CATEGORIES MODAL ── */}
+      {showCatModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowCatModal(false)}>
+          <div className="modal-content modal-md" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Manage Categories</h3>
+              <button className="btn-icon" onClick={() => setShowCatModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="cat-manage-wrap">
+                <div className="cat-add-box">
+                  <input 
+                    type="text" 
+                    placeholder="Category Name (e.g. Scooters)" 
+                    value={catForm.name}
+                    onChange={(e) => setCatForm({...catForm, name: e.target.value})}
+                  />
+                  <button className="btn btn-primary btn-sm" onClick={() => {
+                    if (!catForm.name.trim()) return;
+                    call(() => createCategory(catForm), 
+                      () => {
+                        setCatForm({ name: '', description: '' });
+                        fetchCategories();
+                        alert('Category added successfully!');
+                      }, 
+                      (err) => alert('Failed to add category: ' + err)
+                    );
+                  }} disabled={loading || !catForm.name}>
+                    {loading ? '...' : 'Add'}
+                  </button>
+                </div>
+                
+                <div className="cat-list">
+                  {categories && categories.length > 0 ? categories.map(cat => (
+                    <div key={cat._id} className="cat-item">
+                      <span>{cat.name}</span>
+                      <button className="btn-icon delete" onClick={() => {
+                        if(window.confirm(`Delete "${cat.name}" category?`)) {
+                          call(() => deleteCategory(cat._id), 
+                            () => {
+                              fetchCategories();
+                              alert('Category deleted!');
+                            }, 
+                            (err) => alert('Error: ' + err)
+                          );
+                        }
+                      }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )) : (
+                    <div className="td-muted" style={{ textAlign: 'center', padding: '1rem' }}>No categories found.</div>
+                  )}
                 </div>
               </div>
             </div>

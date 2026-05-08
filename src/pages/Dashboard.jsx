@@ -47,11 +47,13 @@ const Dashboard = () => {
   }
 
   const kpis = [
-    { title: 'Total Vehicles', value: stats.fleet.total, icon: Car, color: 'blue', sub: 'Across all hubs' },
-    { title: 'Active Rides', value: stats.bookings.active, icon: Zap, color: 'green', sub: 'In progress now' },
-    { title: 'Total Revenue', value: `₹${stats.revenue.toLocaleString()}`, icon: IndianRupee, color: 'emerald', sub: 'Lifetime earnings' },
-    { title: 'Available Fleet', value: stats.fleet.available, icon: Activity, color: 'orange', sub: 'Ready for booking' },
-    { title: 'Pending KYC', value: stats.users.kyc_pending, icon: Clock, color: 'purple', sub: 'Verification required' },
+    { title: 'Total Vehicles', value: stats.fleet?.total || 0, icon: Car, color: 'blue', sub: 'Across all hubs' },
+    { title: 'Active Rides', value: stats.bookings?.active || 0, icon: Zap, color: 'green', sub: 'In progress now' },
+    { title: 'Weekly Income', value: `₹${(stats.revenue?.weekly || 0).toLocaleString()}`, icon: IndianRupee, color: 'emerald', sub: 'Last 7 days' },
+    { title: 'Monthly Income', value: `₹${(stats.revenue?.monthly || 0).toLocaleString()}`, icon: IndianRupee, color: 'purple', sub: 'Last 30 days' },
+    { title: 'Yearly Income', value: `₹${(stats.revenue?.yearly || 0).toLocaleString()}`, icon: IndianRupee, color: 'orange', sub: 'Last 365 days' },
+    { title: 'Available Fleet', value: stats.fleet?.available || 0, icon: Activity, color: 'blue', sub: 'Ready for booking' },
+    { title: 'Pending KYC', value: stats.users?.kyc_pending || 0, icon: Clock, color: 'purple', sub: 'Verification required' },
     { title: 'Docs Expiring', value: stats.documents?.expiring || 0, icon: FileWarning, color: 'red', sub: 'Action required' },
   ];
 
@@ -111,6 +113,31 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Category Distribution Stats */}
+      {stats.categories && stats.categories.length > 0 && (
+        <div className="category-stats-container">
+          <div className="section-header">
+            <h3>Vehicle Distribution by Category</h3>
+          </div>
+          <div className="category-stats-grid">
+            {stats.categories.map((cat, idx) => (
+              <div key={idx} className="category-stat-card card">
+                <div className="cat-stat-info">
+                  <span className="cat-name">{cat.name}</span>
+                  <span className="cat-count">{cat.count} Vehicles</span>
+                </div>
+                <div className="cat-stat-progress">
+                  <div 
+                    className="progress-bar" 
+                    style={{ width: `${(cat.count / stats.fleet.total) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="dashboard-content-grid">
         <div className="card chart-card">

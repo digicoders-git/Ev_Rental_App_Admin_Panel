@@ -55,8 +55,8 @@ const AssignEV = () => {
     call(
       () => assignVehicle(vehicleId, selectedFranchise._id),
       () => {
-        setVehicles(prev => prev.map(v => v.id === vehicleId ? { ...v, franchiseId: selectedFranchise._id } : v));
         setShowModal(false);
+        fetchData();
       }
     );
   };
@@ -70,8 +70,8 @@ const AssignEV = () => {
     call(
       () => assignVehicle(confirmUnassignId, null),
       () => {
-        setVehicles(prev => prev.map(v => v.id === confirmUnassignId ? { ...v, franchiseId: null } : v));
         setConfirmUnassignId(null);
+        fetchData();
       }
     );
   };

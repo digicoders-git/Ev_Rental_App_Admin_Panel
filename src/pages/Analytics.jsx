@@ -80,7 +80,7 @@ const Analytics = () => {
 
   /* KPI cards data mapping */
   const kpis = [
-    { label: 'Total Revenue',    value: fmtINR(stats.revenue), sub: 'Overall earnings', up: true, icon: <IndianRupee size={20} />, color: 'green' },
+    { label: 'Total Revenue',    value: fmtINR(stats.revenue.total), sub: 'Overall earnings', up: true, icon: <IndianRupee size={20} />, color: 'green' },
     { label: 'Total Bookings',   value: stats.bookings.total,  sub: `${stats.bookings.completed} completed`, up: true, icon: <CalendarCheck size={20} />, color: 'blue' },
     { label: 'Riders/Users',     value: stats.users.total,     sub: `${stats.users.kyc_verified} verified`, up: true, icon: <Users size={20} />, color: 'purple' },
     { label: 'Total Fleet',      value: stats.fleet.total,     sub: `${stats.fleet.active} active`, up: true, icon: <Car size={20} />, color: 'orange' },
