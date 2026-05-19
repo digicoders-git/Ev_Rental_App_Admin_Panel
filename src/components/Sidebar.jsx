@@ -67,7 +67,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated }) => {
         <div className="logo-icon">
           <Zap size={24} fill="white" stroke="white" />
         </div>
-        <span className="logo-text">Volt<span>Rent</span></span>
+        <span className="logo-text">EV<span>Rental</span></span>
         <button className="sidebar-close-btn" onClick={onClose}>
           <X size={24} />
         </button>
