@@ -94,10 +94,17 @@ const Franchise = () => {
     color: COLORS[i % COLORS.length]
   }));
 
+  const formatRevenue = (val) => {
+    if (!val) return '₹0';
+    if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(1)}k`;
+    return `₹${val}`;
+  };
+
   const statsList = [
     { label: 'Total Partners', value: dashStats?.franchise?.total_stores || 0, icon: <Building2 size={20} /> },
     { label: 'Total Vehicles', value: dashStats?.fleet?.total || 0, icon: <Car size={20} /> },
-    { label: 'Total Revenue', value: `₹${((dashStats?.revenue || 0) / 100000).toFixed(1)}L`, icon: <TrendingUp size={20} /> },
+    { label: 'Total Revenue', value: formatRevenue(dashStats?.revenue?.total), icon: <TrendingUp size={20} /> },
     { label: 'Pending Apps', value: enquiries.length, icon: <Users size={20} /> },
   ];
 
