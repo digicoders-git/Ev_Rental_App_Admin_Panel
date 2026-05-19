@@ -6,7 +6,7 @@ import {
   IndianRupee, Ban, CircleCheck, Activity,
   Navigation, PackageCheck, Hourglass, TrendingUp, Loader, AlertTriangle
 } from 'lucide-react';
-import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual } from '../services/apiServices';
+import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Bookings.css';
 
@@ -50,10 +50,20 @@ const Bookings = () => {
   const [showActivity, setShowActivity] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null); // { id, type, label }
   const [installmentAmount, setInstallmentAmount] = useState('');
+  
+  const [stores, setStores] = useState([]);
+  const [selectedFranchise, setSelectedFranchise] = useState('All');
 
   useEffect(() => {
     fetchBookings();
+    loadStores();
   }, []);
+
+  const loadStores = () => {
+    getAllStores().then(res => {
+      setStores(res.data?.data || res.data || []);
+    }).catch(err => console.error(err));
+  };
 
   const fetchBookings = () => {
     call(() => getAllBookings(), (res) => {
@@ -66,7 +76,7 @@ const Bookings = () => {
         phone: b.user?.mobile || '',
         vehicle: b.vehicle?.vehicle_name || 'N/A',
         regNo: b.vehicle?.registration_number || '',
-        franchise: b.vehicle?.franchise?.store_name || 'Main Hub',
+        franchise: b.franchise?.store_name || b.vehicle?.franchise?.store_name || 'Main Hub',
         plan: b.plan?.plan_name || 'Custom',
         status: b.booking_status === 'confirmed' ? 'Active' :
                 b.booking_status === 'ongoing'   ? 'Ongoing' :
@@ -105,13 +115,14 @@ const Bookings = () => {
   /* ── filter ── */
   const filtered = bookings.filter((b) => {
     const matchTab = activeTab === 'All' || b.status === activeTab;
+    const matchFranchise = selectedFranchise === 'All' || b.franchise === selectedFranchise;
     const q = search.toLowerCase();
     const matchSearch =
       b.bookingId.toLowerCase().includes(q) ||
       b.user.toLowerCase().includes(q) ||
       b.vehicle.toLowerCase().includes(q) ||
       b.regNo.toLowerCase().includes(q);
-    return matchTab && matchSearch;
+    return matchTab && matchFranchise && matchSearch;
   });
 
   /* ── pagination ── */
@@ -339,14 +350,36 @@ const Bookings = () => {
               </button>
             ))}
           </div>
-          <div className="search-wrapper">
-            <Search size={15} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search ID, user, vehicle..."
-              value={search}
-              onChange={handleSearch}
-            />
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select
+              value={selectedFranchise}
+              onChange={(e) => { setSelectedFranchise(e.target.value); setPage(1); }}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                background: 'var(--surface)',
+                color: 'var(--text-main)',
+                minWidth: '180px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="All">All Franchises</option>
+              {stores.map(store => (
+                <option key={store._id} value={store.store_name}>{store.store_name}</option>
+              ))}
+            </select>
+            <div className="search-wrapper">
+              <Search size={15} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search ID, user, vehicle..."
+                value={search}
+                onChange={handleSearch}
+              />
+            </div>
           </div>
         </div>
 
@@ -358,6 +391,7 @@ const Bookings = () => {
                 <th>Booking ID</th>
                 <th>Customer</th>
                 <th>Vehicle</th>
+                <th>Franchise Store</th>
                 <th>Plan/Duration</th>
                 <th>Total</th>
                 <th>Paid</th>
@@ -369,7 +403,7 @@ const Bookings = () => {
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="bk-empty-row">
+                  <td colSpan={11} className="bk-empty-row">
                     <Calendar size={28} />
                     <p>No bookings found.</p>
                   </td>
@@ -390,6 +424,9 @@ const Bookings = () => {
                     <td>
                       <span className="cell-main">{b.vehicle}</span>
                       <span className="cell-sub">{b.regNo}</span>
+                    </td>
+                    <td>
+                      <span className="badge badge-info" style={{ fontWeight: 600, fontSize: '0.8rem' }}>{b.franchise}</span>
                     </td>
                     <td>
                       <span className="cell-main">{b.plan}</span>

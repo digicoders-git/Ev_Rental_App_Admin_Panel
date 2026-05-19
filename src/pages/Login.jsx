@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Mail, Lock, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { adminLogin } from '../services/apiServices';
+import { Zap, Mail, Lock, ArrowRight, Eye, EyeOff, Loader2, User, Store } from 'lucide-react';
+import { adminLogin, franchiseLogin } from '../services/apiServices';
 import './Login.css';
 
 const Login = ({ setIsAuthenticated }) => {
+  const [role, setRole]         = useState('admin');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd]   = useState(false);
@@ -17,11 +18,22 @@ const Login = ({ setIsAuthenticated }) => {
     setError('');
     setIsLoading(true);
     try {
-      const res = await adminLogin({ email, password });
-      const { token, user } = res.data;
+      let res;
+      let userData;
+      if (role === 'admin') {
+        res = await adminLogin({ email, password });
+        userData = res.data.user;
+      } else {
+        res = await franchiseLogin({ email, password });
+        userData = res.data.data;
+      }
+
+      const { token } = res.data;
       localStorage.setItem('token', token);
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('adminUser', JSON.stringify(user));
+      localStorage.setItem('userRole', role);
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
       setIsAuthenticated(true);
       navigate('/');
     } catch (err) {
@@ -39,8 +51,27 @@ const Login = ({ setIsAuthenticated }) => {
             <Zap size={28} fill="var(--primary)" stroke="var(--primary)" />
             <span>Volt<span>Rent</span></span>
           </div>
-          <h2>Admin Login</h2>
-          <p>Access the VoltRent administrative dashboard</p>
+          <h2>{role === 'admin' ? 'Admin Login' : 'Franchise Login'}</h2>
+          <p>Access the VoltRent {role === 'admin' ? 'administrative dashboard' : 'franchise panel'}</p>
+        </div>
+
+        <div className="role-toggle-container" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <button 
+            type="button" 
+            className={`role-btn ${role === 'admin' ? 'active' : ''}`}
+            onClick={() => setRole('admin')}
+            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: role === 'admin' ? 'var(--primary)' : 'var(--card-bg)', color: role === 'admin' ? '#fff' : 'var(--text-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '500' }}
+          >
+            <User size={18} /> Admin
+          </button>
+          <button 
+            type="button" 
+            className={`role-btn ${role === 'franchise' ? 'active' : ''}`}
+            onClick={() => setRole('franchise')}
+            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: role === 'franchise' ? 'var(--primary)' : 'var(--card-bg)', color: role === 'franchise' ? '#fff' : 'var(--text-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '500' }}
+          >
+            <Store size={18} /> Franchise
+          </button>
         </div>
 
         <form onSubmit={handleLogin} className="login-form-v2">
@@ -50,7 +81,7 @@ const Login = ({ setIsAuthenticated }) => {
               <Mail size={18} className="input-icon-v2" />
               <input 
                 type="email" 
-                placeholder="admin@voltrent.com" 
+                placeholder={role === 'admin' ? "admin@voltrent.com" : "franchise@voltrent.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 

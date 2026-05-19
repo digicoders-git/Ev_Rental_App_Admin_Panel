@@ -21,13 +21,19 @@ import {
   MessageSquare,
   Layers,
   BarChart2,
-  AlertTriangle
+  AlertTriangle,
+  Wallet,
+  UserCheck,
+  AlertCircle,
+  BarChart,
+  Headphones
 } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = ({ isOpen, onClose, setIsAuthenticated }) => {
+const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const menuItems = [
+  
+  const adminMenuItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Users', path: '/users', icon: Users },
     { name: 'Vehicles', path: '/vehicles', icon: Car },
@@ -46,6 +52,22 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated }) => {
     { name: 'Notifications', path: '/notifications', icon: Bell },
   ];
 
+  const franchiseMenuItems = [
+    { name: 'Dashboard',     path: '/f',              icon: LayoutDashboard },
+    { name: 'My Vehicles',   path: '/f/vehicles',     icon: Car },
+    { name: 'Rides',         path: '/f/rides',        icon: CalendarCheck },
+    { name: 'Earnings',      path: '/f/earnings',     icon: Wallet },
+    { name: 'Customers',     path: '/f/customers',    icon: Users },
+    { name: 'KYC Status',    path: '/f/kyc',          icon: UserCheck },
+    { name: 'Due Payments',  path: '/f/dues',         icon: AlertCircle },
+    { name: 'Reports',       path: '/f/reports',      icon: BarChart },
+    { name: 'Notifications', path: '/f/notifications', icon: Bell },
+    { name: 'Complaints',    path: '/f/complaints',   icon: Headphones },
+    { name: 'Profile & Settings', path: '/f/profile', icon: Settings },
+  ];
+
+  const menuItems = userRole === 'franchise' ? franchiseMenuItems : adminMenuItems;
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -56,6 +78,8 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated }) => {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('token');
     localStorage.removeItem('adminUser');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userData');
     setIsAuthenticated(false);
     navigate('/login');
     setShowLogoutConfirm(false);

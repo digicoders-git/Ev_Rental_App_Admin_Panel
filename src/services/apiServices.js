@@ -3,6 +3,7 @@ import api from './api';
 /* ── AUTH ── */
 export const adminLogin    = (data) => api.post('/auth/admin/login', data);
 export const adminRegister = (data) => api.post('/auth/admin/register', data);
+export const franchiseLogin = (data) => api.post('/franchise-enquiry/login', data);
 export const sendOtp       = (mobile) => api.post('/auth/send-otp', { mobile });
 export const verifyOtp     = (mobile, otp) => api.post('/auth/verify-otp', { mobile, otp });
 
@@ -49,6 +50,13 @@ export const updateStore    = (id, data) => api.put(`/franchise-enquiry/stores/$
 export const deleteStore    = (id)   => api.delete(`/franchise-enquiry/stores/${id}`);
 export const getFranchiseRevenue      = (params) => api.get('/franchise-enquiry/revenue', { params });
 export const getAdminFranchiseRevenue = (id, params) => api.get(`/franchise-enquiry/admin/revenue/${id}`, { params });
+
+/* ── FRANCHISE OWNER (Self) ── */
+export const getMyFranchiseVehicles   = ()     => api.get('/vehicles/franchise/my');
+export const createFranchiseVehicle   = (data) => api.post('/vehicles/franchise/create', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const getFranchiseProfile      = ()     => api.get('/franchise-enquiry/profile');
+export const updateFranchiseProfile   = (data) => api.put('/franchise-enquiry/profile', data);
+export const changeFranchisePassword  = (data) => api.put('/franchise-enquiry/change-password', data);
 
 /* ── RENTAL PLANS ── */
 export const getAllPlans    = ()     => api.get('/plans');

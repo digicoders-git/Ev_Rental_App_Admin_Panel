@@ -58,13 +58,35 @@ const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('adminUser');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userData');
     setIsAuthenticated(false);
     navigate('/login');
     setShowLogoutConfirm(false);
   };
 
-  const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{"name":"Admin User","email":"admin@voltrent.com","role":"Super Admin"}');
-  const initials  = adminUser.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'AU';
+  const userRole = localStorage.getItem('userRole') || 'admin';
+  let currentUser = { name: 'Admin User', email: 'admin@voltrent.com', role: 'Super Admin' };
+
+  if (userRole === 'franchise') {
+    const data = JSON.parse(localStorage.getItem('userData') || '{}');
+    currentUser = {
+      name: data.owner_name || 'Franchise Owner',
+      email: data.email || 'franchise@store.com',
+      role: 'Franchise Partner'
+    };
+  } else {
+    const data = JSON.parse(localStorage.getItem('adminUser') || '{}');
+    if (data.name) {
+      currentUser = {
+        name: data.name,
+        email: data.email,
+        role: data.role || 'Super Admin'
+      };
+    }
+  }
+
+  const initials = currentUser.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'AU';
 
   return (
     <header className="navbar">
@@ -95,8 +117,8 @@ const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
         <div className="user-profile-wrap" ref={dropdownRef}>
           <button className="user-profile" onClick={() => setDropdownOpen(p => !p)}>
             <div className="user-info">
-              <span className="user-name">{adminUser.name}</span>
-              <span className="user-role">{adminUser.role || 'Admin'}</span>
+              <span className="user-name">{currentUser.name}</span>
+              <span className="user-role">{currentUser.role}</span>
             </div>
             <div className="user-avatar">{initials}</div>
             <ChevronDown size={14} className={`avatar-chevron ${dropdownOpen ? 'open' : ''}`} />
@@ -107,17 +129,19 @@ const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
               <div className="dropdown-header">
                 <div className="dropdown-avatar">{initials}</div>
                 <div>
-                  <span className="dropdown-name">{adminUser.name}</span>
-                  <span className="dropdown-email">{adminUser.email}</span>
+                  <span className="dropdown-name">{currentUser.name}</span>
+                  <span className="dropdown-email">{currentUser.email}</span>
                 </div>
               </div>
               <div className="dropdown-divider" />
-              <button className="dropdown-item" onClick={() => { navigate('/profile'); setDropdownOpen(false); }}>
+              <button className="dropdown-item" onClick={() => { navigate(userRole === 'franchise' ? '/f/profile' : '/profile'); setDropdownOpen(false); }}>
                 <UserCircle size={16} /> My Profile
               </button>
-              <button className="dropdown-item" onClick={() => { navigate('/settings'); setDropdownOpen(false); }}>
-                <Settings size={16} /> Settings
-              </button>
+              {userRole !== 'franchise' && (
+                <button className="dropdown-item" onClick={() => { navigate('/settings'); setDropdownOpen(false); }}>
+                  <Settings size={16} /> Settings
+                </button>
+              )}
               <div className="dropdown-divider" />
               <button className="dropdown-item danger" onClick={handleLogout}>
                 <LogOut size={16} /> Logout
