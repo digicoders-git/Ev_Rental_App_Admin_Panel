@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bike, Users, IndianRupee, TrendingUp, Clock, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { getFranchiseBookings, getMyFranchiseVehicles, getFranchiseRevenue } from '../../services/apiServices';
 
@@ -7,6 +8,7 @@ const FDashboard = () => {
   const [vehicles, setVehicles] = useState([]);
   const [revenue, setRevenue] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
 
   useEffect(() => {
@@ -43,6 +45,28 @@ const FDashboard = () => {
     return map[status] || 'badge-warning';
   };
 
+  const handleMouseEnter = (e) => {
+    e.currentTarget.style.transform = 'translateY(-3px)';
+    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)';
+    e.currentTarget.style.borderColor = 'var(--primary)';
+  };
+
+  const handleMouseLeave = (e) => {
+    e.currentTarget.style.transform = 'translateY(0)';
+    e.currentTarget.style.boxShadow = 'none';
+    e.currentTarget.style.borderColor = 'var(--border)';
+  };
+
+  const cardStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    cursor: 'pointer',
+    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px'
+  };
+
   if (loading) return (
     <div className="page-header" style={{ justifyContent: 'center', minHeight: '200px', alignItems: 'center' }}>
       <Loader size={32} className="spinner" color="var(--primary)" />
@@ -60,48 +84,97 @@ const FDashboard = () => {
 
       {/* Stats Cards */}
       <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        
+        {/* Total Fleet */}
+        <div 
+          className="card" 
+          style={cardStyle}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={() => navigate('/f/vehicles')}
+        >
           <div style={{ background: '#d1fae5', color: '#065f46', padding: '12px', borderRadius: '12px' }}><Bike size={22} /></div>
           <div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Total Fleet</p>
-            <h2 style={{ margin: 0 }}>{vehicles.length}</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Total Fleet</p>
+            <h2 style={{ margin: 0, fontWeight: 700 }}>{vehicles.length}</h2>
           </div>
         </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+        {/* Active Rides */}
+        <div 
+          className="card" 
+          style={cardStyle}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={() => navigate('/f/rides')}
+        >
           <div style={{ background: '#dbeafe', color: '#1e40af', padding: '12px', borderRadius: '12px' }}><TrendingUp size={22} /></div>
           <div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Active Rides</p>
-            <h2 style={{ margin: 0 }}>{activeCount}</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Active Rides</p>
+            <h2 style={{ margin: 0, fontWeight: 700 }}>{activeCount}</h2>
           </div>
         </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+        {/* Pending Approval */}
+        <div 
+          className="card" 
+          style={cardStyle}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={() => navigate('/f/rides')}
+        >
           <div style={{ background: '#fef3c7', color: '#92400e', padding: '12px', borderRadius: '12px' }}><Clock size={22} /></div>
           <div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Pending</p>
-            <h2 style={{ margin: 0 }}>{pendingCount}</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Pending</p>
+            <h2 style={{ margin: 0, fontWeight: 700 }}>{pendingCount}</h2>
           </div>
         </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+        {/* Total Revenue */}
+        <div 
+          className="card" 
+          style={cardStyle}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={() => navigate('/f/earnings')}
+        >
           <div style={{ background: '#d1fae5', color: '#065f46', padding: '12px', borderRadius: '12px' }}><IndianRupee size={22} /></div>
           <div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Total Revenue</p>
-            <h2 style={{ margin: 0 }}>₹{(revenue?.totalRevenue || 0).toLocaleString()}</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Total Revenue</p>
+            <h2 style={{ margin: 0, fontWeight: 700 }}>₹{(revenue?.totalRevenue || 0).toLocaleString()}</h2>
           </div>
         </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+        {/* Completed */}
+        <div 
+          className="card" 
+          style={cardStyle}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={() => navigate('/f/rides')}
+        >
           <div style={{ background: '#ede9fe', color: '#5b21b6', padding: '12px', borderRadius: '12px' }}><CheckCircle size={22} /></div>
           <div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Completed</p>
-            <h2 style={{ margin: 0 }}>{completedCount}</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Completed</p>
+            <h2 style={{ margin: 0, fontWeight: 700 }}>{completedCount}</h2>
           </div>
         </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+        {/* Average Booking */}
+        <div 
+          className="card" 
+          style={cardStyle}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={() => navigate('/f/earnings')}
+        >
           <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px', borderRadius: '12px' }}><AlertCircle size={22} /></div>
           <div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Avg. Booking</p>
-            <h2 style={{ margin: 0 }}>₹{Math.round(revenue?.averageBookingValue || 0).toLocaleString()}</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Avg. Booking</p>
+            <h2 style={{ margin: 0, fontWeight: 700 }}>₹{Math.round(revenue?.averageBookingValue || 0).toLocaleString()}</h2>
           </div>
         </div>
+
       </div>
 
       {/* Recent Bookings */}
