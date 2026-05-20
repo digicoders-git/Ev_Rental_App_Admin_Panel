@@ -43,7 +43,7 @@ const Profile = () => {
           email: data.email || '',
           mobile: data.mobile || '',
           city: data.city || 'Bangalore',
-          bio: data.bio || 'Administrator of VoltRent EV platform.'
+          bio: data.bio || 'Administrator of EVRental EV platform.'
         });
       }
 

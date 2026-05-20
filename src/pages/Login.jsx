@@ -49,10 +49,10 @@ const Login = ({ setIsAuthenticated }) => {
         <div className="login-header-v2">
           <div className="login-logo-v2">
             <Zap size={28} fill="var(--primary)" stroke="var(--primary)" />
-            <span>Volt<span>Rent</span></span>
+            <span>EV<span>Rental</span></span>
           </div>
           <h2>{role === 'admin' ? 'Admin Login' : 'Franchise Login'}</h2>
-          <p>Access the VoltRent {role === 'admin' ? 'administrative dashboard' : 'franchise panel'}</p>
+          <p>Access the EVRental {role === 'admin' ? 'administrative dashboard' : 'franchise panel'}</p>
         </div>
 
         <div className="role-toggle-container" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
@@ -81,7 +81,7 @@ const Login = ({ setIsAuthenticated }) => {
               <Mail size={18} className="input-icon-v2" />
               <input 
                 type="email" 
-                placeholder={role === 'admin' ? "admin@voltrent.com" : "franchise@voltrent.com"}
+                placeholder={role === 'admin' ? "admin@evrental.com" : "franchise@evrental.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 

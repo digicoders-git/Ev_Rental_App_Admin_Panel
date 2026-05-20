@@ -66,7 +66,7 @@ const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
   };
 
   const userRole = localStorage.getItem('userRole') || 'admin';
-  let currentUser = { name: 'Admin User', email: 'admin@voltrent.com', role: 'Super Admin' };
+  let currentUser = { name: 'Admin User', email: 'admin@evrental.com', role: 'Super Admin' };
 
   if (userRole === 'franchise') {
     const data = JSON.parse(localStorage.getItem('userData') || '{}');
