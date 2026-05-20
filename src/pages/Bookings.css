@@ -781,3 +781,70 @@
 .bk-modal { max-width: 640px !important; width: 95vw !important; }
 .activity-modal { max-width: 520px !important; width: 95vw !important; }
 
+/* Symmetrical and Premium Mobile Responsiveness for Bookings Page */
+@media (max-width: 640px) {
+  .bk-toolbar {
+    padding: 1rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+  }
+
+  /* Make tab selectors scroll horizontally as elegant, rounded pills instead of wrapping */
+  .filter-tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important; /* Hide scrollbar for Firefox */
+    -ms-overflow-style: none !important;  /* Hide scrollbar for IE/Edge */
+    gap: 0.4rem !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0.2rem 0 !important;
+    width: 100% !important;
+  }
+
+  .filter-tabs::-webkit-scrollbar {
+    display: none !important; /* Hide scrollbar for Chrome/Safari/Opera */
+  }
+
+  .filter-tab {
+    flex: 0 0 auto !important; /* Prevent tabs from shrinking */
+    background: var(--surface) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: 20px !important; /* Beautiful rounded pills */
+    padding: 0.45rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .filter-tab.active {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: white !important;
+  }
+
+  /* Make filter options and search elements stack vertically full-width */
+  .bk-toolbar > div[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 0.75rem !important;
+  }
+
+  .bk-toolbar select {
+    width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+  }
+
+  .search-wrapper {
+    width: 100% !important;
+  }
+
+  .search-wrapper input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+  }
+}
+

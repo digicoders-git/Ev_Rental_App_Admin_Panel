@@ -106,7 +106,7 @@ const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
       </div>
 
       <div className="navbar-right">
-        <button className="nav-icon-btn" onClick={() => navigate('/notifications')}>
+        <button className="nav-icon-btn" onClick={() => navigate(userRole === 'franchise' ? '/f/notifications' : '/notifications')}>
           <Bell size={20} />
           {unreadCount > 0 && (
             <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>

@@ -50,6 +50,7 @@ export const updateStore    = (id, data) => api.put(`/franchise-enquiry/stores/$
 export const deleteStore    = (id)   => api.delete(`/franchise-enquiry/stores/${id}`);
 export const getFranchiseRevenue      = (params) => api.get('/franchise-enquiry/revenue', { params });
 export const getAdminFranchiseRevenue = (id, params) => api.get(`/franchise-enquiry/admin/revenue/${id}`, { params });
+export const getFranchiseHistory      = (id)   => api.get(`/franchise-enquiry/stores/${id}/history`);
 
 /* ── FRANCHISE OWNER (Self) ── */
 export const getMyFranchiseVehicles   = ()     => api.get('/vehicles/franchise/my');

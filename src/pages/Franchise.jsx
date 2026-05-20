@@ -3,14 +3,15 @@ import { createPortal } from 'react-dom';
 import { 
   Building2, Check, X, MapPin, Plus, Search, MoreVertical, TrendingUp,
   Users, Car, XCircle, CheckCircle, Eye, DollarSign, ArrowUpRight,
-  ArrowDownRight, KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle
+  ArrowDownRight, KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle,
+  History
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
 import { 
   getFranchiseEnquiries, getAllStores, createStore, deleteStore, getStoreById,
-  updateEnquiryStatus, getFranchisePerformance, getDashboardStats 
+  updateEnquiryStatus, getFranchisePerformance, getDashboardStats, getFranchiseHistory
 } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Franchise.css';
@@ -79,10 +80,22 @@ const Franchise = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showAllRequestsModal, setShowAllRequestsModal] = useState(false);
 
+  const [historyPartner, setHistoryPartner] = useState(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [activeHistoryTab, setActiveHistoryTab] = useState('overview');
+
   const openViewModal = (partner) => {
     call(() => getStoreById(partner._id), (res) => {
       setSelectedPartner(res.data); // res.data contains { store, assigned_vehicles }
       setShowViewModal(true);
+    });
+  };
+
+  const openHistoryModal = (partner) => {
+    setActiveHistoryTab('overview');
+    call(() => getFranchiseHistory(partner._id), (res) => {
+      setHistoryPartner(res.data);
+      setShowHistoryModal(true);
     });
   };
 
@@ -237,6 +250,7 @@ const Franchise = () => {
                   <td>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button className="btn-icon" title="View Profile" onClick={() => openViewModal(f)}><Eye size={16} /></button>
+                      <button className="btn-icon history" title="View History" onClick={() => openHistoryModal(f)} style={{ color: '#8b5cf6' }}><History size={16} /></button>
                       <button className="btn-icon delete" title="Delete Franchise" onClick={() => setDeleteId(f._id)} style={{ color: '#ef4444' }}><Trash2 size={16} /></button>
                     </div>
                   </td>
@@ -486,6 +500,385 @@ const Franchise = () => {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" style={{ width: '100%' }} onClick={() => setShowViewModal(false)}>Close Detail View</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── FRANCHISE HISTORY DETAIL MODAL ── */}
+      {showHistoryModal && historyPartner && createPortal(
+        <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
+          <div className="modal-content modal-xl" style={{ maxWidth: '1000px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="app-icon" style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <History size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '700', margin: 0, color: 'var(--text-main)' }}>
+                    {historyPartner.store?.store_name} History
+                  </h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                    Owner: <strong>{historyPartner.store?.owner_name}</strong> | ID: <span style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 600 }}>{historyPartner.store?.store_id}</span>
+                  </p>
+                </div>
+              </div>
+              <button className="btn-icon" onClick={() => setShowHistoryModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
+              
+              {/* Modal Tabs */}
+              <div style={{ display: 'flex', gap: '1rem', borderBottom: '2px solid var(--border)', marginBottom: '1.5rem', paddingBottom: '2px' }}>
+                <button 
+                  onClick={() => setActiveHistoryTab('overview')} 
+                  style={{
+                    padding: '0.5rem 1rem',
+                    border: 'none',
+                    background: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    color: activeHistoryTab === 'overview' ? '#8b5cf6' : 'var(--text-muted)',
+                    borderBottom: activeHistoryTab === 'overview' ? '3px solid #8b5cf6' : '3px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Overview & Stats
+                </button>
+                <button 
+                  onClick={() => setActiveHistoryTab('vehicles')} 
+                  style={{
+                    padding: '0.5rem 1rem',
+                    border: 'none',
+                    background: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    color: activeHistoryTab === 'vehicles' ? '#8b5cf6' : 'var(--text-muted)',
+                    borderBottom: activeHistoryTab === 'vehicles' ? '3px solid #8b5cf6' : '3px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Fleet (Vehicles)
+                </button>
+                <button 
+                  onClick={() => setActiveHistoryTab('bookings')} 
+                  style={{
+                    padding: '0.5rem 1rem',
+                    border: 'none',
+                    background: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    color: activeHistoryTab === 'bookings' ? '#8b5cf6' : 'var(--text-muted)',
+                    borderBottom: activeHistoryTab === 'bookings' ? '3px solid #8b5cf6' : '3px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Bookings Log
+                </button>
+              </div>
+
+              {/* TAB 1: OVERVIEW & STATS */}
+              {activeHistoryTab === 'overview' && (
+                <div className="fade-in">
+                  
+                  {/* Stats Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+                    
+                    {/* Revenue Card */}
+                    <div style={{ 
+                      padding: '1.25rem', 
+                      borderRadius: '16px', 
+                      background: 'linear-gradient(135deg, #10b981, #059669)', 
+                      color: 'white',
+                      boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Revenue</span>
+                        <DollarSign size={20} />
+                      </div>
+                      <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
+                        ₹{historyPartner.revenue?.totalPaid?.toLocaleString('en-IN') || 0}
+                      </h3>
+                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', opacity: 0.8 }}>
+                        Actual collected amount
+                      </p>
+                    </div>
+
+                    {/* Total Fleet Card */}
+                    <div style={{ 
+                      padding: '1.25rem', 
+                      borderRadius: '16px', 
+                      background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', 
+                      color: 'white',
+                      boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Fleet Size</span>
+                        <Car size={20} />
+                      </div>
+                      <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
+                        {historyPartner.vehicles?.total || 0} Units
+                      </h3>
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '8px', fontSize: '0.72rem', opacity: 0.9 }}>
+                        <span>Admin: <strong>{historyPartner.vehicles?.assigned || 0}</strong></span>
+                        <span>•</span>
+                        <span>Owned: <strong>{historyPartner.vehicles?.owned || 0}</strong></span>
+                      </div>
+                    </div>
+
+                    {/* Total Bookings Card */}
+                    <div style={{ 
+                      padding: '1.25rem', 
+                      borderRadius: '16px', 
+                      background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                      color: 'white',
+                      boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Bookings</span>
+                        <Users size={20} />
+                      </div>
+                      <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
+                        {historyPartner.bookings?.total || 0} Rides
+                      </h3>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', fontSize: '0.72rem', opacity: 0.9 }}>
+                        <span>Pending: <strong style={{ textDecoration: 'underline' }}>{historyPartner.bookings?.pending || 0}</strong></span>
+                        <span>•</span>
+                        <span>Completed: <strong>{historyPartner.bookings?.completed || 0}</strong></span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Split Visual Section */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1rem' }}>
+                    
+                    {/* Vehicle Ownership Details */}
+                    <div style={{ padding: '1.25rem', border: '1px solid var(--border)', borderRadius: '12px', background: '#f8fafc' }}>
+                      <h4 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Car size={18} color="#3b82f6" /> Vehicle Breakdown
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                          <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Admin Assigned Fleet</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{historyPartner.vehicles?.assigned || 0} Vehicles</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #e2e8f0' }}>
+                          <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Franchise Self-Owned Fleet</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{historyPartner.vehicles?.owned || 0} Vehicles</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '0.95rem', color: '#3b82f6', paddingTop: '0.2rem' }}>
+                          <span>Total Dynamic Fleet</span>
+                          <span>{historyPartner.vehicles?.total || 0} Vehicles</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Booking Stats Details */}
+                    <div style={{ padding: '1.25rem', border: '1px solid var(--border)', borderRadius: '12px', background: '#f8fafc' }}>
+                      <h4 style={{ margin: '0 0 1rem', fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Users size={18} color="#f59e0b" /> Bookings Summary
+                      </h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div style={{ background: 'white', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                          <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f59e0b', display: 'block' }}>
+                            {historyPartner.bookings?.pending || 0}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Pending</span>
+                        </div>
+                        <div style={{ background: 'white', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                          <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#10b981', display: 'block' }}>
+                            {historyPartner.bookings?.completed || 0}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Completed</span>
+                        </div>
+                        <div style={{ background: 'white', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                          <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#3b82f6', display: 'block' }}>
+                            {historyPartner.bookings?.ongoing || 0}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Ongoing</span>
+                        </div>
+                        <div style={{ background: 'white', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+                          <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ef4444', display: 'block' }}>
+                            {historyPartner.bookings?.cancelled || 0}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Cancelled</span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <div style={{ padding: '1rem', background: '#eff6ff', borderLeft: '4px solid #3b82f6', borderRadius: '6px', color: '#1e40af', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                    <strong>Note:</strong> Vehicles assigned by admin are dispatched from the central fleet to boost the franchise's availability. Self-owned fleet is onboarded independently by this franchise under the premium revenue share plan.
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAB 2: VEHICLES FLEET LIST */}
+              {activeHistoryTab === 'vehicles' && (
+                <div className="fade-in">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1rem' }}>Current Fleet Inventory ({historyPartner.vehicles?.list?.length || 0} Vehicles)</h4>
+                  </div>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Vehicle Name</th>
+                          <th>Reg. Number</th>
+                          <th>Source</th>
+                          <th>Price / Day</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(!historyPartner.vehicles?.list || historyPartner.vehicles.list.length === 0) ? (
+                          <tr>
+                            <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                              No vehicles in fleet yet.
+                            </td>
+                          </tr>
+                        ) : (
+                          historyPartner.vehicles.list.map((v) => (
+                            <tr key={v._id}>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <Car size={16} color="var(--primary)" />
+                                  <span style={{ fontWeight: 600 }}>{v.vehicle_name}</span>
+                                </div>
+                              </td>
+                              <td><span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.85rem' }}>{v.registration_number}</span></td>
+                              <td>
+                                <span style={{ 
+                                  padding: '0.2rem 0.5rem', 
+                                  borderRadius: '4px', 
+                                  fontSize: '0.7rem', 
+                                  fontWeight: 600,
+                                  textTransform: 'uppercase',
+                                  background: v.added_by_franchise ? '#faf5ff' : '#eff6ff',
+                                  color: v.added_by_franchise ? '#8b5cf6' : '#3b82f6',
+                                  border: v.added_by_franchise ? '1px solid #d8b4fe' : '1px solid #bfdbfe'
+                                }}>
+                                  {v.added_by_franchise ? 'Franchise Owned' : 'Admin Assigned'}
+                                </span>
+                              </td>
+                              <td style={{ fontWeight: 600 }}>₹{v.price_per_day || 0}/day</td>
+                              <td>
+                                <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.85rem' }}>
+                                  <span className="status-dot" style={{ 
+                                    background: v.status === 'active' ? '#10b981' : v.status === 'maintenance' ? '#ef4444' : '#f59e0b' 
+                                  }}></span> 
+                                  {v.status ? (v.status.charAt(0).toUpperCase() + v.status.slice(1)) : 'Active'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: BOOKINGS LOG */}
+              {activeHistoryTab === 'bookings' && (
+                <div className="fade-in">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1rem' }}>Recent Booking Transactions</h4>
+                  </div>
+                  <div className="table-container">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Booking ID</th>
+                          <th>Customer</th>
+                          <th>Vehicle</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                          <th>Payment</th>
+                          <th>Booking Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(!historyPartner.bookings?.recent || historyPartner.bookings.recent.length === 0) ? (
+                          <tr>
+                            <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                              No bookings found for this franchise.
+                            </td>
+                          </tr>
+                        ) : (
+                          historyPartner.bookings.recent.map((b) => (
+                            <tr key={b._id}>
+                              <td>
+                                <span style={{ fontWeight: 600, color: 'var(--primary)', fontFamily: 'monospace' }}>
+                                  {b.booking_id || 'N/A'}
+                                </span>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>{b.user?.name || 'N/A'}</span>
+                                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{b.user?.mobile || 'N/A'}</span>
+                                </div>
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{b.vehicle?.vehicle_name || 'N/A'}</span>
+                                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{b.vehicle?.registration_number || ''}</span>
+                                </div>
+                              </td>
+                              <td style={{ fontWeight: 700 }}>₹{(b.grand_total || 0).toLocaleString('en-IN')}</td>
+                              <td>
+                                <span className={`status-badge ${b.booking_status}`} style={{ 
+                                  padding: '0.2rem 0.5rem', 
+                                  borderRadius: '20px', 
+                                  fontSize: '0.7rem', 
+                                  fontWeight: '600',
+                                  textTransform: 'uppercase',
+                                  background: b.booking_status === 'completed' ? '#dcfce7' : b.booking_status === 'cancelled' ? '#fee2e2' : b.booking_status === 'ongoing' ? '#eff6ff' : '#fef9c3',
+                                  color: b.booking_status === 'completed' ? '#15803d' : b.booking_status === 'cancelled' ? '#b91c1c' : b.booking_status === 'ongoing' ? '#1d4ed8' : '#854d0e'
+                                }}>
+                                  {b.booking_status}
+                                </span>
+                              </td>
+                              <td>
+                                <span className={`status-badge ${b.payment_status}`} style={{ 
+                                  padding: '0.2rem 0.5rem', 
+                                  borderRadius: '20px', 
+                                  fontSize: '0.7rem', 
+                                  fontWeight: '600',
+                                  textTransform: 'uppercase',
+                                  background: b.payment_status === 'paid' ? '#dcfce7' : b.payment_status === 'pending' ? '#fef9c3' : '#fee2e2',
+                                  color: b.payment_status === 'paid' ? '#15803d' : b.payment_status === 'pending' ? '#854d0e' : '#b91c1c'
+                                }}>
+                                  {b.payment_status}
+                                </span>
+                              </td>
+                              <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                {new Date(b.createdAt).toLocaleDateString('en-IN')}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+            </div>
+            
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+              <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setShowHistoryModal(false)}>
+                Close History
+              </button>
             </div>
           </div>
         </div>,

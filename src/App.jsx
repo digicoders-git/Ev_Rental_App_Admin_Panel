@@ -22,6 +22,8 @@ import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 
+import AdminLayout from './pages/AdminLayout';
+
 // Franchise Panel Imports
 import FranchiseLayout from './pages/franchisePanel/FranchiseLayout';
 import FranchiseDashboard from './pages/franchisePanel/FDashboard';
@@ -95,6 +97,34 @@ function App() {
         </Route>
         <Route path="/f/*" element={<Navigate to="/f" />} />
         <Route path="*" element={<Navigate to="/f" />} />
+      </Routes>
+    );
+  }
+
+  if (userRole === 'admin' && isMobile) {
+    return (
+      <Routes>
+        <Route path="/" element={<AdminLayout setIsAuthenticated={setIsAuthenticated} />}>
+          <Route index element={<Dashboard />} />
+          <Route path="users" element={<Users />} />
+          <Route path="vehicles" element={<Vehicles />} />
+          <Route path="bookings" element={<Bookings />} />
+          <Route path="kyc" element={<KYC />} />
+          <Route path="plans" element={<RentalPlans />} />
+          <Route path="franchise" element={<Franchise />} />
+          <Route path="assign-ev" element={<AssignEV />} />
+          <Route path="documents" element={<Documents />} />
+          <Route path="revenue" element={<Revenue />} />
+          <Route path="coupons" element={<Coupons />} />
+          <Route path="complaints" element={<Complaints />} />
+          <Route path="content" element={<Content />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="payments" element={<Payments />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     );
   }

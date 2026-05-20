@@ -231,3 +231,84 @@
   border: 1px solid var(--primary);
   color: var(--primary);
 }
+
+/* Responsive adjustments for page headers and action buttons on mobile */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    width: 100% !important;
+  }
+  
+  .page-header h1 {
+    font-size: 1.5rem !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .page-header p {
+    font-size: 0.85rem !important;
+    margin: 0 !important;
+  }
+  
+  /* Stretches the buttons or the button wrapping div to 100% width */
+  .page-header > div:last-child:not(:first-child),
+  .page-header > button,
+  .page-header > .btn {
+    width: 100% !important;
+  }
+  
+  /* Arranges side-by-side buttons with symmetric layout split */
+  .page-header > div:last-child:not(:first-child) {
+    display: flex !important;
+    gap: 0.75rem !important;
+  }
+  
+  .page-header .btn, 
+  .page-header button {
+    flex: 1 !important;
+    justify-content: center !important;
+    font-size: 0.85rem !important;
+    padding: 0.625rem 1rem !important;
+    height: 42px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Premium mobile responsiveness overrides for modals */
+  .modal-overlay {
+    padding: 1rem 0.5rem !important;
+  }
+
+  .modal-content {
+    width: 94% !important;
+    max-width: 94% !important;
+    margin: auto !important;
+    max-height: 85vh !important;
+    border-radius: 12px !important;
+  }
+
+  .modal-header {
+    padding: 1rem !important;
+  }
+
+  .modal-body {
+    padding: 1.25rem 1rem !important;
+  }
+
+  .modal-footer {
+    padding: 1rem !important;
+  }
+
+  /* Overrides side-by-side grid column structures to stack vertically on mobile */
+  div[style*="1fr 1fr"],
+  .modal-body div[style*="grid-template-columns"],
+  .modal-body div[style*="gridTemplateColumns"],
+  .modal-body .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}

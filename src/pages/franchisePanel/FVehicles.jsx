@@ -131,7 +131,7 @@ const FVehicles = () => {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div className="card" style={{ textAlign: 'center' }}>
           <h2 style={{ color: 'var(--primary)' }}>{vehicles.length}</h2>
           <p style={{ margin: 0, fontSize: '0.85rem' }}>Total Fleet</p>

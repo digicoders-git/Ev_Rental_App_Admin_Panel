@@ -153,7 +153,7 @@ const FKYC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
           { label: 'Total Customers', value: customers.length, color: 'var(--primary)' },
           { label: 'KYC Approved', value: customers.filter(c => c.isKycVerified || c.kyc?.status === 'approved').length, color: '#10b981' },

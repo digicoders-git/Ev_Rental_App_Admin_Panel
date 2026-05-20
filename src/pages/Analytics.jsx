@@ -101,7 +101,7 @@ const Analytics = () => {
           <h1>Analytics & Reports</h1>
           <p>Complete overview of all platform data and performance metrics.</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div className="an-header-actions">
           <div className="an-period-tabs">
             {PERIODS.map(p => (
               <button key={p.value} className={`an-period-btn ${period.value === p.value ? 'active' : ''}`}

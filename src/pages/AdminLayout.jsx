@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Bike, CalendarDays, Wallet, User, LogOut, Bell, Menu, X } from 'lucide-react';
-import Sidebar from '../../components/Sidebar';
-import './FranchiseMobile.css';
+import { Home, Users, Car, CalendarCheck, User, LogOut, Bell, Menu, X } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
+import '../pages/franchisePanel/FranchiseMobile.css';
 
-const FranchiseLayout = ({ setIsAuthenticated }) => {
+const AdminLayout = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,40 +20,48 @@ const FranchiseLayout = ({ setIsAuthenticated }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userData');
+    localStorage.removeItem('adminUser');
     setIsAuthenticated(false);
     navigate('/login');
     setShowLogoutConfirm(false);
   };
 
   const navItems = [
-    { path: '/f', icon: <Home size={24} />, label: 'Home' },
-    { path: '/f/vehicles', icon: <Bike size={24} />, label: 'Vehicles' },
-    { path: '/f/rides', icon: <CalendarDays size={24} />, label: 'Rides' },
-    { path: '/f/earnings', icon: <Wallet size={24} />, label: 'Earnings' },
-    { path: '/f/profile', icon: <User size={24} />, label: 'Profile' }
+    { path: '/', icon: <Home size={24} />, label: 'Home' },
+    { path: '/users', icon: <Users size={24} />, label: 'Users' },
+    { path: '/vehicles', icon: <Car size={24} />, label: 'Vehicles' },
+    { path: '/bookings', icon: <CalendarCheck size={24} />, label: 'Bookings' },
+    { path: '/profile', icon: <User size={24} />, label: 'Profile' }
   ];
 
   const getHeaderTitle = () => {
     switch (location.pathname) {
-      case '/f': return 'Dashboard';
-      case '/f/vehicles': return 'My Vehicles';
-      case '/f/rides': return 'Ride Management';
-      case '/f/earnings': return 'Earnings';
-      case '/f/customers': return 'Customers';
-      case '/f/kyc': return 'KYC Status';
-      case '/f/dues': return 'Due Payments';
-      case '/f/reports': return 'Reports';
-      case '/f/notifications': return 'Notifications';
-      case '/f/complaints': return 'Complaints';
-      case '/f/profile': return 'Profile Settings';
-      default: return 'Franchise Panel';
+      case '/': return 'Dashboard';
+      case '/users': return 'User Management';
+      case '/vehicles': return 'Vehicles Fleet';
+      case '/bookings': return 'Bookings Management';
+      case '/kyc': return 'KYC Verification';
+      case '/plans': return 'Rental Plans';
+      case '/franchise': return 'Franchises';
+      case '/assign-ev': return 'Assign EVs';
+      case '/documents': return 'Documents';
+      case '/revenue': return 'Revenue Ledger';
+      case '/coupons': return 'Offers & Coupons';
+      case '/complaints': return 'User Complaints';
+      case '/content': return 'Content Management';
+      case '/analytics': return 'Business Analytics';
+      case '/payments': return 'Payments Records';
+      case '/notifications': return 'System Alerts';
+      case '/settings': return 'System Settings';
+      case '/profile': return 'Profile Settings';
+      default: return 'Admin Portal';
     }
   };
 
   return (
     <div className="mobile-app-container">
       {/* Dynamic responsive sidebar for mobile navigation */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} setIsAuthenticated={setIsAuthenticated} userRole="franchise" />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} setIsAuthenticated={setIsAuthenticated} userRole="admin" />
       {sidebarOpen && (
         <div 
           className="sidebar-overlay" 
@@ -82,7 +90,7 @@ const FranchiseLayout = ({ setIsAuthenticated }) => {
           </div>
         </div>
         <div className="mobile-header-actions">
-          <button className="icon-btn" onClick={() => navigate('/f/notifications')} title="Notifications"><Bell size={20} /></button>
+          <button className="icon-btn" onClick={() => navigate('/notifications')} title="Notifications"><Bell size={20} /></button>
           <button className="icon-btn" onClick={handleLogout} title="Logout"><LogOut size={20} /></button>
         </div>
       </div>
@@ -120,7 +128,7 @@ const FranchiseLayout = ({ setIsAuthenticated }) => {
                   <LogOut size={28} />
                 </div>
                 <p style={{ margin: '0 0 8px 0', fontSize: '0.95rem', color: '#444', fontWeight: 500 }}>Are you sure you want to <strong>Logout</strong>?</p>
-                <p className="delete-sub" style={{ margin: 0, fontSize: '0.8rem', color: '#777' }}>You will need to sign in again to access your franchise dashboard.</p>
+                <p className="delete-sub" style={{ margin: 0, fontSize: '0.8rem', color: '#777' }}>You will need to sign in again to access the admin portal.</p>
               </div>
             </div>
             <div className="modal-footer" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', borderTop: '1px solid #eee', paddingTop: '12px' }}>
@@ -137,4 +145,4 @@ const FranchiseLayout = ({ setIsAuthenticated }) => {
   );
 };
 
-export default FranchiseLayout;
+export default AdminLayout;
