@@ -60,9 +60,11 @@ function App() {
     setLoading(false);
   }, []);
 
-  // Register FCM token after authentication
+  // Register FCM token after authentication — only for admin role
   useEffect(() => {
     if (!isAuthenticated) return;
+    const userRole = localStorage.getItem('userRole') || 'admin';
+    if (userRole !== 'admin') return; // franchise ka FCM token login pe hi save hota hai
     const registerFcm = async () => {
       try {
         const fcmToken = await requestFcmToken();

@@ -17,9 +17,14 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('isAuthenticated');
-      window.location.href = '/login';
+      const userRole = localStorage.getItem('userRole');
+      // franchise token is validated by franchiseProtect middleware
+      // only logout if it's an admin token that failed
+      if (userRole === 'admin') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isAuthenticated');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }
