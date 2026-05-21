@@ -1,3 +1,58 @@
+/* ── Installment input shared styles ── */
+.inst-amount-field {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 34px;
+}
+
+.inst-prefix {
+  padding: 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border-right: 1px solid var(--border, #e2e8f0);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.inst-field-input {
+  border: none !important;
+  outline: none !important;
+  padding: 0 0.6rem !important;
+  font-size: 0.85rem !important;
+  height: 100%;
+  background: transparent;
+  color: #1e293b;
+}
+
+.inst-date-input {
+  padding: 0 0.6rem;
+  height: 34px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  background: #fff;
+  color: #1e293b;
+  outline: none;
+}
+
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 600; }
+.badge-success { background: #f0fdf4; color: #15803d; }
+.badge-warning { background: #fefce8; color: #b45309; }
+.badge-danger  { background: #fef2f2; color: #dc2626; }
+.badge-info    { background: #eff6ff; color: #2563eb; }
+.badge-secondary { background: #f1f5f9; color: #475569; }
+
+.btn-sm { padding: 0.35rem 0.85rem !important; font-size: 0.8rem !important; }
+
 /* Mobile-First Layout Styles */
 
 .mobile-app-container {

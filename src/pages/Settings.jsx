@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  Save, Shield, IndianRupee, Percent, Bell, Smartphone, 
+  Save, Shield, IndianRupee, Percent,
   User, Lock, Mail, Phone, Loader2, CheckCircle, AlertCircle
 } from 'lucide-react';
 import { 
@@ -22,13 +22,10 @@ const Settings = () => {
     auto_approve_franchise: false
   });
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving]   = useState(false);
-  const [msg, setMsg]         = useState({ type: '', text: '' });
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const [loading, setLoading]   = useState(true);
+  const [saving, setSaving]     = useState(false);
+  const [msg, setMsg]           = useState({ type: '', text: '' });
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
@@ -270,6 +267,8 @@ const Settings = () => {
               </button>
             </div>
           </div>
+
+          {/* Push Notifications section removed - FCM token is now saved automatically at login */}
         </div>
       </div>
     </div>

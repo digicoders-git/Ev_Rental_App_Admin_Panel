@@ -4,9 +4,10 @@ import {
   Calendar, Search, Eye, CheckCircle, XCircle, Clock,
   Car, User, MapPin, CreditCard, X, Download,
   IndianRupee, Ban, CircleCheck, Activity,
-  Navigation, PackageCheck, Hourglass, TrendingUp, Loader, AlertTriangle
+  Navigation, PackageCheck, Hourglass, TrendingUp, Loader, AlertTriangle,
+  Plus, Trash2, CalendarDays, CheckCircle2, AlertOctagon
 } from 'lucide-react';
-import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores } from '../services/apiServices';
+import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Bookings.css';
 
@@ -53,6 +54,11 @@ const Bookings = () => {
   
   const [stores, setStores] = useState([]);
   const [selectedFranchise, setSelectedFranchise] = useState('All');
+  const [showInstallSetup, setShowInstallSetup] = useState(false);
+  const [installRows, setInstallRows] = useState([{ amount: '', due_date: '' }]);
+  const [showDamageModal, setShowDamageModal] = useState(false);
+  const [damageForm, setDamageForm] = useState({ description: '', amount: '' });
+  const [damageBookingId, setDamageBookingId] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -92,6 +98,7 @@ const Bookings = () => {
         payment_status: b.payment_status || 'pending',
         paid: b.payment_status === 'paid',
         pickup: b.pickup_location || 'Hub Pickup',
+        next_installment: b.next_installment || null,
         raw: b
       }));
       setBookings(list);
@@ -171,6 +178,53 @@ const Bookings = () => {
       (err) => {
         alert(`Failed to record payment: ${err}`);
       }
+    );
+  };
+
+  const handleSetupInstallments = () => {
+    const valid = installRows.every(r => r.amount && r.due_date);
+    if (!valid) return alert('Fill all installment amounts and due dates');
+    call(
+      () => setupInstallments(selected.raw._id, installRows.map(r => ({ amount: parseFloat(r.amount), due_date: r.due_date }))),
+      (res) => {
+        fetchBookings();
+        setShowInstallSetup(false);
+        setInstallRows([{ amount: '', due_date: '' }]);
+        setSelected(prev => ({ ...prev, raw: { ...prev.raw, payment_installments: res.data.data } }));
+        alert('Installment schedule saved!');
+      },
+      (err) => alert(`Failed: ${err}`)
+    );
+  };
+
+  const handlePayInstallment = (instId) => {
+    call(
+      () => payInstallment(selected.raw._id, instId, {}),
+      () => {
+        fetchBookings();
+        alert('Installment marked as paid!');
+        setSelected(null);
+      },
+      (err) => alert(`Failed: ${err}`)
+    );
+  };
+
+  const addInstallRow = () => setInstallRows(r => [...r, { amount: '', due_date: '' }]);
+  const removeInstallRow = (i) => setInstallRows(r => r.filter((_, idx) => idx !== i));
+  const updateInstallRow = (i, field, val) => setInstallRows(r => r.map((row, idx) => idx === i ? { ...row, [field]: val } : row));
+
+  const handleAddDamageCharge = () => {
+    if (!damageForm.description.trim() || !damageForm.amount || Number(damageForm.amount) <= 0)
+      return alert('Description aur valid amount dono required hain');
+    call(
+      () => addDamageCharge(damageBookingId, { description: damageForm.description.trim(), amount: Number(damageForm.amount) }),
+      () => {
+        fetchBookings();
+        setShowDamageModal(false);
+        setDamageForm({ description: '', amount: '' });
+        setDamageBookingId(null);
+      },
+      (err) => alert(`Failed: ${err}`)
     );
   };
 
@@ -396,6 +450,7 @@ const Bookings = () => {
                 <th>Total</th>
                 <th>Paid</th>
                 <th>Due</th>
+                <th>Extra Charges</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -436,6 +491,27 @@ const Bookings = () => {
                     <td><span className="text-success" style={{ fontWeight: 600 }}>₹{b.total_paid.toLocaleString()}</span></td>
                     <td><span className={b.due_amount > 0 ? "text-danger" : "text-success"} style={{ fontWeight: 600 }}>₹{b.due_amount.toLocaleString()}</span></td>
                     <td>
+                      {b.raw?.damage_charges?.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          <span style={{ fontWeight: 700, color: '#f59e0b', fontSize: '0.85rem' }}>
+                            ₹{b.raw.damage_charges.reduce((s, c) => s + c.amount, 0).toLocaleString()}
+                          </span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                            {b.raw.damage_charges.length} charge{b.raw.damage_charges.length > 1 ? 's' : ''}
+                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '2px' }}>
+                            {b.raw.damage_charges.map((ch, i) => (
+                              <span key={i} style={{ fontSize: '0.68rem', color: '#92400e', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '4px', padding: '1px 5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '130px', display: 'block' }}>
+                                ₹{ch.amount.toLocaleString()} — {ch.description}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>
+                      )}
+                    </td>
+                    <td>
                       <div className="bk-status-stack">
                         <span className={`badge badge-icon ${STATUS_CONFIG[b.status].cls}`}>
                           {STATUS_CONFIG[b.status].icon} {b.status}
@@ -468,6 +544,10 @@ const Bookings = () => {
                             <Ban size={15} />
                           </button>
                         )}
+                        <button className="btn-icon" title="Add Extra Charge" style={{ color: '#f59e0b' }}
+                          onClick={() => { setDamageBookingId(b.id); setDamageForm({ description: '', amount: '' }); setShowDamageModal(true); }}>
+                          <AlertOctagon size={15} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -578,32 +658,156 @@ const Bookings = () => {
                       </span>
                     </div>
                   </div>
+                  {selected.amount > 0 && (
+                    <div style={{ marginTop: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                        <span>Payment Progress</span>
+                        <span>{Math.round((selected.total_paid / selected.amount) * 100)}%</span>
+                      </div>
+                      <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', borderRadius: '4px', background: selected.total_paid >= selected.amount ? '#10b981' : '#3b82f6', width: `${Math.min(100, Math.round((selected.total_paid / selected.amount) * 100))}%`, transition: 'width 0.3s' }} />
+                      </div>
+                    </div>
+                  )}
+                  {selected.next_installment && (
+                    <div style={{ marginTop: '0.75rem', padding: '0.6rem 0.75rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px' }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: '#92400e', marginBottom: '0.3rem', letterSpacing: '0.04em' }}>Next Payment Due</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}>₹{selected.next_installment.amount.toLocaleString()}</span>
+                        <span style={{ fontSize: '0.78rem', color: selected.next_installment.status === 'overdue' ? '#ef4444' : '#92400e', fontWeight: 600 }}>
+                          {new Date(selected.next_installment.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {selected.next_installment.status === 'overdue' && ' ⚠ Overdue'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
               </div>
+
+              {/* Installment Schedule */}
+              {selected.due_amount > 0 && (
+                <div className="inst-section">
+                  <div className="inst-section-header">
+                    <div className="bk-detail-section-title" style={{ marginBottom: 0 }}><CalendarDays size={13} /> Installment Schedule</div>
+                    <button className="btn btn-outline btn-sm" onClick={() => { setShowInstallSetup(s => !s); setInstallRows([{ amount: '', due_date: '' }]); }}>
+                      <Plus size={13} /> {showInstallSetup ? 'Cancel' : 'Setup'}
+                    </button>
+                  </div>
+
+                  {showInstallSetup && (
+                    <div className="inst-setup-box">
+                      <p className="inst-hint">Due: ₹{selected.due_amount.toLocaleString()} — split into installments below</p>
+                      {installRows.map((row, i) => (
+                        <div key={i} className="inst-row">
+                          <span className="inst-no">#{i + 1}</span>
+                          <div className="inst-amount-field">
+                            <span className="inst-prefix">₹</span>
+                            <input type="number" placeholder="Amount" value={row.amount}
+                              onChange={e => updateInstallRow(i, 'amount', e.target.value)}
+                              className="inst-field-input" />
+                          </div>
+                          <input type="date" value={row.due_date}
+                            onChange={e => updateInstallRow(i, 'due_date', e.target.value)}
+                            className="inst-date-input" />
+                          {installRows.length > 1 && (
+                            <button className="btn-icon" onClick={() => removeInstallRow(i)}><Trash2 size={13} /></button>
+                          )}
+                        </div>
+                      ))}
+                      <div className="inst-setup-actions">
+                        <button className="btn btn-outline btn-sm" onClick={addInstallRow}><Plus size={13} /> Add Row</button>
+                        <button className="btn btn-primary btn-sm" onClick={handleSetupInstallments}>Save Schedule</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!showInstallSetup && selected.raw?.payment_installments?.length > 0 && (
+                    <div className="inst-list">
+                      {selected.raw.payment_installments.map((inst) => (
+                        <div key={inst._id} className={`inst-item inst-${inst.status}`}>
+                          <div className="inst-item-left">
+                            <span className="inst-no">#{inst.installment_no}</span>
+                            <div>
+                              <span className="inst-amount">₹{inst.amount.toLocaleString()}</span>
+                              <span className="inst-date">Due: {new Date(inst.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            </div>
+                          </div>
+                          <div className="inst-item-right">
+                            <span className={`badge badge-icon ${ inst.status === 'paid' ? 'badge-success' : inst.status === 'overdue' ? 'badge-danger' : 'badge-warning' }`}>
+                              {inst.status === 'paid' ? <CheckCircle2 size={11} /> : <Clock size={11} />} {inst.status}
+                            </span>
+                            {inst.status !== 'paid' && (
+                              <button className="btn btn-primary btn-sm" onClick={() => handlePayInstallment(inst._id)}>Mark Paid</button>
+                            )}
+                            {inst.status === 'paid' && inst.paid_date && (
+                              <span className="inst-paid-date">Paid {new Date(inst.paid_date).toLocaleDateString('en-IN')}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!showInstallSetup && (!selected.raw?.payment_installments || selected.raw.payment_installments.length === 0) && (
+                    <p className="inst-empty">No installment schedule set. Click Setup to create one.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Damage / Extra Charges History */}
+              {selected.raw?.damage_charges?.length > 0 && (
+                <div className="inst-section" style={{ marginTop: '1rem' }}>
+                  <div className="inst-section-header">
+                    <div className="bk-detail-section-title" style={{ marginBottom: 0, color: '#ef4444' }}>
+                      <AlertOctagon size={13} /> Extra / Damage Charges
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 700 }}>
+                      Total: ₹{selected.raw.damage_charges.reduce((s, c) => s + c.amount, 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="inst-list">
+                    {selected.raw.damage_charges.map((ch, i) => (
+                      <div key={i} className="inst-item" style={{ background: '#fff7ed' }}>
+                        <div className="inst-item-left">
+                          <AlertOctagon size={14} color="#f59e0b" />
+                          <div>
+                            <span className="inst-amount" style={{ color: '#92400e' }}>₹{Number(ch.amount).toLocaleString()}</span>
+                            <span className="inst-date">{ch.description}</span>
+                          </div>
+                        </div>
+                        <div className="inst-item-right">
+                          <span style={{ fontSize: '0.72rem', color: '#92400e', fontWeight: 600, textTransform: 'uppercase', background: '#fed7aa', padding: '2px 8px', borderRadius: '10px' }}>{ch.added_by}</span>
+                          <span className="inst-date">{new Date(ch.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer Actions */}
             <div className="modal-footer bk-modal-footer">
               <div className="footer-left">
                 {selected.due_amount > 0 && (
-                  <div className="installment-box">
-                    <div className="installment-input">
-                      <IndianRupee size={14} className="input-icon" />
-                      <input 
-                        type="number" 
-                        placeholder="Pay Installment" 
+                  <div className="quick-pay-box">
+                    <div className="inst-amount-field">
+                      <span className="inst-prefix">₹</span>
+                      <input
+                        type="number"
+                        placeholder="Enter amount"
                         value={installmentAmount}
                         onChange={(e) => setInstallmentAmount(e.target.value)}
-                        className="amount-input"
+                        className="inst-field-input"
                       />
                     </div>
-                    <button className="btn btn-primary btn-sm" 
+                    <button className="btn btn-primary btn-sm"
                       onClick={() => handlePayment(selected.id, installmentAmount)}
                       disabled={!installmentAmount || loading}>
                       Record
                     </button>
-                    <button className="btn btn-outline btn-sm" 
+                    <button className="btn btn-outline btn-sm"
                       onClick={() => handlePayment(selected.id)}
                       disabled={loading}>
                       Pay All
@@ -637,6 +841,7 @@ const Bookings = () => {
                     </button>
                   </>
                 )}
+                <button className="btn btn-outline" onClick={() => { setSelected(null); setShowInstallSetup(false); }}>Close</button>
               </div>
             </div>
           </div>
@@ -737,6 +942,67 @@ const Bookings = () => {
                 disabled={loading}
               >
                 {loading ? <Loader size={16} className="spinner" /> : `Yes, ${confirmAction.label}`}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* ── DAMAGE / EXTRA CHARGE MODAL ── */}
+      {showDamageModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowDamageModal(false)}>
+          <div className="modal-content delete-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <AlertOctagon size={18} color="#f59e0b" />
+                <h3 style={{ margin: 0 }}>Add Extra / Damage Charge</h3>
+              </div>
+              <button className="btn-icon" onClick={() => setShowDamageModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.82rem', color: '#92400e' }}>
+                <strong>Booking:</strong> {bookings.find(b => b.id === damageBookingId)?.bookingId} &nbsp;|&nbsp;
+                <strong>Customer:</strong> {bookings.find(b => b.id === damageBookingId)?.user}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>Reason / Description *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Vehicle crash damage, Broken mirror, Tyre puncture..."
+                    value={damageForm.description}
+                    onChange={e => setDamageForm(f => ({ ...f, description: e.target.value }))}
+                    style={{ width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--bg)', color: 'var(--text)', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem' }}>Charge Amount (₹) *</label>
+                  <div className="inst-amount-field" style={{ width: '100%' }}>
+                    <span className="inst-prefix">₹</span>
+                    <input
+                      type="number"
+                      placeholder="Enter amount"
+                      value={damageForm.amount}
+                      onChange={e => setDamageForm(f => ({ ...f, amount: e.target.value }))}
+                      className="inst-field-input"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                </div>
+                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '0.65rem 0.85rem', fontSize: '0.78rem', color: '#dc2626' }}>
+                  ⚠ This amount will be <strong>added to the booking's grand total</strong> and user will owe this extra amount.
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setShowDamageModal(false)}>Cancel</button>
+              <button
+                className="btn btn-primary"
+                style={{ background: '#f59e0b', borderColor: '#f59e0b' }}
+                onClick={handleAddDamageCharge}
+                disabled={loading}
+              >
+                {loading ? <Loader size={15} className="spinner" /> : <><AlertOctagon size={15} /> Add Charge</>}
               </button>
             </div>
           </div>

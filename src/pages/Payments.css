@@ -289,6 +289,7 @@
 .badge-success { background: #f0fdf4; color: #15803d; }
 .badge-warning { background: #fefce8; color: #b45309; }
 .badge-danger  { background: #fef2f2; color: #dc2626; }
+.badge-info    { background: #eff6ff; color: #2563eb; }
 
 /* Actions */
 .pay-actions { display: flex; gap: 0.35rem; align-items: center; }
@@ -356,7 +357,7 @@
 .page-num-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: 700; }
 
 /* ── Modals ── */
-.pay-modal           { max-width: 520px !important; width: 95vw !important; }
+.pay-modal           { max-width: 620px !important; width: 95vw !important; }
 .refund-confirm-modal{ max-width: 400px !important; width: 92vw !important; }
 .payouts-modal       { max-width: 640px !important; width: 95vw !important; }
 
@@ -501,17 +502,11 @@
 .payouts-table-wrap tbody tr:last-child td { border-bottom: none; }
 .payouts-table-wrap tbody tr:hover td { background: var(--surface); }
 
-
-/* Page specific modal tweaks */
-.pay-modal           { max-width: 520px !important; width: 95vw !important; }
-.refund-confirm-modal{ max-width: 400px !important; width: 92vw !important; }
-.payouts-modal       { max-width: 640px !important; width: 95vw !important; }
-
 .pay-amount-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .pay-hero-item {
@@ -524,8 +519,8 @@
 }
 
 .pay-hero-item.total { border-left: 4px solid #3b82f6; }
-.pay-hero-item.paid { border-left: 4px solid #10b981; }
-.pay-hero-item.due { border-left: 4px solid #ef4444; }
+.pay-hero-item.paid  { border-left: 4px solid #10b981; }
+.pay-hero-item.due   { border-left: 4px solid #ef4444; }
 
 .pay-hero-item .hero-label {
   font-size: 0.75rem;
@@ -546,43 +541,182 @@
   padding: 1.25rem 1.5rem;
 }
 
-.installment-box {
+.installment-box,
+.quick-pay-box {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   background: #f8fafc;
-  padding: 0.4rem;
-  border-radius: var(--radius-sm);
+  padding: 0.35rem;
+  border-radius: 8px;
   border: 1px solid var(--border);
 }
 
-.installment-input {
-  position: relative;
+.inst-amount-field {
   display: flex;
   align-items: center;
-  background: white;
+  background: #fff;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 34px;
+}
+
+.inst-prefix {
   padding: 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border-right: 1px solid var(--border);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  user-select: none;
 }
 
-.installment-input .input-icon {
-  color: #94a3b8;
-}
-
-.amount-input {
+.inst-field-input {
   border: none !important;
-  width: 100px !important;
-  padding: 0.4rem 0.25rem !important;
-  font-size: 0.85rem !important;
   outline: none !important;
+  padding: 0 0.6rem !important;
+  font-size: 0.85rem !important;
+  width: 100px;
+  height: 100%;
+  background: transparent;
+  color: var(--text);
 }
 
 .text-success { color: #10b981; }
-.text-danger { color: #ef4444; }
+.text-danger  { color: #ef4444; }
+
+/* ── Installment Schedule ── */
+.inst-section {
+  margin-top: 1.25rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.inst-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.inst-setup-box {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.inst-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.inst-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inst-row .inst-amount-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.inst-row .inst-field-input {
+  width: 100%;
+}
+
+.inst-no {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 24px;
+}
+
+.inst-date-input {
+  padding: 0 0.6rem;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  background: var(--bg);
+  color: var(--text);
+  flex: 1.2;
+  outline: none;
+  min-width: 0;
+}
+
+.inst-setup-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.inst-list { display: flex; flex-direction: column; }
+
+.inst-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-light);
+  gap: 0.5rem;
+}
+
+.inst-item:last-child { border-bottom: none; }
+.inst-item.inst-paid    { background: #f0fdf4; }
+.inst-item.inst-overdue { background: #fef2f2; }
+
+.inst-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.inst-item-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.inst-amount {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.inst-date {
+  display: block;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+}
+
+.inst-paid-date {
+  font-size: 0.72rem;
+  color: #10b981;
+  font-weight: 500;
+}
+
+.inst-empty {
+  padding: 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0;
+}
 
 @media (max-width: 640px) {
-  .pay-amount-grid {
-    grid-template-columns: 1fr;
-  }
+  .pay-amount-grid { grid-template-columns: 1fr; }
 }

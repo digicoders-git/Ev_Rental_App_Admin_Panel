@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { requestFcmToken, onForegroundMessage } from './services/firebaseMessaging';
+import api from './services/api';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
@@ -57,6 +59,27 @@ function App() {
     }
     setLoading(false);
   }, []);
+
+  // Register FCM token after authentication
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const registerFcm = async () => {
+      try {
+        const fcmToken = await requestFcmToken();
+        if (fcmToken) {
+          await api.post('/user/fcm-token', { fcm_token: fcmToken });
+        }
+      } catch (e) {
+        // silently fail — notifications are optional
+      }
+    };
+    registerFcm();
+    // Listen for foreground messages
+    const unsub = onForegroundMessage((payload) => {
+      console.log('Foreground notification:', payload);
+    });
+    return () => unsub && unsub();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);

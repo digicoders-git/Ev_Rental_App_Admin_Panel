@@ -55,6 +55,7 @@ export const getFranchiseHistory      = (id)   => api.get(`/franchise-enquiry/st
 /* ── FRANCHISE OWNER (Self) ── */
 export const getMyFranchiseVehicles   = ()     => api.get('/vehicles/franchise/my');
 export const createFranchiseVehicle   = (data) => api.post('/vehicles/franchise/create', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateFranchiseVehicle   = (id, data) => api.put(`/vehicles/franchise/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getFranchiseProfile      = ()     => api.get('/franchise-enquiry/profile');
 export const updateFranchiseProfile   = (data) => api.put('/franchise-enquiry/profile', data);
 export const changeFranchisePassword  = (data) => api.put('/franchise-enquiry/change-password', data);
@@ -86,6 +87,9 @@ export const getFranchiseBookings = ()      => api.get('/bookings/franchise/my')
 export const getMyDues       = ()       => api.get('/bookings/dues/my');
 export const getDuesByMobile = (mobile) => api.get('/bookings/admin/dues', { params: { mobile } });
 export const payManual       = (id, data) => api.post(`/bookings/${id}/pay-manual`, data);
+export const setupInstallments = (id, installments) => api.post(`/bookings/${id}/installments/setup`, { installments });
+export const payInstallment    = (id, instId, data) => api.post(`/bookings/${id}/installments/${instId}/pay`, data);
+export const addDamageCharge   = (id, data) => api.post(`/bookings/${id}/damage-charge`, data);
 
 /* ── KYC ── */
 export const submitKyc      = (data) => api.post('/kyc/submit', data, { headers: { 'Content-Type': 'multipart/form-data' } });
