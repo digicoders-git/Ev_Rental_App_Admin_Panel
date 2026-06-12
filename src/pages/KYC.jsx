@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Check, X, Eye, User, Calendar, Hash, MapPin,
   ShieldCheck, Clock, Search, Filter, FileText,
-  CheckCircle, XCircle, AlertCircle, AlertTriangle
+  CheckCircle, XCircle, AlertCircle, AlertTriangle, Loader2
 } from 'lucide-react';
 import { getAllKyc, updateKycStatus } from '../services/apiServices';
 import useApi from '../services/useApi';
@@ -105,12 +105,11 @@ const KYC = () => {
   };
 
   const getImageUrl = (path) => {
-    if (!path) return '';
+    if (!path || path.trim() === '') return null;
     if (path.startsWith('http')) return path;
     const baseUrl = 'http://localhost:5000';
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
-    const finalUrl = `${baseUrl}/${cleanPath}`;
-    return encodeURI(finalUrl);
+    return encodeURI(`${baseUrl}/${cleanPath}`);
   };
 
   const pending  = data.filter((r) => r.status === 'pending').length;
