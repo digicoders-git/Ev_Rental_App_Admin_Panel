@@ -47,12 +47,14 @@ const Login = ({ setIsAuthenticated }) => {
     <div className="login-page-v2">
       <div className="login-card-v2 fade-in">
         <div className="login-header-v2">
-          <div className="login-logo-v2">
-            <Zap size={28} fill="var(--primary)" stroke="var(--primary)" />
-            <span>EV<span>Rental</span></span>
+          <div className="login-logo-v2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/logo.png" alt="EcoRide" style={{ width: 40, height: 40, objectFit: 'contain', borderRadius: '4px' }} 
+                 onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+            <Zap size={28} fill="var(--primary)" stroke="var(--primary)" style={{ display: 'none' }} />
+            <span>Eco<span>Ride</span></span>
           </div>
           <h2>{role === 'admin' ? 'Admin Login' : 'Franchise Login'}</h2>
-          <p>Access the EVRental {role === 'admin' ? 'administrative dashboard' : 'franchise panel'}</p>
+          <p>Access the EcoRide {role === 'admin' ? 'administrative dashboard' : 'franchise panel'}</p>
         </div>
 
         <div className="role-toggle-container" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>

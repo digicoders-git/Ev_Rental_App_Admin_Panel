@@ -14,6 +14,7 @@ import {
   createCategory, 
   deleteCategory 
 } from '../../services/apiServices';
+import { io } from 'socket.io-client';
 
 const emptyForm = {
   brand: '',
@@ -40,7 +41,7 @@ const FVehicles = () => {
   const [editVehicle, setEditVehicle] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [form, setForm] = useState(emptyForm);
-  const [catForm, setCatForm] = useState({ name: '', description: '' });
+  const [catForm, setCatForm] = useState({ name: '', description: '', file: null });
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const { loading, call } = useApi();
@@ -48,6 +49,20 @@ const FVehicles = () => {
   useEffect(() => { 
     fetchVehicles(); 
     fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+    const socket = io(BASE_URL);
+
+    socket.on('admin_data_changed', () => {
+      fetchVehicles();
+      fetchCategories();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const fetchVehicles = () => {
@@ -418,19 +433,31 @@ const FVehicles = () => {
             </div>
             <div className="modal-body">
               <div className="cat-manage-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div className="cat-add-box" style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className="cat-add-box" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                   <input 
                     type="text" 
                     placeholder="Category Name (e.g. Scooters)" 
                     value={catForm.name}
                     onChange={(e) => setCatForm({...catForm, name: e.target.value})}
-                    style={{ flex: 1, padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }}
+                    style={{ flex: 1, padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px', minWidth: '150px' }}
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => { const file = e.target.files[0]; if(file) setCatForm({...catForm, file}) }}
+                    style={{ flex: 1, padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '6px', minWidth: '150px', fontSize: '0.8rem' }}
                   />
                   <button className="btn btn-primary" onClick={() => {
                     if (!catForm.name.trim()) return;
-                    call(() => createCategory(catForm), 
+                    
+                    const fd = new FormData();
+                    fd.append('name', catForm.name);
+                    if (catForm.description) fd.append('description', catForm.description);
+                    if (catForm.file) fd.append('image', catForm.file);
+
+                    call(() => createCategory(fd), 
                       () => {
-                        setCatForm({ name: '', description: '' });
+                        setCatForm({ name: '', description: '', file: null });
                         fetchCategories();
                         alert('Category added successfully!');
                       }, 

@@ -238,7 +238,7 @@ const Bookings = () => {
       <div className="page-header">
         <div>
           <h1>Booking Management</h1>
-          <p>Monitor and manage all EV rental bookings.</p>
+          <p>Monitor and manage all EcoRide bookings.</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button className="btn btn-outline" onClick={() => setShowActivity(true)}>

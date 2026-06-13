@@ -6,7 +6,7 @@ import {
   Mail, Clock,
   Lock, EyeOff, Users as UsersIcon, UserCheck, UserX, Ban, Loader2
 } from 'lucide-react';
-import { getAllUsers, addRider, updateUser, deleteUser } from '../services/apiServices';
+import { getAllUsers, addRider, updateUser, deleteUser, addWalletFunds, deductWalletFunds } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Users.css';
 
@@ -35,6 +35,8 @@ const Users = () => {
   const [form, setForm]           = useState(emptyForm);
   const [showPwd, setShowPwd]     = useState(false);
   const [showCPwd, setShowCPwd]   = useState(false);
+  const [walletUser, setWalletUser] = useState(null);
+  const [walletForm, setWalletForm] = useState({ amount: '', description: '', action: 'add' });
   const { loading, error, call }  = useApi();
 
   /* ── fetch users ── */
@@ -56,6 +58,7 @@ const Users = () => {
             joined: new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
             totalRides: u.totalRides || 0,
             totalSpent: u.totalSpent || 0,
+            walletBalance: u.wallet_balance || 0,
           }));
         setUsers(mapped);
       }
@@ -137,6 +140,21 @@ const Users = () => {
   };
 
   const initials = (name) => (name || 'U').split(' ').map((n) => n ? n[0] : '').join('').slice(0, 2).toUpperCase();
+
+  /* ── manage wallet ── */
+  const handleWalletSubmit = () => {
+    if (!walletForm.amount || walletForm.amount <= 0) return;
+    const apiCall = walletForm.action === 'add' ? addWalletFunds : deductWalletFunds;
+    call(
+      () => apiCall({ userId: walletUser.id, amount: Number(walletForm.amount), description: walletForm.description }),
+      () => {
+        setWalletUser(null);
+        setWalletForm({ amount: '', description: '', action: 'add' });
+        fetchUsers();
+      },
+      (err) => alert(err || 'Wallet update failed')
+    );
+  };
 
   return (
     <div className="users-page">
@@ -221,6 +239,7 @@ const Users = () => {
                 <th>Phone</th>
                 <th>City</th>
                 <th>KYC</th>
+                <th>Wallet</th>
                 <th>Total Rides</th>
                 <th>Total Spent</th>
                 <th>Joined</th>
@@ -261,6 +280,7 @@ const Users = () => {
                         {KYC_CONFIG[u.kyc].icon} {u.kyc}
                       </span>
                     </td>
+                    <td><span className="usr-spent" style={{ color: '#10b981', fontWeight: 600 }}>₹{u.walletBalance.toLocaleString()}</span></td>
                     <td className="cell-main" style={{ textAlign: 'center' }}>{u.totalRides}</td>
                     <td><span className="usr-spent">₹{u.totalSpent.toLocaleString()}</span></td>
                     <td className="td-muted">{u.joined}</td>
@@ -274,6 +294,9 @@ const Users = () => {
                       <div className="usr-actions">
                         <button className="btn-icon" title="View Details" onClick={() => setViewUser(u)}>
                           <Eye size={15} />
+                        </button>
+                        <button className="btn-icon" title="Manage Wallet" style={{ color: '#10b981' }} onClick={() => setWalletUser(u)}>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold' }}>₹</span>
                         </button>
                         <button
                           className={`btn-icon ${u.status === 'Active' ? 'block' : 'unblock'}`}
@@ -355,6 +378,7 @@ const Users = () => {
                         {KYC_CONFIG[viewUser.kyc].icon} {viewUser.kyc}
                       </span>
                     </div>
+                    <div className="usr-detail-row"><span>Wallet Balance</span><span className="usr-spent" style={{ color: '#10b981' }}>₹{viewUser.walletBalance.toLocaleString()}</span></div>
                     <div className="usr-detail-row"><span>Total Rides</span><span>{viewUser.totalRides}</span></div>
                     <div className="usr-detail-row"><span>Total Spent</span><span className="usr-spent">₹{viewUser.totalSpent.toLocaleString()}</span></div>
                   </div>
@@ -486,6 +510,47 @@ const Users = () => {
               <button className="btn btn-outline" onClick={() => setDeleteId(null)} disabled={loading}>Cancel</button>
               <button className="btn btn-danger" onClick={() => handleDelete(deleteId)} disabled={loading}>
                 {loading ? <Loader2 size={16} className="spinner" /> : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {walletUser && createPortal(
+        <div className="modal-overlay" onClick={() => setWalletUser(null)}>
+          <div className="modal-content usr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Manage Wallet - {walletUser.name}</h3>
+              <button className="btn-icon" onClick={() => setWalletUser(null)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div style={{ padding: '1rem', background: '#ecfdf5', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #d1fae5', textAlign: 'center' }}>
+                <span style={{ display: 'block', fontSize: '0.85rem', color: '#047857', marginBottom: '4px' }}>Current Balance</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#065f46' }}>₹{walletUser.walletBalance.toLocaleString()}</span>
+              </div>
+              <form className="user-form">
+                <div className="form-group">
+                  <label>Action</label>
+                  <select value={walletForm.action} onChange={e => setWalletForm({...walletForm, action: e.target.value})}>
+                    <option value="add">Add Funds</option>
+                    <option value="deduct">Deduct Funds</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Amount (₹) *</label>
+                  <input type="number" placeholder="Enter amount" value={walletForm.amount} onChange={e => setWalletForm({...walletForm, amount: e.target.value})} min="1" />
+                </div>
+                <div className="form-group">
+                  <label>Description (Optional)</label>
+                  <input type="text" placeholder="e.g. Promotional Bonus" value={walletForm.description} onChange={e => setWalletForm({...walletForm, description: e.target.value})} />
+                </div>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setWalletUser(null)} disabled={loading}>Cancel</button>
+              <button className={`btn ${walletForm.action === 'add' ? 'btn-primary' : 'btn-danger'}`} onClick={handleWalletSubmit} disabled={loading || !walletForm.amount}>
+                {loading ? <Loader2 size={16} className="spinner" /> : (walletForm.action === 'add' ? 'Add Funds' : 'Deduct Funds')}
               </button>
             </div>
           </div>

@@ -120,7 +120,7 @@ const KYC = () => {
     const userMatch = r.user?.name?.toLowerCase().includes(search.toLowerCase()) || 
                       r.user?.mobile?.includes(search) ||
                       r.user?.email?.toLowerCase().includes(search.toLowerCase());
-    const docMatch = r.aadharNumber?.includes(search) || r.drivingLicenseNumber?.includes(search);
+    const docMatch = r.aadharNumber?.includes(search);
     const matchStatus = filterStatus === 'All' || r.status === filterStatus.toLowerCase();
     return (userMatch || docMatch) && matchStatus;
   });
@@ -262,7 +262,7 @@ const KYC = () => {
                           <FileText size={12} /> Aadhar: {req.aadharNumber}
                         </span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
-                          <FileText size={12} /> DL: {req.drivingLicenseNumber}
+                          <FileText size={12} /> PAN Submitted
                         </span>
                       </div>
                     </td>
@@ -348,7 +348,7 @@ const KYC = () => {
                     background: '#f1f5f9'
                   }}>
                     <img 
-                      src={getImageUrl(selected.userPhoto)} 
+                      src={getImageUrl(selected.selfie)} 
                       alt="User Profile" 
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + (selected.user?.name || 'User'); }}
@@ -376,19 +376,19 @@ const KYC = () => {
                     </div>
                   </div>
 
-                  {/* DL Group */}
+                  {/* PAN & Selfie Group */}
                   <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
                     <h4 style={{ fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981' }}>
-                      <ShieldCheck size={16} /> Driving License ({selected.drivingLicenseNumber})
+                      <ShieldCheck size={16} /> Additional Documents
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <div className="kyc-img-box">
-                        <img src={getImageUrl(selected.drivingLicenseFront)} alt="DL Front" style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center', marginTop: '0.25rem' }}>FRONT SIDE</span>
+                        <img src={getImageUrl(selected.panCard)} alt="PAN Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center', marginTop: '0.25rem' }}>PAN CARD</span>
                       </div>
                       <div className="kyc-img-box">
-                        <img src={getImageUrl(selected.drivingLicenseBack)} alt="DL Back" style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center', marginTop: '0.25rem' }}>BACK SIDE</span>
+                        <img src={getImageUrl(selected.selfie)} alt="Selfie" style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center', marginTop: '0.25rem' }}>USER SELFIE</span>
                       </div>
                     </div>
                   </div>

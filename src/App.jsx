@@ -20,6 +20,7 @@ import Revenue from './pages/Revenue';
 import Coupons from './pages/Coupons';
 import Complaints from './pages/Complaints';
 import Content from './pages/Content';
+import DamageReports from './pages/DamageReports';
 import Analytics from './pages/Analytics';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
@@ -176,6 +177,7 @@ function App() {
                 <Route path="/revenue" element={<Revenue />} />
                 <Route path="/coupons" element={<Coupons />} />
                 <Route path="/complaints" element={<Complaints />} />
+                <Route path="/damage-reports" element={<DamageReports />} />
                 <Route path="/content" element={<Content />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/profile" element={<Profile />} />

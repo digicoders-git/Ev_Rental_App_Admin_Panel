@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  Battery, MapPin, Plus, Search, Edit, Trash2, X, Upload,
+  MapPin, Plus, Search, Edit, Trash2, X, Upload,
   Eye, Car, CheckCircle, Clock, Wrench, IndianRupee,
-  BatteryCharging, Shield, ToggleLeft, ToggleRight,
+  BatteryCharging, Shield, 
   AlertTriangle, RefreshCw, SlidersHorizontal, Loader,
-  Settings, LayoutGrid, Hash
+  LayoutGrid, Hash
 } from 'lucide-react';
 import { 
   getAllVehicles, createVehicle, deleteVehicle, updateVehicle, getAllStores,
-  getAllCategories, createCategory, updateCategory, deleteCategory
+  getAllCategories, createCategory, deleteCategory
 } from '../services/apiServices';
 import useApi from '../services/useApi';
+import { io } from 'socket.io-client';
 import './Vehicles.css';
 
 const emptyForm = {
@@ -37,9 +38,10 @@ const Vehicles = () => {
   const [viewVehicle, setViewVehicle]   = useState(null);
   const [manageVehicle, setManageVehicle] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
+  const [filterCategory, setFilterCategory] = useState('');
   const [search, setSearch]             = useState('');
   const [form, setForm]                 = useState(emptyForm);
-  const [catForm, setCatForm]           = useState({ name: '', description: '' });
+  const [catForm, setCatForm]           = useState({ name: '', description: '', file: null });
   const [imagePreview, setImagePreview] = useState(null);
   const [deleteId, setDeleteId]         = useState(null);
   const [editVehicle, setEditVehicle]   = useState(null); // holds raw vehicle object for editing
@@ -59,8 +61,10 @@ const Vehicles = () => {
 
   /* ── fetch vehicles ── */
   const fetchVehicles = () => {
+    const params = {};
+    if (filterCategory) params.category = filterCategory;
     call(
-      () => getAllVehicles(),
+      () => getAllVehicles(params),
       (data) => {
         const vehiclesData = data.data || data.vehicles || data;
         const list = Array.isArray(vehiclesData) ? vehiclesData.map(v => ({
@@ -87,6 +91,7 @@ const Vehicles = () => {
           insuranceExpiry: v.insurance_valid_till || '',
           pucExpiry: v.puc_valid_till || '',
           odometer: v.odometer || 0,
+          thumbnail_image: v.thumbnail_image,
         })) : [];
         setVehicles(list);
       }
@@ -101,7 +106,21 @@ const Vehicles = () => {
     getAllStores().then(res => {
       setFranchises(res.data?.data || res.data || []);
     }).catch(err => console.error("Franchise fetch error:", err));
-  }, []);
+  }, [filterCategory]);
+
+  useEffect(() => {
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+    const socket = io(BASE_URL);
+
+    socket.on('admin_data_changed', () => {
+      fetchVehicles();
+      fetchCategories();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [filterCategory]);
 
   const filtered = vehicles.filter((v) => {
     const matchStatus = filterStatus === 'All' || v.status === filterStatus;
@@ -295,10 +314,24 @@ const Vehicles = () => {
               </button>
             ))}
           </div>
-          <div className="search-wrapper">
-            <Search size={15} className="search-icon" />
-            <input type="text" placeholder="Search vehicle, brand, reg no, vehicle ID..."
-              value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div className="search-wrapper" style={{ display: 'flex', gap: '10px' }}>
+            <select 
+              value={filterCategory} 
+              onChange={e => setFilterCategory(e.target.value)}
+              style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '6px', outline: 'none' }}
+            >
+              <option value="">All Categories</option>
+              {categories.map(cat => (
+                <option key={cat._id} value={cat._id}>{cat.name}</option>
+              ))}
+            </select>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Search size={15} className="search-icon" style={{ position: 'absolute', left: '10px', color: 'var(--text-muted)' }} />
+              <input type="text" placeholder="Search vehicle, reg no..."
+                value={search} onChange={(e) => setSearch(e.target.value)} 
+                style={{ padding: '0.4rem 0.4rem 0.4rem 30px', border: '1px solid var(--border)', borderRadius: '6px' }}
+              />
+            </div>
           </div>
         </div>
 
@@ -683,6 +716,15 @@ const Vehicles = () => {
               </div>
             </div>
             <div className="modal-body">
+              {viewVehicle.thumbnail_image ? (
+                <img src={`${import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000'}/${viewVehicle.thumbnail_image}`} alt={viewVehicle.name}
+                  style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '8px', marginBottom: '1rem' }} />
+              ) : (
+                <div style={{ width: '100%', height: '220px', borderRadius: '8px', background: 'var(--background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <Car size={48} color="var(--primary)" />
+                  <span style={{ color: 'var(--text-secondary)' }}>No image uploaded</span>
+                </div>
+              )}
               <div className="veh-detail-grid">
                 <div className="veh-detail-section">
                   <div className="veh-detail-section-title"><Car size={13} /> Basic Info</div>
@@ -743,18 +785,30 @@ const Vehicles = () => {
             </div>
             <div className="modal-body">
               <div className="cat-manage-wrap">
-                <div className="cat-add-box">
+                <div className="cat-add-box" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                   <input 
                     type="text" 
                     placeholder="Category Name (e.g. Scooters)" 
                     value={catForm.name}
                     onChange={(e) => setCatForm({...catForm, name: e.target.value})}
+                    style={{ flex: 1, minWidth: '150px' }}
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => { const file = e.target.files[0]; if(file) setCatForm({...catForm, file}) }}
+                    style={{ flex: 1, minWidth: '150px', fontSize: '0.8rem' }}
                   />
                   <button className="btn btn-primary btn-sm" onClick={() => {
                     if (!catForm.name.trim()) return;
-                    call(() => createCategory(catForm), 
+                    const fd = new FormData();
+                    fd.append('name', catForm.name);
+                    if (catForm.description) fd.append('description', catForm.description);
+                    if (catForm.file) fd.append('image', catForm.file);
+
+                    call(() => createCategory(fd), 
                       () => {
-                        setCatForm({ name: '', description: '' });
+                        setCatForm({ name: '', description: '', file: null });
                         fetchCategories();
                         alert('Category added successfully!');
                       }, 

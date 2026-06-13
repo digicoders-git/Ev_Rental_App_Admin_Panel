@@ -14,7 +14,7 @@ const messaging = firebase.messaging();
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(
-    payload.notification?.title || 'EV Rental',
+    payload.notification?.title || 'EcoRide',
     {
       body: payload.notification?.body || '',
       icon: '/favicon.svg',

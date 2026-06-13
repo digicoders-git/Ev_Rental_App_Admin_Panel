@@ -19,9 +19,11 @@ export const getUserById    = (id)   => api.get(`/user/admin/${id}`);
 export const addRider       = (data) => api.post('/user/admin/add-rider', data);
 export const updateUser     = (id, data) => api.put(`/user/admin/${id}`, data);
 export const deleteUser     = (id)   => api.delete(`/user/admin/${id}`);
+export const addWalletFunds = (data) => api.post('/wallet/admin/add', data);
+export const deductWalletFunds = (data) => api.post('/wallet/admin/deduct', data);
 
 /* ── VEHICLES ── */
-export const getAllVehicles      = (franchiseId) => api.get('/vehicles', { params: franchiseId ? { franchiseId } : {} });
+export const getAllVehicles      = (params) => api.get('/vehicles', { params });
 export const getVehicleById     = (id)   => api.get(`/vehicles/${id}`);
 export const createVehicle      = (data) => api.post('/vehicles', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const updateVehicle      = (id, data) => api.put(`/vehicles/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -146,10 +148,14 @@ export const getVehicleReviews = (id)   => api.get(`/reviews/vehicle/${id}`);
 
 /* ── VEHICLE CATEGORIES ── */
 export const getAllCategories = ()     => api.get('/v-categories');
-export const createCategory   = (data) => api.post('/v-categories', data);
-export const updateCategory   = (id, data) => api.put(`/v-categories/${id}`, data);
+export const createCategory   = (data) => api.post('/v-categories', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updateCategory   = (id, data) => api.put(`/v-categories/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const deleteCategory   = (id)   => api.delete(`/v-categories/${id}`);
 
 /* ── PLATFORM SETTINGS ── */
 export const getPlatformSettings = ()     => api.get('/settings');
 export const updatePlatformSettings = (settings) => api.put('/settings', { settings });
+
+/* ── DAMAGE REPORTS ── */
+export const getDamageReports = () => api.get('/damage-reports/admin');
+export const updateDamageReportStatus = (id, data) => api.patch(`/damage-reports/${id}`, data);

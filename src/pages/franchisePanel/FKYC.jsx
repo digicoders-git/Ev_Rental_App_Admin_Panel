@@ -16,12 +16,10 @@ const FKYC = () => {
   // Upload Form State
   const [uploadForm, setUploadForm] = useState({
     aadharNumber: '',
-    drivingLicenseNumber: '',
     aadharFront: null,
     aadharBack: null,
-    drivingLicenseFront: null,
-    drivingLicenseBack: null,
-    userPhoto: null
+    panCard: null,
+    selfie: null
   });
 
   const [formError, setFormError] = useState('');
@@ -85,34 +83,30 @@ const FKYC = () => {
     setFormError('');
     setSuccessMsg('');
 
-    const { aadharNumber, drivingLicenseNumber, aadharFront, aadharBack, drivingLicenseFront, drivingLicenseBack, userPhoto } = uploadForm;
+    const { aadharNumber, aadharFront, aadharBack, panCard, selfie } = uploadForm;
 
-    if (!aadharNumber || !drivingLicenseNumber || !aadharFront || !aadharBack || !drivingLicenseFront || !drivingLicenseBack || !userPhoto) {
-      setFormError('Aadhar/DL numbers and all 5 document images are required.');
+    if (!aadharNumber || !aadharFront || !aadharBack || !panCard || !selfie) {
+      setFormError('Aadhar number and all 4 document images are required.');
       return;
     }
 
     const formData = new FormData();
     formData.append('userId', selectedCustomerForUpload._id);
     formData.append('aadharNumber', aadharNumber);
-    formData.append('drivingLicenseNumber', drivingLicenseNumber);
     formData.append('aadharFront', aadharFront);
     formData.append('aadharBack', aadharBack);
-    formData.append('drivingLicenseFront', drivingLicenseFront);
-    formData.append('drivingLicenseBack', drivingLicenseBack);
-    formData.append('userPhoto', userPhoto);
+    formData.append('panCard', panCard);
+    formData.append('selfie', selfie);
 
     call(() => submitKyc(formData), () => {
       setSuccessMsg('KYC documents submitted successfully! 🎉');
       fetchData();
       setUploadForm({
         aadharNumber: '',
-        drivingLicenseNumber: '',
         aadharFront: null,
         aadharBack: null,
-        drivingLicenseFront: null,
-        drivingLicenseBack: null,
-        userPhoto: null
+        panCard: null,
+        selfie: null
       });
       setTimeout(() => {
         setShowUploadKyc(false);
@@ -186,7 +180,7 @@ const FKYC = () => {
                   <th>Mobile</th>
                   <th>KYC Status</th>
                   <th>Aadhar</th>
-                  <th>Driving License</th>
+                  <th>PAN Card</th>
                   <th>Submitted On</th>
                   <th>Actions</th>
                 </tr>
@@ -214,7 +208,7 @@ const FKYC = () => {
                         {c.kyc?.aadharFront ? <span className="badge badge-success">Uploaded</span> : <span className="badge badge-warning">Missing</span>}
                       </td>
                       <td style={{ fontSize: '0.85rem' }}>
-                        {c.kyc?.drivingLicenseFront ? <span className="badge badge-success">Uploaded</span> : <span className="badge badge-warning">Missing</span>}
+                        {c.kyc?.panCard ? <span className="badge badge-success">Uploaded</span> : <span className="badge badge-warning">Missing</span>}
                       </td>
                       <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         {c.kyc?.createdAt ? new Date(c.kyc.createdAt).toLocaleDateString('en-IN') : '—'}
@@ -262,15 +256,10 @@ const FKYC = () => {
                   <FileText size={14} /> Document Information
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Aadhar Number *</label>
                     <input type="text" required placeholder="12-digit Aadhar Number" value={uploadForm.aadharNumber} onChange={e => setUploadForm(p => ({ ...p, aadharNumber: e.target.value }))}
-                      style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Driving License Number *</label>
-                    <input type="text" required placeholder="DL Number" value={uploadForm.drivingLicenseNumber} onChange={e => setUploadForm(p => ({ ...p, drivingLicenseNumber: e.target.value }))}
                       style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
                   </div>
                 </div>
@@ -302,33 +291,23 @@ const FKYC = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Driving License Front *</label>
-                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, drivingLicenseFront: e.target.files[0] }))}
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>PAN Card *</label>
+                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, panCard: e.target.files[0] }))}
                       style={{ width: '100%', fontSize: '0.8rem' }} />
-                    {uploadForm.drivingLicenseFront && (
-                      <img src={URL.createObjectURL(uploadForm.drivingLicenseFront)} alt="DL Front Preview"
+                    {uploadForm.panCard && (
+                      <img src={URL.createObjectURL(uploadForm.panCard)} alt="PAN Card Preview"
                         style={{ width: '100%', maxHeight: '80px', objectFit: 'contain', marginTop: '0.35rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
                     )}
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Driving License Back *</label>
-                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, drivingLicenseBack: e.target.files[0] }))}
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Selfie (Passport size) *</label>
+                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, selfie: e.target.files[0] }))}
                       style={{ width: '100%', fontSize: '0.8rem' }} />
-                    {uploadForm.drivingLicenseBack && (
-                      <img src={URL.createObjectURL(uploadForm.drivingLicenseBack)} alt="DL Back Preview"
-                        style={{ width: '100%', maxHeight: '80px', objectFit: 'contain', marginTop: '0.35rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
+                    {uploadForm.selfie && (
+                      <img src={URL.createObjectURL(uploadForm.selfie)} alt="Selfie Preview"
+                        style={{ width: '80px', height: '80px', objectFit: 'cover', marginTop: '0.35rem', borderRadius: '50%', border: '1px solid var(--border)' }} />
                     )}
                   </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Customer Photo (Passport size) *</label>
-                  <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, userPhoto: e.target.files[0] }))}
-                    style={{ width: '100%', fontSize: '0.8rem' }} />
-                  {uploadForm.userPhoto && (
-                    <img src={URL.createObjectURL(uploadForm.userPhoto)} alt="User Photo Preview"
-                      style={{ width: '80px', height: '80px', objectFit: 'cover', marginTop: '0.35rem', borderRadius: '50%', border: '1px solid var(--border)' }} />
-                  )}
                 </div>
               </div>
               <div className="modal-footer">
@@ -354,23 +333,18 @@ const FKYC = () => {
             <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               
               {/* Render document numbers first */}
-              <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', border: '1px solid var(--border)' }}>
+              <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', border: '1px solid var(--border)' }}>
                 <div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Aadhar Number</div>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)' }}>{selected.kyc?.aadharNumber || 'N/A'}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Driving License Number</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)' }}>{selected.kyc?.drivingLicenseNumber || 'N/A'}</div>
                 </div>
               </div>
 
               {[
                 { label: 'Aadhar Front', key: 'aadharFront' },
                 { label: 'Aadhar Back', key: 'aadharBack' },
-                { label: 'Driving License Front', key: 'drivingLicenseFront' },
-                { label: 'Driving License Back', key: 'drivingLicenseBack' },
-                { label: 'User Photo', key: 'userPhoto' },
+                { label: 'PAN Card', key: 'panCard' },
+                { label: 'Selfie', key: 'selfie' },
               ].map(doc => selected.kyc?.[doc.key] && (
                 <div key={doc.key} style={{ marginBottom: '1rem' }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>{doc.label}</div>

@@ -74,7 +74,7 @@ export const onForegroundMessage = (callback) => {
     return onMessage(msg, (payload) => {
       // Show native notification even when app is open
       if (Notification.permission === 'granted') {
-        new Notification(payload.notification?.title || 'EV Rental', {
+        new Notification(payload.notification?.title || 'EcoRide', {
           body: payload.notification?.body || '',
           icon: '/favicon.svg',
         });
