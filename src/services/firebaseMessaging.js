@@ -28,6 +28,7 @@ export const requestFcmToken = async () => {
       console.warn('Browser does not support notifications');
       return null;
     }
+
     if (!('serviceWorker' in navigator)) {
       console.warn('Browser does not support service workers');
       return null;
@@ -72,11 +73,68 @@ export const onForegroundMessage = (callback) => {
   try {
     const msg = getMessagingInstance();
     return onMessage(msg, (payload) => {
-      // Show native notification even when app is open
+      // Create a beautiful In-App Toast Notification
+      const toast = document.createElement('div');
+      toast.style.position = 'fixed';
+      toast.style.bottom = '20px';
+      toast.style.right = '20px';
+      toast.style.backgroundColor = '#1e293b';
+      toast.style.color = '#fff';
+      toast.style.padding = '16px 20px';
+      toast.style.borderRadius = '12px';
+      toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+      toast.style.zIndex = '99999';
+      toast.style.display = 'flex';
+      toast.style.flexDirection = 'column';
+      toast.style.gap = '4px';
+      toast.style.transform = 'translateY(100px)';
+      toast.style.opacity = '0';
+      toast.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      toast.style.cursor = 'pointer';
+
+      toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🔔</span>
+          <strong style="font-size: 15px;">${payload.notification?.title || 'New Notification'}</strong>
+        </div>
+        <div style="font-size: 13px; color: #cbd5e1; margin-left: 28px;">
+          ${payload.notification?.body || ''}
+        </div>
+      `;
+
+      // Click to dismiss
+      toast.onclick = () => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(() => toast.remove(), 300);
+      };
+
+      document.body.appendChild(toast);
+
+      // Animate in
+      setTimeout(() => {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+      }, 100);
+
+      // Auto dismiss after 5 seconds
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(20px)';
+          setTimeout(() => {
+            if (document.body.contains(toast)) toast.remove();
+          }, 300);
+        }
+      }, 5000);
+
+      // Also try to show native notification
       if (Notification.permission === 'granted') {
-        new Notification(payload.notification?.title || 'EcoRide', {
-          body: payload.notification?.body || '',
-          icon: '/favicon.svg',
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(payload.notification?.title || 'EcoRide', {
+            body: payload.notification?.body || '',
+            icon: '/favicon.svg',
+          });
         });
       }
       if (callback) callback(payload);
