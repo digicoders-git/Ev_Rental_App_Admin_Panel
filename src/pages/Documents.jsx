@@ -187,7 +187,8 @@ const Documents = () => {
   const getFileUrl = (path) => {
     if (!path) return '#';
     if (path.startsWith('http')) return path;
-    return `http://localhost:5000/${path}`;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+    return `${baseUrl}/${path}`;
   };
 
   if (loading) {

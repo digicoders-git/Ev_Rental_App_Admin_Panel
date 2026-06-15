@@ -107,7 +107,7 @@ const KYC = () => {
   const getImageUrl = (path) => {
     if (!path || path.trim() === '') return null;
     if (path.startsWith('http')) return path;
-    const baseUrl = 'http://localhost:5000';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
     const cleanPath = path.startsWith('/') ? path.substring(1) : path;
     return encodeURI(`${baseUrl}/${cleanPath}`);
   };

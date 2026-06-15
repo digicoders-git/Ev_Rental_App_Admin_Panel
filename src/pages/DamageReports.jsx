@@ -7,6 +7,8 @@ const DamageReports = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState(null);
+  
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
 
   useEffect(() => {
     fetchReports();
@@ -120,8 +122,8 @@ const DamageReports = () => {
               <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '10px' }}>
                 {selectedReport.photos && selectedReport.photos.length > 0 ? (
                   selectedReport.photos.map((photo, i) => (
-                    <a key={i} href={`http://localhost:5000${photo}`} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
-                      <img src={`http://localhost:5000${photo}`} alt="Damage" style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'block' }} />
+                    <a key={i} href={`${BASE_URL}${photo.startsWith('/') ? '' : '/'}${photo}`} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
+                      <img src={`${BASE_URL}${photo.startsWith('/') ? '' : '/'}${photo}`} alt="Damage" style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'block' }} />
                     </a>
                   ))
                 ) : (
