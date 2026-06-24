@@ -15,18 +15,27 @@ const FKYC = () => {
   
   // Upload Form State
   const [uploadForm, setUploadForm] = useState({
-    aadharNumber: '',
-    aadharFront: null,
-    aadharBack: null,
-    panCard: null,
-    selfie: null
+    name: '',
+    mobileNumber: '',
+    document: null
   });
 
   const [formError, setFormError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  useEffect(() => {
+    if (selectedCustomerForUpload) {
+      setUploadForm({
+        name: selectedCustomerForUpload.name || '',
+        mobileNumber: selectedCustomerForUpload.mobile || '',
+        document: null
+      });
+    }
+  }, [selectedCustomerForUpload]);
+
   const { loading, call } = useApi();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+  const FALLBACK_URL = 'https://ev-rental-app-backend.onrender.com';
 
   const fetchData = () => {
     call(
@@ -83,30 +92,26 @@ const FKYC = () => {
     setFormError('');
     setSuccessMsg('');
 
-    const { aadharNumber, aadharFront, aadharBack, panCard, selfie } = uploadForm;
+    const { name, mobileNumber, document } = uploadForm;
 
-    if (!aadharNumber || !aadharFront || !aadharBack || !panCard || !selfie) {
-      setFormError('Aadhar number and all 4 document images are required.');
+    if (!name || !mobileNumber || !document) {
+      setFormError('Name, mobile number, and document file are required.');
       return;
     }
 
     const formData = new FormData();
     formData.append('userId', selectedCustomerForUpload._id);
-    formData.append('aadharNumber', aadharNumber);
-    formData.append('aadharFront', aadharFront);
-    formData.append('aadharBack', aadharBack);
-    formData.append('panCard', panCard);
-    formData.append('selfie', selfie);
+    formData.append('name', name);
+    formData.append('mobileNumber', mobileNumber);
+    formData.append('document', document);
 
     call(() => submitKyc(formData), () => {
       setSuccessMsg('KYC documents submitted successfully! 🎉');
       fetchData();
       setUploadForm({
-        aadharNumber: '',
-        aadharFront: null,
-        aadharBack: null,
-        panCard: null,
-        selfie: null
+        name: '',
+        mobileNumber: '',
+        document: null
       });
       setTimeout(() => {
         setShowUploadKyc(false);
@@ -179,8 +184,7 @@ const FKYC = () => {
                   <th>Customer</th>
                   <th>Mobile</th>
                   <th>KYC Status</th>
-                  <th>Aadhar</th>
-                  <th>PAN Card</th>
+                  <th>KYC Document</th>
                   <th>Submitted On</th>
                   <th>Actions</th>
                 </tr>
@@ -205,10 +209,7 @@ const FKYC = () => {
                         </span>
                       </td>
                       <td style={{ fontSize: '0.85rem' }}>
-                        {c.kyc?.aadharFront ? <span className="badge badge-success">Uploaded</span> : <span className="badge badge-warning">Missing</span>}
-                      </td>
-                      <td style={{ fontSize: '0.85rem' }}>
-                        {c.kyc?.panCard ? <span className="badge badge-success">Uploaded</span> : <span className="badge badge-warning">Missing</span>}
+                        {(c.kyc?.document || c.kyc?.aadharFront) ? <span className="badge badge-success">Uploaded</span> : <span className="badge badge-warning">Missing</span>}
                       </td>
                       <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         {c.kyc?.createdAt ? new Date(c.kyc.createdAt).toLocaleDateString('en-IN') : '—'}
@@ -256,56 +257,31 @@ const FKYC = () => {
                   <FileText size={14} /> Document Information
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Aadhar Number *</label>
-                    <input type="text" required placeholder="12-digit Aadhar Number" value={uploadForm.aadharNumber} onChange={e => setUploadForm(p => ({ ...p, aadharNumber: e.target.value }))}
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Customer Name *</label>
+                    <input type="text" required placeholder="Full Name" value={uploadForm.name} onChange={e => setUploadForm(p => ({ ...p, name: e.target.value }))}
+                      style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Mobile Number *</label>
+                    <input type="text" required placeholder="10-digit Mobile Number" value={uploadForm.mobileNumber} onChange={e => setUploadForm(p => ({ ...p, mobileNumber: e.target.value }))}
                       style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
                   </div>
                 </div>
 
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid var(--border)', paddingBottom: '0.35rem', marginTop: '0.5rem' }}>
-                  <Upload size={14} /> Upload Documents (Images Only)
+                  <Upload size={14} /> Upload KYC Document
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Aadhar Card Front *</label>
-                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, aadharFront: e.target.files[0] }))}
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>KYC Document File *</label>
+                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, document: e.target.files[0] }))}
                       style={{ width: '100%', fontSize: '0.8rem' }} />
-                    {uploadForm.aadharFront && (
-                      <img src={URL.createObjectURL(uploadForm.aadharFront)} alt="Aadhar Front Preview"
-                        style={{ width: '100%', maxHeight: '80px', objectFit: 'contain', marginTop: '0.35rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
-                    )}
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Aadhar Card Back *</label>
-                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, aadharBack: e.target.files[0] }))}
-                      style={{ width: '100%', fontSize: '0.8rem' }} />
-                    {uploadForm.aadharBack && (
-                      <img src={URL.createObjectURL(uploadForm.aadharBack)} alt="Aadhar Back Preview"
-                        style={{ width: '100%', maxHeight: '80px', objectFit: 'contain', marginTop: '0.35rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>PAN Card *</label>
-                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, panCard: e.target.files[0] }))}
-                      style={{ width: '100%', fontSize: '0.8rem' }} />
-                    {uploadForm.panCard && (
-                      <img src={URL.createObjectURL(uploadForm.panCard)} alt="PAN Card Preview"
-                        style={{ width: '100%', maxHeight: '80px', objectFit: 'contain', marginTop: '0.35rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
-                    )}
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Selfie (Passport size) *</label>
-                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, selfie: e.target.files[0] }))}
-                      style={{ width: '100%', fontSize: '0.8rem' }} />
-                    {uploadForm.selfie && (
-                      <img src={URL.createObjectURL(uploadForm.selfie)} alt="Selfie Preview"
-                        style={{ width: '80px', height: '80px', objectFit: 'cover', marginTop: '0.35rem', borderRadius: '50%', border: '1px solid var(--border)' }} />
+                    {uploadForm.document && (
+                      <img src={URL.createObjectURL(uploadForm.document)} alt="KYC Document Preview"
+                        style={{ width: '100%', maxWidth: '300px', maxHeight: '150px', objectFit: 'contain', marginTop: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
                     )}
                   </div>
                 </div>
@@ -332,26 +308,91 @@ const FKYC = () => {
             </div>
             <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               
-              {/* Render document numbers first */}
-              <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', border: '1px solid var(--border)' }}>
+              {/* Render document details */}
+              <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', border: '1px solid var(--border)' }}>
                 <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Aadhar Number</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)' }}>{selected.kyc?.aadharNumber || 'N/A'}</div>
+                  <div style={{ fontSize: 0.8 + 'rem', color: 'var(--text-secondary)', fontWeight: 500 }}>KYC Name</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)' }}>{selected.kyc?.name || 'N/A'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 0.8 + 'rem', color: 'var(--text-secondary)', fontWeight: 500 }}>KYC Mobile</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)' }}>{selected.kyc?.mobileNumber || 'N/A'}</div>
                 </div>
               </div>
 
-              {[
-                { label: 'Aadhar Front', key: 'aadharFront' },
-                { label: 'Aadhar Back', key: 'aadharBack' },
-                { label: 'PAN Card', key: 'panCard' },
-                { label: 'Selfie', key: 'selfie' },
-              ].map(doc => selected.kyc?.[doc.key] && (
-                <div key={doc.key} style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>{doc.label}</div>
-                  <img src={`${BASE_URL}/${selected.kyc[doc.key]}`} alt={doc.label}
-                    style={{ width: '100%', maxHeight: '180px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--border)' }} />
+              {selected.kyc?.document ? (
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>KYC Document</div>
+                  <img 
+                    src={`${BASE_URL}/${selected.kyc.document}`} 
+                    alt="KYC Document"
+                    style={{ width: '100%', maxHeight: '300px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `${FALLBACK_URL}/${selected.kyc.document}`;
+                    }}
+                  />
                 </div>
-              ))}
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  {selected.kyc?.aadharFront && (
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Aadhar Front</div>
+                      <img 
+                        src={`${BASE_URL}/${selected.kyc.aadharFront}`} 
+                        alt="Aadhar Front"
+                        style={{ width: '100%', maxHeight: '150px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `${FALLBACK_URL}/${selected.kyc.aadharFront}`;
+                        }}
+                      />
+                    </div>
+                  )}
+                  {selected.kyc?.aadharBack && (
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Aadhar Back</div>
+                      <img 
+                        src={`${BASE_URL}/${selected.kyc.aadharBack}`} 
+                        alt="Aadhar Back"
+                        style={{ width: '100%', maxHeight: '150px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `${FALLBACK_URL}/${selected.kyc.aadharBack}`;
+                        }}
+                      />
+                    </div>
+                  )}
+                  {selected.kyc?.panCard && (
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>PAN Card</div>
+                      <img 
+                        src={`${BASE_URL}/${selected.kyc.panCard}`} 
+                        alt="PAN Card"
+                        style={{ width: '100%', maxHeight: '150px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `${FALLBACK_URL}/${selected.kyc.panCard}`;
+                        }}
+                      />
+                    </div>
+                  )}
+                  {selected.kyc?.selfie && (
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Selfie</div>
+                      <img 
+                        src={`${BASE_URL}/${selected.kyc.selfie}`} 
+                        alt="Selfie"
+                        style={{ width: '100%', maxHeight: '150px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `${FALLBACK_URL}/${selected.kyc.selfie}`;
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
               {selected.kyc?.remarks && (
                 <div style={{ background: '#fef3c7', padding: '0.75rem', borderRadius: '8px', marginTop: '0.5rem' }}>
                   <strong>Remarks:</strong> {selected.kyc.remarks}

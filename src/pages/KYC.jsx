@@ -112,6 +112,13 @@ const KYC = () => {
     return encodeURI(`${baseUrl}/${cleanPath}`);
   };
 
+  const getFallbackImageUrl = (path) => {
+    if (!path || path.trim() === '') return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return encodeURI(`https://ev-rental-app-backend.onrender.com/${cleanPath}`);
+  };
+
   const pending  = data.filter((r) => r.status === 'pending').length;
   const approved = data.filter((r) => r.status === 'approved').length;
   const rejected = data.filter((r) => r.status === 'rejected').length;
@@ -120,7 +127,7 @@ const KYC = () => {
     const userMatch = r.user?.name?.toLowerCase().includes(search.toLowerCase()) || 
                       r.user?.mobile?.includes(search) ||
                       r.user?.email?.toLowerCase().includes(search.toLowerCase());
-    const docMatch = r.aadharNumber?.includes(search);
+    const docMatch = r.mobileNumber?.includes(search) || r.name?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === 'All' || r.status === filterStatus.toLowerCase();
     return (userMatch || docMatch) && matchStatus;
   });
@@ -258,11 +265,8 @@ const KYC = () => {
                     </td>
                     <td>
                       <div className="kyc-doc-cell" style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
-                          <FileText size={12} /> Aadhar: {req.aadharNumber}
-                        </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
-                          <FileText size={12} /> PAN Submitted
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: 500 }}>
+                          <FileText size={14} /> Document Uploaded
                         </span>
                       </div>
                     </td>
@@ -334,64 +338,87 @@ const KYC = () => {
             <div className="modal-body kyc-modal-body" style={{ maxHeight: '80vh', overflowY: 'auto', padding: '1.5rem' }}>
               {/* Document Previews */}
               <div className="kyc-docs-container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                
-                {/* User Photo Section */}
-                <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                  <div style={{ 
-                    width: '120px', 
-                    height: '120px', 
-                    margin: '0 auto', 
-                    borderRadius: '50%', 
-                    border: '4px solid #fff',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                    overflow: 'hidden',
-                    background: '#f1f5f9'
-                  }}>
-                    <img 
-                      src={getImageUrl(selected.selfie)} 
-                      alt="User Profile" 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + (selected.user?.name || 'User'); }}
-                    />
-                  </div>
-                  <h4 style={{ marginTop: '0.75rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Applicant Photo</h4>
-                </div>
-
                 {/* Identity Documents */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  {/* Aadhar Group */}
-                  <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                    <h4 style={{ fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
-                      <ShieldCheck size={16} /> Aadhar Card ({selected.aadharNumber})
-                    </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div className="kyc-img-box">
-                        <img src={getImageUrl(selected.aadharFront)} alt="Aadhar Front" style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center', marginTop: '0.25rem' }}>FRONT SIDE</span>
-                      </div>
-                      <div className="kyc-img-box">
-                        <img src={getImageUrl(selected.aadharBack)} alt="Aadhar Back" style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center', marginTop: '0.25rem' }}>BACK SIDE</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* PAN & Selfie Group */}
-                  <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                    <h4 style={{ fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981' }}>
-                      <ShieldCheck size={16} /> Additional Documents
-                    </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <div className="kyc-img-box">
-                        <img src={getImageUrl(selected.panCard)} alt="PAN Card" style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center', marginTop: '0.25rem' }}>PAN CARD</span>
-                      </div>
-                      <div className="kyc-img-box">
-                        <img src={getImageUrl(selected.selfie)} alt="Selfie" style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'center', marginTop: '0.25rem' }}>USER SELFIE</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {selected.document ? (
+                    <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                      <h4 style={{ fontSize: '0.85rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
+                        <ShieldCheck size={16} /> KYC Document
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                        <div className="kyc-img-box" style={{ width: '100%', maxWidth: '400px' }}>
+                          <img 
+                            src={getImageUrl(selected.document)} 
+                            alt="KYC Document" 
+                            style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackImageUrl(selected.document);
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                      {selected.aadharFront && (
+                        <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>Aadhar Front</h4>
+                          <img 
+                            src={getImageUrl(selected.aadharFront)} 
+                            alt="Aadhar Front" 
+                            style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackImageUrl(selected.aadharFront);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {selected.aadharBack && (
+                        <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>Aadhar Back</h4>
+                          <img 
+                            src={getImageUrl(selected.aadharBack)} 
+                            alt="Aadhar Back" 
+                            style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackImageUrl(selected.aadharBack);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {selected.panCard && (
+                        <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>PAN Card</h4>
+                          <img 
+                            src={getImageUrl(selected.panCard)} 
+                            alt="PAN Card" 
+                            style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackImageUrl(selected.panCard);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {selected.selfie && (
+                        <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>Selfie</h4>
+                          <img 
+                            src={getImageUrl(selected.selfie)} 
+                            alt="Selfie" 
+                            style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackImageUrl(selected.selfie);
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
