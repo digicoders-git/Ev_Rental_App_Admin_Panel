@@ -17,7 +17,10 @@ const FKYC = () => {
   const [uploadForm, setUploadForm] = useState({
     name: '',
     mobileNumber: '',
-    document: null
+    aadharFront: null,
+    aadharBack: null,
+    panCard: null,
+    selfie: null
   });
 
   const [formError, setFormError] = useState('');
@@ -28,7 +31,10 @@ const FKYC = () => {
       setUploadForm({
         name: selectedCustomerForUpload.name || '',
         mobileNumber: selectedCustomerForUpload.mobile || '',
-        document: null
+        aadharFront: null,
+        aadharBack: null,
+        panCard: null,
+        selfie: null
       });
     }
   }, [selectedCustomerForUpload]);
@@ -92,10 +98,10 @@ const FKYC = () => {
     setFormError('');
     setSuccessMsg('');
 
-    const { name, mobileNumber, document } = uploadForm;
+    const { name, mobileNumber, aadharFront, aadharBack, panCard, selfie } = uploadForm;
 
-    if (!name || !mobileNumber || !document) {
-      setFormError('Name, mobile number, and document file are required.');
+    if (!name || !mobileNumber || !aadharFront || !aadharBack || !panCard || !selfie) {
+      setFormError('Name, mobile number, and all 4 documents are required.');
       return;
     }
 
@@ -103,7 +109,10 @@ const FKYC = () => {
     formData.append('userId', selectedCustomerForUpload._id);
     formData.append('name', name);
     formData.append('mobileNumber', mobileNumber);
-    formData.append('document', document);
+    formData.append('aadharFront', aadharFront);
+    formData.append('aadharBack', aadharBack);
+    formData.append('panCard', panCard);
+    formData.append('selfie', selfie);
 
     call(() => submitKyc(formData), () => {
       setSuccessMsg('KYC documents submitted successfully! 🎉');
@@ -111,7 +120,10 @@ const FKYC = () => {
       setUploadForm({
         name: '',
         mobileNumber: '',
-        document: null
+        aadharFront: null,
+        aadharBack: null,
+        panCard: null,
+        selfie: null
       });
       setTimeout(() => {
         setShowUploadKyc(false);
@@ -271,17 +283,44 @@ const FKYC = () => {
                 </div>
 
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '1px solid var(--border)', paddingBottom: '0.35rem', marginTop: '0.5rem' }}>
-                  <Upload size={14} /> Upload KYC Document
+                  <Upload size={14} /> Upload KYC Documents (All 4 Required)
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>KYC Document File *</label>
-                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, document: e.target.files[0] }))}
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Aadhar Front *</label>
+                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, aadharFront: e.target.files[0] }))}
                       style={{ width: '100%', fontSize: '0.8rem' }} />
-                    {uploadForm.document && (
-                      <img src={URL.createObjectURL(uploadForm.document)} alt="KYC Document Preview"
-                        style={{ width: '100%', maxWidth: '300px', maxHeight: '150px', objectFit: 'contain', marginTop: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
+                    {uploadForm.aadharFront && (
+                      <img src={URL.createObjectURL(uploadForm.aadharFront)} alt="Aadhar Front Preview"
+                        style={{ width: '100%', maxHeight: '100px', objectFit: 'contain', marginTop: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
+                    )}
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Aadhar Back *</label>
+                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, aadharBack: e.target.files[0] }))}
+                      style={{ width: '100%', fontSize: '0.8rem' }} />
+                    {uploadForm.aadharBack && (
+                      <img src={URL.createObjectURL(uploadForm.aadharBack)} alt="Aadhar Back Preview"
+                        style={{ width: '100%', maxHeight: '100px', objectFit: 'contain', marginTop: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
+                    )}
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>PAN Card *</label>
+                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, panCard: e.target.files[0] }))}
+                      style={{ width: '100%', fontSize: '0.8rem' }} />
+                    {uploadForm.panCard && (
+                      <img src={URL.createObjectURL(uploadForm.panCard)} alt="PAN Card Preview"
+                        style={{ width: '100%', maxHeight: '100px', objectFit: 'contain', marginTop: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
+                    )}
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Selfie *</label>
+                    <input type="file" required accept="image/*" onChange={e => setUploadForm(p => ({ ...p, selfie: e.target.files[0] }))}
+                      style={{ width: '100%', fontSize: '0.8rem' }} />
+                    {uploadForm.selfie && (
+                      <img src={URL.createObjectURL(uploadForm.selfie)} alt="Selfie Preview"
+                        style={{ width: '100%', maxHeight: '100px', objectFit: 'contain', marginTop: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)' }} />
                     )}
                   </div>
                 </div>
