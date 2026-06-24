@@ -6,7 +6,7 @@ import {
   Mail, Clock,
   Lock, EyeOff, Users as UsersIcon, UserCheck, UserX, Ban, Loader2
 } from 'lucide-react';
-import { getAllUsers, addRider, updateUser, deleteUser, addWalletFunds, deductWalletFunds } from '../services/apiServices';
+import { getAllUsers, getUserById, addRider, updateUser, deleteUser, addWalletFunds, deductWalletFunds } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Users.css';
 
@@ -37,7 +37,40 @@ const Users = () => {
   const [showCPwd, setShowCPwd]   = useState(false);
   const [walletUser, setWalletUser] = useState(null);
   const [walletForm, setWalletForm] = useState({ amount: '', description: '', action: 'add' });
+  const [fullDetail, setFullDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const { loading, error, call }  = useApi();
+
+  const getImageUrl = (path) => {
+    if (!path || path.trim() === '') return null;
+    if (path.startsWith('http')) return path;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return encodeURI(`${baseUrl}/${cleanPath}`);
+  };
+
+  const getFallbackImageUrl = (path) => {
+    if (!path || path.trim() === '') return null;
+    if (path.startsWith('http')) return path;
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    return encodeURI(`https://ev-rental-app-backend.onrender.com/${cleanPath}`);
+  };
+
+  const handleViewDetails = async (u) => {
+    setViewUser(u);
+    setFullDetail(null);
+    setLoadingDetail(true);
+    try {
+      const res = await getUserById(u.id);
+      if (res.data.success) {
+        setFullDetail(res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching user details:", err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
 
   /* ── fetch users ── */
   const fetchUsers = () => {
@@ -292,7 +325,7 @@ const Users = () => {
                     </td>
                     <td>
                       <div className="usr-actions">
-                        <button className="btn-icon" title="View Details" onClick={() => setViewUser(u)}>
+                        <button className="btn-icon" title="View Details" onClick={() => handleViewDetails(u)}>
                           <Eye size={15} />
                         </button>
                         <button className="btn-icon" title="Manage Wallet" style={{ color: '#10b981' }} onClick={() => setWalletUser(u)}>
@@ -382,6 +415,110 @@ const Users = () => {
                     <div className="usr-detail-row"><span>Total Rides</span><span>{viewUser.totalRides}</span></div>
                     <div className="usr-detail-row"><span>Total Spent</span><span className="usr-spent">₹{viewUser.totalSpent.toLocaleString()}</span></div>
                   </div>
+                </div>
+
+                {/* KYC Documents Section */}
+                <div style={{ gridColumn: '1 / -1', marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                  <div className="usr-detail-title" style={{ marginBottom: '1rem' }}>
+                    <ShieldCheck size={13} /> KYC Documents
+                  </div>
+                  {loadingDetail ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748b' }}>
+                      <Loader2 size={16} className="spinner spin" />
+                      <span>Loading KYC documents...</span>
+                    </div>
+                  ) : fullDetail && fullDetail.kyc ? (
+                    <div>
+                      {/* Document Details (Name and Mobile entered during KYC) */}
+                      <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', border: '1px solid #e2e8f0' }}>
+                        <div>
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>KYC Full Name</span>
+                          <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{fullDetail.kyc.name || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>KYC Mobile Number</span>
+                          <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{fullDetail.kyc.mobileNumber || 'N/A'}</span>
+                        </div>
+                      </div>
+
+                      {/* Document Images */}
+                      {fullDetail.kyc.document ? (
+                        <div style={{ maxWidth: '100%' }}>
+                          <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: 500, marginBottom: '0.5rem' }}>KYC Document File</span>
+                          <img 
+                            src={getImageUrl(fullDetail.kyc.document)} 
+                            alt="KYC Document" 
+                            style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackImageUrl(fullDetail.kyc.document);
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          {fullDetail.kyc.aadharFront && (
+                            <div>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: 500, marginBottom: '0.25rem' }}>Aadhar Front</span>
+                              <img 
+                                src={getImageUrl(fullDetail.kyc.aadharFront)} 
+                                alt="Aadhar Front" 
+                                style={{ width: '100%', maxHeight: '120px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = getFallbackImageUrl(fullDetail.kyc.aadharFront);
+                                }}
+                              />
+                            </div>
+                          )}
+                          {fullDetail.kyc.aadharBack && (
+                            <div>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: 500, marginBottom: '0.25rem' }}>Aadhar Back</span>
+                              <img 
+                                src={getImageUrl(fullDetail.kyc.aadharBack)} 
+                                alt="Aadhar Back" 
+                                style={{ width: '100%', maxHeight: '120px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = getFallbackImageUrl(fullDetail.kyc.aadharBack);
+                                }}
+                              />
+                            </div>
+                          )}
+                          {fullDetail.kyc.panCard && (
+                            <div>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: 500, marginBottom: '0.25rem' }}>PAN Card</span>
+                              <img 
+                                src={getImageUrl(fullDetail.kyc.panCard)} 
+                                alt="PAN Card" 
+                                style={{ width: '100%', maxHeight: '120px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = getFallbackImageUrl(fullDetail.kyc.panCard);
+                                }}
+                              />
+                            </div>
+                          )}
+                          {fullDetail.kyc.selfie && (
+                            <div>
+                              <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: 500, marginBottom: '0.25rem' }}>Selfie</span>
+                              <img 
+                                src={getImageUrl(fullDetail.kyc.selfie)} 
+                                alt="Selfie" 
+                                style={{ width: '100%', maxHeight: '120px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = getFallbackImageUrl(fullDetail.kyc.selfie);
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontStyle: 'italic' }}>No KYC document record found.</span>
+                  )}
                 </div>
 
               </div>
