@@ -235,11 +235,11 @@ const RentalPlans = () => {
           <span className="plans-stat-label">Active Plans</span>
         </div>
         <div className="card plans-stat">
-          <span className="plans-stat-val">₹{Math.min(...plans.map((p) => Number(p.price)))}</span>
+          <span className="plans-stat-val">₹{plans.length > 0 ? Math.min(...plans.map((p) => Number(p.price))) : 0}</span>
           <span className="plans-stat-label">Starting Price</span>
         </div>
         <div className="card plans-stat">
-          <span className="plans-stat-val">₹{Math.max(...plans.map((p) => Number(p.price)))}</span>
+          <span className="plans-stat-val">₹{plans.length > 0 ? Math.max(...plans.map((p) => Number(p.price))) : 0}</span>
           <span className="plans-stat-label">Highest Plan</span>
         </div>
       </div>

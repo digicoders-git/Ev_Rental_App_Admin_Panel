@@ -49,14 +49,11 @@
 }
 
 .logo-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--primary);
-  border-radius: 8px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .logo-text {

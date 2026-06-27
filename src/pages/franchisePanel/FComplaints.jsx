@@ -120,7 +120,7 @@ const FComplaints = () => {
               For urgent issues contact your franchise coordinator directly.
             </p>
             <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.75rem', borderRadius: '8px', color: 'white', fontSize: '0.85rem' }}>
-              📞 Support: 1800-XXX-XXXX (Toll Free)
+              📞 Support: +91 94531 69279 (Available 24/7)
             </div>
           </div>
 

@@ -126,7 +126,7 @@ const Franchise = () => {
       <div className="page-header">
         <div>
           <h1>Franchise Network</h1>
-          <p>Expand and manage your EcoRide partner ecosystem.</p>
+          <p>Expand and manage your TRIS Electric partner ecosystem.</p>
         </div>
         <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
           <Plus size={18} />
@@ -996,3 +996,4 @@ const Franchise = () => {
 };
 
 export default Franchise;
+

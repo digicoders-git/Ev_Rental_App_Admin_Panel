@@ -38,6 +38,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Users', path: '/users', icon: Users },
     { name: 'Vehicles', path: '/vehicles', icon: Car },
     { name: 'Rental Plans', path: '/plans', icon: Zap },
+    { name: 'Wallet Plans', path: '/recharge-plans', icon: Wallet },
     { name: 'Bookings', path: '/bookings', icon: CalendarCheck },
     { name: 'KYC Management', path: '/kyc', icon: ShieldCheck },
     { name: 'Franchise', path: '/franchise', icon: Building2 },
@@ -90,11 +91,11 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-logo">
         <div className="logo-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="/logo.png" alt="EcoRide" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '4px' }} 
+          <img src="/logo.png" alt="TRIS Electric" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '4px' }} 
                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
           <Zap size={24} fill="white" stroke="white" style={{ display: 'none' }} />
         </div>
-        <span className="logo-text">Eco<span>Ride</span></span>
+        <span className="logo-text">TRIS <span>Electric</span></span>
         <button className="sidebar-close-btn" onClick={onClose}>
           <X size={24} />
         </button>
@@ -156,3 +157,4 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
 };
 
 export default Sidebar;
+

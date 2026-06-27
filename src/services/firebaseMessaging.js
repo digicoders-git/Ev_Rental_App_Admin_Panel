@@ -131,7 +131,7 @@ export const onForegroundMessage = (callback) => {
       // Also try to show native notification
       if (Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then((registration) => {
-          registration.showNotification(payload.notification?.title || 'EcoRide', {
+          registration.showNotification(payload.notification?.title || 'TRIS Electric', {
             body: payload.notification?.body || '',
             icon: '/favicon.svg',
           });
@@ -144,3 +144,4 @@ export const onForegroundMessage = (callback) => {
     return () => {};
   }
 };
+

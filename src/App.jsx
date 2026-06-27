@@ -11,6 +11,7 @@ import Bookings from './pages/Bookings';
 import KYC from './pages/KYC';
 import Franchise from './pages/Franchise';
 import RentalPlans from './pages/RentalPlans';
+import RechargePlans from './pages/RechargePlans';
 import Payments from './pages/Payments';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
@@ -137,6 +138,7 @@ function App() {
           <Route path="bookings" element={<Bookings />} />
           <Route path="kyc" element={<KYC />} />
           <Route path="plans" element={<RentalPlans />} />
+          <Route path="recharge-plans" element={<RechargePlans />} />
           <Route path="franchise" element={<Franchise />} />
           <Route path="assign-ev" element={<AssignEV />} />
           <Route path="documents" element={<Documents />} />
@@ -171,6 +173,7 @@ function App() {
                 <Route path="/bookings" element={<Bookings />} />
                 <Route path="/kyc" element={<KYC />} />
                 <Route path="/plans" element={<RentalPlans />} />
+                <Route path="/recharge-plans" element={<RechargePlans />} />
                 <Route path="/franchise" element={<Franchise />} />
                 <Route path="/assign-ev" element={<AssignEV />} />
                 <Route path="/documents" element={<Documents />} />

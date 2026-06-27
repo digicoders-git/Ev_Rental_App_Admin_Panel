@@ -446,6 +446,18 @@ const KYC = () => {
                     <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>SUBMISSION DATE</label>
                     <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{new Date(selected.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>REGISTRATION FEE</label>
+                    {selected.registration_fee_paid ? (
+                      <span style={{ fontWeight: '600', fontSize: '0.95rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <CheckCircle size={14} /> ₹{selected.registration_fee_amount || 49} (Paid)
+                      </span>
+                    ) : (
+                      <span style={{ fontWeight: '600', fontSize: '0.95rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <XCircle size={14} /> Not Paid
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {selected.status === 'rejected' && (

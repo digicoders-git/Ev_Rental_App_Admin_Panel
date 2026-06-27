@@ -14,7 +14,7 @@ const messaging = firebase.messaging();
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(
-    payload.notification?.title || 'EcoRide',
+    payload.notification?.title || 'TRIS Electric',
     {
       body: payload.notification?.body || '',
       icon: '/favicon.svg',
@@ -23,3 +23,4 @@ messaging.onBackgroundMessage((payload) => {
     }
   );
 });
+

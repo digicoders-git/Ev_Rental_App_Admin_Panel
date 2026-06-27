@@ -191,7 +191,7 @@ const Coupons = () => {
       <div className="page-header">
         <div>
           <h1>Offers & Coupons</h1>
-          <p>Create and manage discount coupons across your EcoRide network.</p>
+          <p>Create and manage discount coupons across your TRIS Electric network.</p>
         </div>
         <button className="btn btn-primary" onClick={openAdd}>
           <Plus size={17} /> Create Coupon
@@ -510,3 +510,4 @@ const Coupons = () => {
 };
 
 export default Coupons;
+

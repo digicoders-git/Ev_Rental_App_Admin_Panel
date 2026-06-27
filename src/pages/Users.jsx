@@ -82,6 +82,7 @@ const Users = () => {
           .filter(u => u.role !== 'admin') // Double protection: filter admins on frontend too
           .map(u => ({
             id: u._id,
+            driver_id: u.driver_id,
             name: u.name || '',
             email: u.email || '',
             phone: u.mobile || u.phone || '',
@@ -377,7 +378,7 @@ const Users = () => {
                 </div>
                 <div>
                   <h3>{viewUser.name}</h3>
-                  <span className="td-muted">ID: USR-{String(viewUser.id).padStart(4, '0')}</span>
+                  <span className="td-muted">ID: {viewUser.driver_id || 'N/A'}</span>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
@@ -399,6 +400,12 @@ const Users = () => {
                     <div className="usr-detail-row"><span>Phone</span><span>{viewUser.phone}</span></div>
                     <div className="usr-detail-row"><span>City</span><span>{viewUser.city}</span></div>
                     <div className="usr-detail-row"><span>Joined</span><span>{viewUser.joined}</span></div>
+                    {fullDetail?.user?.referred_by && (
+                      <div className="usr-detail-row">
+                        <span>Referred By</span>
+                        <span style={{ fontWeight: 600, color: '#10b981' }}>{fullDetail.user.referred_by.name} ({fullDetail.user.referred_by.driver_id})</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
