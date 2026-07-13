@@ -155,6 +155,7 @@ export const deleteCategory   = (id)   => api.delete(`/v-categories/${id}`);
 /* ── PLATFORM SETTINGS ── */
 export const getPlatformSettings = ()     => api.get('/settings');
 export const updatePlatformSettings = (settings) => api.put('/settings', { settings });
+export const deleteOldRecords = (months)  => api.delete('/settings/cleanup', { params: { months } });
 
 /* ── DAMAGE REPORTS ── */
 export const getDamageReports = () => api.get('/damage-reports/admin');

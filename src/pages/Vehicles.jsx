@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { 
   getAllVehicles, createVehicle, deleteVehicle, updateVehicle, getAllStores,
-  getAllCategories, createCategory, deleteCategory
+  getAllCategories, createCategory, deleteCategory, updateCategory
 } from '../services/apiServices';
 import useApi from '../services/useApi';
 import { io } from 'socket.io-client';
@@ -28,6 +28,7 @@ const statusConfig = {
   Available:   { cls: 'badge-success', icon: <CheckCircle size={12} /> },
   Booked:      { cls: 'badge-info',    icon: <Clock size={12} /> },
   Maintenance: { cls: 'badge-warning', icon: <Wrench size={12} /> },
+  'Out of Order': { cls: 'badge-danger', icon: <AlertTriangle size={12} /> },
 };
 
 const Vehicles = () => {
@@ -42,6 +43,8 @@ const Vehicles = () => {
   const [search, setSearch]             = useState('');
   const [form, setForm]                 = useState(emptyForm);
   const [catForm, setCatForm]           = useState({ name: '', description: '', file: null });
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editCatForm, setEditCatForm]   = useState({ name: '', description: '', file: null });
   const [imagePreview, setImagePreview] = useState(null);
   const [deleteId, setDeleteId]         = useState(null);
   const [editVehicle, setEditVehicle]   = useState(null); // holds raw vehicle object for editing
@@ -75,7 +78,7 @@ const Vehicles = () => {
           vehicleId: v.vehicle_id || '',
           category: v.category?.name || v.vehicle_type || 'N/A',
           catId: v.category?._id || '',
-          status: v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : 'Maintenance'),
+          status: v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : (v.status === 'out_of_order' ? 'Out of Order' : 'Maintenance')),
           battery: v.battery_level || 100,
           location: v.location || '',
           franchise: v.franchise?.store_name || 'Unassigned',
@@ -138,6 +141,7 @@ const Vehicles = () => {
     Available: vehicles.filter((v) => v.status === 'Available').length,
     Booked: vehicles.filter((v) => v.status === 'Booked').length,
     Maintenance: vehicles.filter((v) => v.status === 'Maintenance').length,
+    'Out of Order': vehicles.filter((v) => v.status === 'Out of Order').length,
   };
 
   const handleAdd = () => {
@@ -161,7 +165,7 @@ const Vehicles = () => {
     fd.append('price_per_day', form.ratePerDay);
     fd.append('price_per_hour', form.ratePerHour);
     fd.append('odometer', form.odometer);
-    fd.append('status', form.status === 'Available' ? 'active' : form.status.toLowerCase());
+    fd.append('status', form.status === 'Available' ? 'active' : (form.status === 'Out of Order' ? 'out_of_order' : form.status.toLowerCase()));
     fd.append('location', form.location);
     fd.append('insurance_valid_till', form.insuranceExpiry);
     fd.append('puc_valid_till', form.pucExpiry);
@@ -197,7 +201,7 @@ const Vehicles = () => {
   };
 
   const handleAvailSave = () => {
-    const apiStatus = avail.status === 'Available' ? 'active' : avail.status === 'Maintenance' ? 'maintenance' : 'booked';
+    const apiStatus = avail.status === 'Available' ? 'active' : (avail.status === 'Out of Order' ? 'out_of_order' : (avail.status === 'Maintenance' ? 'maintenance' : 'booked'));
     call(
       () => updateVehicle(manageVehicle.id, { status: apiStatus }),
       () => {
@@ -246,7 +250,7 @@ const Vehicles = () => {
     fd.append('price_per_day', editForm.ratePerDay);
     fd.append('price_per_hour', editForm.ratePerHour);
     fd.append('odometer', editForm.odometer);
-    fd.append('status', editForm.status === 'Available' ? 'active' : editForm.status === 'Maintenance' ? 'maintenance' : 'active');
+    fd.append('status', editForm.status === 'Available' ? 'active' : (editForm.status === 'Out of Order' ? 'out_of_order' : (editForm.status === 'Maintenance' ? 'maintenance' : 'active')));
     fd.append('location', editForm.location);
     if (editForm.insuranceExpiry) fd.append('insurance_valid_till', editForm.insuranceExpiry);
     if (editForm.pucExpiry) fd.append('puc_valid_till', editForm.pucExpiry);
@@ -307,7 +311,7 @@ const Vehicles = () => {
       <div className="card">
         <div className="veh-toolbar">
           <div className="filter-tabs">
-            {['All', 'Available', 'Booked', 'Maintenance'].map((s) => (
+            {['All', 'Available', 'Booked', 'Maintenance', 'Out of Order'].map((s) => (
               <button key={s} className={`filter-tab ${filterStatus === s ? 'active' : ''}`}
                 onClick={() => setFilterStatus(s)}>
                 {s} <span className="tab-count">{counts[s]}</span>
@@ -494,6 +498,7 @@ const Vehicles = () => {
                       <option>Available</option>
                       <option>Booked</option>
                       <option>Maintenance</option>
+                      <option>Out of Order</option>
                     </select>
                   </div>
                 </div>
@@ -621,16 +626,17 @@ const Vehicles = () => {
 
               {/* Quick status buttons */}
               <div className="form-section-title" style={{ marginTop: '1rem' }}><RefreshCw size={13} /> Change Status</div>
-              <div className="avail-status-btns">
-                {['Available', 'Booked', 'Maintenance'].map((s) => (
+              <div className="avail-status-btns" style={{ flexWrap: 'wrap' }}>
+                {['Available', 'Booked', 'Maintenance', 'Out of Order'].map((s) => (
                   <button
                     key={s}
-                    className={`avail-status-btn ${avail.status === s ? 'active-' + s.toLowerCase() : ''}`}
+                    className={`avail-status-btn ${avail.status === s ? 'active-' + s.toLowerCase().replace(/\s+/g, '-') : ''}`}
                     onClick={() => setAvail((p) => ({ ...p, status: s }))}
                   >
                     {s === 'Available' && <CheckCircle size={15} />}
                     {s === 'Booked'    && <Clock size={15} />}
                     {s === 'Maintenance' && <Wrench size={15} />}
+                    {s === 'Out of Order' && <AlertTriangle size={15} />}
                     {s}
                   </button>
                 ))}
@@ -668,9 +674,9 @@ const Vehicles = () => {
               </div>
 
               {/* Reason */}
-              {avail.status === 'Maintenance' && (
+              {(avail.status === 'Maintenance' || avail.status === 'Out of Order') && (
                 <>
-                  <div className="form-section-title" style={{ marginTop: '0.5rem' }}><AlertTriangle size={13} /> Maintenance Reason</div>
+                  <div className="form-section-title" style={{ marginTop: '0.5rem' }}><AlertTriangle size={13} /> {avail.status} Reason</div>
                   <div className="form-group">
                     <textarea
                       rows={3}
@@ -821,21 +827,69 @@ const Vehicles = () => {
                 
                 <div className="cat-list">
                   {categories && categories.length > 0 ? categories.map(cat => (
-                    <div key={cat._id} className="cat-item">
-                      <span>{cat.name}</span>
-                      <button className="btn-icon delete" onClick={() => {
-                        if(window.confirm(`Delete "${cat.name}" category?`)) {
-                          call(() => deleteCategory(cat._id), 
-                            () => {
-                              fetchCategories();
-                              alert('Category deleted!');
-                            }, 
-                            (err) => alert('Error: ' + err)
-                          );
-                        }
-                      }}>
-                        <Trash2 size={14} />
-                      </button>
+                    <div key={cat._id} className="cat-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.5rem' }}>
+                      {editingCategory === cat._id ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <input 
+                            type="text" 
+                            value={editCatForm.name}
+                            onChange={(e) => setEditCatForm({...editCatForm, name: e.target.value})}
+                            style={{ flex: 1, minWidth: '150px' }}
+                          />
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => { const file = e.target.files[0]; if(file) setEditCatForm({...editCatForm, file}) }}
+                            style={{ flex: 1, minWidth: '150px', fontSize: '0.8rem' }}
+                          />
+                          <button className="btn btn-primary btn-sm" onClick={() => {
+                            if (!editCatForm.name.trim()) return;
+                            const fd = new FormData();
+                            fd.append('name', editCatForm.name);
+                            if (editCatForm.description) fd.append('description', editCatForm.description);
+                            if (editCatForm.file) fd.append('image', editCatForm.file);
+        
+                            call(() => updateCategory(cat._id, fd), 
+                              () => {
+                                setEditingCategory(null);
+                                fetchCategories();
+                                alert('Category updated successfully!');
+                              }, 
+                              (err) => alert('Failed to update category: ' + err)
+                            );
+                          }} disabled={loading || !editCatForm.name}>
+                            Save
+                          </button>
+                          <button className="btn btn-outline btn-sm" onClick={() => setEditingCategory(null)}>
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                          <span>{cat.name}</span>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button className="btn-icon manage" onClick={() => {
+                              setEditingCategory(cat._id);
+                              setEditCatForm({ name: cat.name, description: cat.description || '', file: null });
+                            }}>
+                              <Edit size={14} />
+                            </button>
+                            <button className="btn-icon delete" onClick={() => {
+                              if(window.confirm(`Delete "${cat.name}" category?`)) {
+                                call(() => deleteCategory(cat._id), 
+                                  () => {
+                                    fetchCategories();
+                                    alert('Category deleted!');
+                                  }, 
+                                  (err) => alert('Error: ' + err)
+                                );
+                              }
+                            }}>
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )) : (
                     <div className="td-muted" style={{ textAlign: 'center', padding: '1rem' }}>No categories found.</div>
@@ -942,6 +996,7 @@ const Vehicles = () => {
                       <option>Available</option>
                       <option>Booked</option>
                       <option>Maintenance</option>
+                      <option>Out of Order</option>
                     </select>
                   </div>
                 </div>

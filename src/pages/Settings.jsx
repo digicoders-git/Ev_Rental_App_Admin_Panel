@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { 
   getProfile, updateProfile, changePassword, 
-  getPlatformSettings, updatePlatformSettings 
+  getPlatformSettings, updatePlatformSettings, deleteOldRecords
 } from '../services/apiServices';
 import './Settings.css';
 
@@ -25,6 +25,8 @@ const Settings = () => {
   const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);
   const [msg, setMsg]           = useState({ type: '', text: '' });
+  const [cleanupMonths, setCleanupMonths] = useState(6);
+  const [cleaning, setCleaning] = useState(false);
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
@@ -93,6 +95,19 @@ const Settings = () => {
       showMsg('error', 'Failed to update platform settings');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    if (!window.confirm(`Are you sure you want to permanently delete completed/cancelled bookings and tracking logs older than ${cleanupMonths} months?`)) return;
+    try {
+      setCleaning(true);
+      const res = await deleteOldRecords(cleanupMonths);
+      showMsg('success', res.data?.message || 'Old records deleted successfully');
+    } catch (error) {
+      showMsg('error', error.response?.data?.message || 'Failed to delete old records');
+    } finally {
+      setCleaning(false);
     }
   };
 
@@ -268,7 +283,36 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Push Notifications section removed - FCM token is now saved automatically at login */}
+          <div className="card" style={{ border: '1px solid #ef4444' }}>
+            <div className="settings-card-header">
+              <AlertCircle size={18} className="danger-text" />
+              <h3 className="danger-text">Data Management & Cleanup</h3>
+            </div>
+            <div className="settings-form">
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                Permanently delete old historical data (Tracking logs, Approved KYC records, and Completed/Cancelled bookings) to free up database storage.
+              </p>
+              <div className="form-group">
+                <label>Delete records older than:</label>
+                <select value={cleanupMonths} onChange={e => setCleanupMonths(Number(e.target.value))}>
+                  <option value={0}>All Time (Clear Everything)</option>
+                  <option value={3}>3 Months</option>
+                  <option value={6}>6 Months</option>
+                  <option value={12}>1 Year</option>
+                  <option value={24}>2 Years</option>
+                </select>
+              </div>
+              <button 
+                className="btn btn-outline btn-full" 
+                style={{ borderColor: '#ef4444', color: '#ef4444', marginTop: '0.5rem' }} 
+                onClick={handleCleanup} 
+                disabled={cleaning}
+              >
+                {cleaning ? <Loader2 className="spinner" size={16} /> : 'Delete Old Records'}
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

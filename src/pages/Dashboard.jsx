@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { 
   Car, Zap, IndianRupee, Clock,
-  Loader2, Activity,
+  Loader2, Activity, Trash2, X,
   AlertTriangle, FileWarning, FileText
 } from 'lucide-react';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, AreaChart, Area
 } from 'recharts';
-import { getDashboardStats, getRevenueReport } from '../services/apiServices';
+import { getDashboardStats, getRevenueReport, deleteOldRecords } from '../services/apiServices';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal State
+  const [showCleanupModal, setShowCleanupModal] = useState(false);
+  const [cleanupMonths, setCleanupMonths] = useState(6);
+  const [cleaning, setCleaning] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -34,6 +40,20 @@ const Dashboard = () => {
       console.error("Dashboard data fetch failed:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmCleanup = async () => {
+    try {
+      setCleaning(true);
+      const res = await deleteOldRecords(cleanupMonths);
+      setShowCleanupModal(false);
+      alert(res.data?.message || 'Old records deleted successfully');
+      fetchData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to delete old records');
+    } finally {
+      setCleaning(false);
     }
   };
 
@@ -65,6 +85,9 @@ const Dashboard = () => {
           <p>Real-time analytics and operations monitoring.</p>
         </div>
         <div className="header-actions">
+          <button className="btn btn-outline" style={{ borderColor: '#ef4444', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowCleanupModal(true)}>
+            <Trash2 size={16} /> Clear Old History
+          </button>
           <Link to="/bookings" className="btn btn-outline">Manage Bookings</Link>
           <Link to="/vehicles" className="btn btn-primary">Add Vehicle</Link>
         </div>
@@ -225,6 +248,58 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Custom Confirmation Modal */}
+      {showCleanupModal && createPortal(
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal" style={{ maxWidth: '400px', backgroundColor: 'var(--card-bg, #ffffff)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: '0', backgroundColor: 'transparent' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444' }}>
+                <AlertTriangle size={24} />
+                <h3 style={{ margin: 0, color: '#ef4444' }}>Clear Old History</h3>
+              </div>
+              <button className="btn-icon" onClick={() => setShowCleanupModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ paddingTop: '10px', backgroundColor: 'transparent' }}>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '15px' }}>
+                You are about to permanently delete old tracking logs, approved KYC records, and completed/cancelled bookings. Active data will <strong>NOT</strong> be affected.
+              </p>
+              <div className="form-group">
+                <label>Delete records older than:</label>
+                <select value={cleanupMonths} onChange={(e) => setCleanupMonths(Number(e.target.value))}>
+                  <option value={0}>All Time (Clear Everything)</option>
+                  <option value={3}>3 Months</option>
+                  <option value={6}>6 Months</option>
+                  <option value={12}>1 Year</option>
+                  <option value={24}>2 Years</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px', paddingBottom: '10px' }}>
+                <button 
+                  className="btn btn-outline" 
+                  style={{ flex: 1 }} 
+                  onClick={() => setShowCleanupModal(false)}
+                  disabled={cleaning}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1, backgroundColor: '#ef4444', borderColor: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                  onClick={handleConfirmCleanup}
+                  disabled={cleaning}
+                >
+                  {cleaning ? <Loader2 size={16} className="spinner" /> : <Trash2 size={16} />}
+                  Delete History
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
