@@ -16,7 +16,8 @@ import './Analytics.css';
 const PERIODS = [
   { label: 'Weekly', value: 'weekly' },
   { label: 'Monthly', value: 'monthly' },
-  { label: 'Yearly', value: 'yearly' }
+  { label: 'Yearly', value: 'yearly' },
+  { label: 'All Time', value: 'all' }
 ];
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
@@ -51,11 +52,12 @@ const Analytics = () => {
   const handleExport = async () => {
     try {
       setExporting(true);
-      const res = await exportBookings();
+      const res = await exportBookings(period.value);
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `bookings_report_${new Date().toLocaleDateString()}.csv`);
+      const pLabel = period.label.replace(' ', '');
+      link.setAttribute('download', `bookings_${pLabel}_${new Date().toLocaleDateString('en-CA')}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();

@@ -22,7 +22,7 @@ const PRIORITY_CFG = {
   'critical': { cls: 'priority-critical', dot: '#ef4444', label: 'Critical' }, // In case backend adds it
 };
 
-const TABS = ['All', 'Open', 'In Progress', 'Resolved', 'Closed'];
+const TABS = ['All', 'Active', 'Open', 'In Progress', 'Resolved', 'Closed'];
 
 const Complaints = () => {
   const [complaints, setComplaints] = useState([]);
@@ -68,12 +68,26 @@ const Complaints = () => {
   };
 
   const counts = TABS.reduce((acc, t) => {
-    acc[t] = t === 'All' ? complaints.length : complaints.filter(c => c.status === t).length;
+    if (t === 'All') {
+      acc[t] = complaints.length;
+    } else if (t === 'Active') {
+      acc[t] = complaints.filter(c => c.status === 'Open' || c.status === 'In Progress').length;
+    } else {
+      acc[t] = complaints.filter(c => c.status === t).length;
+    }
     return acc;
   }, {});
 
   const filtered = complaints.filter(c => {
-    const matchTab = activeTab === 'All' || c.status === activeTab;
+    let matchTab = false;
+    if (activeTab === 'All') {
+      matchTab = true;
+    } else if (activeTab === 'Active') {
+      matchTab = c.status === 'Open' || c.status === 'In Progress';
+    } else {
+      matchTab = c.status === activeTab;
+    }
+    
     const q = search.toLowerCase();
     return matchTab && (
       c.ticketId.toLowerCase().includes(q) ||
