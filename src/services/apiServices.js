@@ -127,6 +127,7 @@ export const getRevenueAnalysis     = (timeframe) => api.get('/reports/revenue-a
 export const getRevenueReport       = (timeframe) => api.get('/reports/revenue-report', { params: { timeframe } });
 export const getFranchisePerformance = ()      => api.get('/reports/franchise-performance');
 export const exportBookings         = (timeframe) => api.get('/reports/export/bookings', { params: { timeframe }, responseType: 'blob' });
+export const getInstallmentHealth   = ()       => api.get('/reports/installment-health');
 
 /* ── CONTENT (CMS) ── */
 export const getAllContent   = (params) => api.get('/content', { params });

@@ -947,26 +947,42 @@ const Bookings = () => {
                   )}
 
                   {!showInstallSetup && selected.raw?.payment_installments?.length > 0 && (
-                    <div className="inst-list">
-                      {selected.raw.payment_installments.map((inst) => (
-                        <div key={inst._id} className={`inst-item inst-${inst.status}`}>
-                          <div className="inst-item-left">
-                            <span className="inst-no">#{inst.installment_no}</span>
+                    <div className="installment-timeline" style={{ position: 'relative', paddingLeft: '16px', marginTop: '12px' }}>
+                      <div style={{ position: 'absolute', top: 0, bottom: 0, left: '22px', width: '2px', background: '#e2e8f0', zIndex: 1 }} />
+                      
+                      {selected.raw.payment_installments.map((inst, idx) => (
+                        <div key={inst._id} style={{ position: 'relative', zIndex: 2, display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                          <div style={{ 
+                            width: '14px', height: '14px', borderRadius: '50%', marginTop: '6px', flexShrink: 0,
+                            background: inst.status === 'paid' ? '#10b981' : inst.status === 'overdue' ? '#ef4444' : '#fff',
+                            border: `3px solid ${inst.status === 'paid' ? '#10b981' : inst.status === 'overdue' ? '#ef4444' : '#e2e8f0'}`,
+                            boxShadow: '0 0 0 4px #fff'
+                          }} />
+                          
+                          <div style={{ flex: 1, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                              <span className="inst-amount">₹{inst.amount.toLocaleString()}</span>
-                              <span className="inst-date">Due: {new Date(inst.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
+                                Week {inst.installment_no} • {new Date(inst.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontWeight: 700, fontSize: '16px', color: '#0f172a' }}>₹{inst.amount.toLocaleString()}</span>
+                                <span className={`badge ${inst.status === 'paid' ? 'badge-success' : inst.status === 'overdue' ? 'badge-danger' : 'badge-warning'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
+                                  {inst.status}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="inst-item-right">
-                            <span className={`badge badge-icon ${ inst.status === 'paid' ? 'badge-success' : inst.status === 'overdue' ? 'badge-danger' : 'badge-warning' }`}>
-                              {inst.status === 'paid' ? <CheckCircle2 size={11} /> : <Clock size={11} />} {inst.status}
-                            </span>
-                            {inst.status !== 'paid' && (
-                              <button className="btn btn-primary btn-sm" onClick={() => handlePayInstallment(inst._id)}>Mark Paid</button>
-                            )}
-                            {inst.status === 'paid' && inst.paid_date && (
-                              <span className="inst-paid-date">Paid {new Date(inst.paid_date).toLocaleDateString('en-IN')}</span>
-                            )}
+                            
+                            <div style={{ textAlign: 'right' }}>
+                              {inst.status === 'paid' && inst.paid_date ? (
+                                <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <CheckCircle2 size={12} /> Paid on {new Date(inst.paid_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                </div>
+                              ) : (
+                                <button className="btn btn-primary btn-sm" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => handlePayInstallment(inst._id)}>
+                                  Mark Paid
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}

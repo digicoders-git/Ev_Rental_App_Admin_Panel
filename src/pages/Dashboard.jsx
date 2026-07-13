@@ -10,12 +10,13 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, AreaChart, Area
 } from 'recharts';
-import { getDashboardStats, getRevenueReport, deleteOldRecords } from '../services/apiServices';
+import { getDashboardStats, getRevenueReport, deleteOldRecords, getInstallmentHealth } from '../services/apiServices';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
+  const [installmentHealth, setInstallmentHealth] = useState(null);
   const [loading, setLoading] = useState(true);
   
   // Modal State
@@ -30,12 +31,14 @@ const Dashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [statsRes, reportRes] = await Promise.all([
+      const [statsRes, reportRes, healthRes] = await Promise.all([
         getDashboardStats(),
-        getRevenueReport('weekly')
+        getRevenueReport('weekly'),
+        getInstallmentHealth()
       ]);
       setStats(statsRes.data.data);
       setChartData(reportRes.data.data.chartData || []);
+      setInstallmentHealth(healthRes.data.data);
     } catch (error) {
       console.error("Dashboard data fetch failed:", error);
     } finally {
@@ -211,7 +214,72 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Weekly Payment Tracker Widget */}
         <div className="card table-card">
+          <div className="card-header">
+            <h3>Weekly Installment Alerts</h3>
+            <Link to="/bookings" className="btn-text">Manage</Link>
+          </div>
+          <div className="table-container" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+            {(!installmentHealth || (installmentHealth.overdue.length === 0 && installmentHealth.due_today.length === 0 && installmentHealth.upcoming.length === 0)) ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
+                <p>No pending weekly payments for the next 3 days. 🎉</p>
+              </div>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rider</th>
+                    <th>Amount</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {installmentHealth.overdue.map((inst, i) => (
+                    <tr key={`overdue-${i}`}>
+                      <td>
+                        <div className="font-medium">{inst.rider_name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>{inst.booking_id}</div>
+                      </td>
+                      <td className="font-medium">₹{inst.amount}</td>
+                      <td style={{ color: '#ef4444', fontWeight: 500 }}>
+                        {new Date(inst.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                      </td>
+                      <td><span className="badge" style={{ backgroundColor: '#fee2e2', color: '#ef4444' }}>Overdue</span></td>
+                    </tr>
+                  ))}
+                  {installmentHealth.due_today.map((inst, i) => (
+                    <tr key={`due-${i}`}>
+                      <td>
+                        <div className="font-medium">{inst.rider_name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>{inst.booking_id}</div>
+                      </td>
+                      <td className="font-medium">₹{inst.amount}</td>
+                      <td style={{ color: '#f59e0b', fontWeight: 500 }}>Today</td>
+                      <td><span className="badge" style={{ backgroundColor: '#fef3c7', color: '#d97706' }}>Due Today</span></td>
+                    </tr>
+                  ))}
+                  {installmentHealth.upcoming.map((inst, i) => (
+                    <tr key={`upc-${i}`}>
+                      <td>
+                        <div className="font-medium">{inst.rider_name}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>{inst.booking_id}</div>
+                      </td>
+                      <td className="font-medium">₹{inst.amount}</td>
+                      <td style={{ color: '#3b82f6' }}>
+                        {new Date(inst.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                      </td>
+                      <td><span className="badge badge-info">Upcoming</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
+        <div className="card table-card" style={{ gridColumn: '1 / -1' }}>
           <div className="card-header">
             <h3>Recent Bookings</h3>
             <Link to="/bookings" className="btn-text">View All</Link>
