@@ -5,9 +5,9 @@ import {
   Car, User, MapPin, CreditCard, X, Download,
   IndianRupee, Ban, CircleCheck, Activity,
   Navigation, PackageCheck, Hourglass, TrendingUp, Loader, AlertTriangle,
-  Plus, Trash2, CalendarDays, CheckCircle2, AlertOctagon
+  Plus, Trash2, CalendarDays, CheckCircle2, AlertOctagon, Receipt
 } from 'lucide-react';
-import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge, changeBookingVehicle, getAllVehicles } from '../services/apiServices';
+import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge, changeBookingVehicle, getAllVehicles, getInvoiceByBooking } from '../services/apiServices';
 import useApi from '../services/useApi';
 import api from '../services/api';
 import './Bookings.css';
@@ -60,6 +60,10 @@ const Bookings = () => {
   const [showDamageModal, setShowDamageModal] = useState(false);
   const [damageForm, setDamageForm] = useState({ description: '', amount: '' });
   const [damageBookingId, setDamageBookingId] = useState(null);
+  
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceData, setInvoiceData] = useState(null);
+  const [loadingInvoice, setLoadingInvoice] = useState(false);
 
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [swapVehiclesList, setSwapVehiclesList] = useState([]);
@@ -183,6 +187,167 @@ const Bookings = () => {
   const goPage = (p) => setPage(Math.max(1, Math.min(p, totalPages)));
 
   /* ── derived counts ── */
+
+  const handleDownloadReport = () => {
+    alert("Export feature coming soon!");
+  };
+
+  const handleViewBill = async (bookingId) => {
+    try {
+      setLoadingInvoice(true);
+      setShowInvoiceModal(true);
+      const res = await getInvoiceByBooking(bookingId);
+      setInvoiceData(res.data.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load invoice");
+      setShowInvoiceModal(false);
+    } finally {
+      setLoadingInvoice(false);
+    }
+  };
+
+  const printInvoice = (inv) => {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8" />
+        <title>Invoice ${inv.invoice_number}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; display: flex; justify-content: center; padding: 32px; }
+          .invoice { background: #fff; width: 600px; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.12); overflow: hidden; }
+          .header { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #10b981 100%); padding: 28px; position: relative; overflow: hidden; }
+          .header::before { content: ''; position: absolute; top: -30px; right: -30px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.05); }
+          .header-row { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
+          .receipt-label { color: rgba(255,255,255,0.55); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+          .invoice-num { color: #fff; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+          .company-name { color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 4px; }
+          .status-row { margin-top: 16px; position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; }
+          .status-badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; padding: 5px 14px;
+            background: ${inv.status === 'paid' ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.25)'};
+            border: 1px solid ${inv.status === 'paid' ? 'rgba(16,185,129,0.5)' : 'rgba(245,158,11,0.5)'}; }
+          .status-dot { width: 7px; height: 7px; border-radius: 50%; background: ${inv.status === 'paid' ? '#10b981' : '#f59e0b'}; }
+          .status-text { color: ${inv.status === 'paid' ? '#10b981' : '#f59e0b'}; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+          .date-text { color: rgba(255,255,255,0.4); font-size: 12px; }
+          .body { padding: 24px 28px; }
+          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+          .info-card { background: #f8fafc; border-radius: 10px; padding: 14px; }
+          .info-card.green { border-left: 3px solid #10b981; }
+          .info-card.blue  { border-left: 3px solid #3b82f6; }
+          .info-label { font-size: 9px; color: #94a3b8; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+          .info-name { font-weight: 700; color: #0f172a; font-size: 14px; margin-bottom: 4px; }
+          .info-sub { color: #64748b; font-size: 12px; line-height: 1.7; }
+          .line-table { border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+          .line-head { background: #f1f5f9; padding: 9px 16px; display: flex; justify-content: space-between; }
+          .line-head span { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
+          .line-body { padding: 0 16px; }
+          .line-row { display: flex; justify-content: space-between; padding: 13px 0; border-bottom: 1px dashed #e2e8f0; }
+          .line-row:last-child { border-bottom: none; padding: 14px 0; }
+          .line-title { font-weight: 500; color: #1e293b; font-size: 13px; }
+          .line-sub { color: #94a3b8; font-size: 11px; margin-top: 2px; }
+          .line-amount { font-weight: 600; color: #0f172a; font-size: 13px; }
+          .line-discount .line-title { color: #10b981; }
+          .line-discount .line-amount { color: #10b981; }
+          .line-total .line-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+          .line-total .line-amount { font-size: 20px; font-weight: 800; color: #0f172a; }
+          .footer-note { text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px; }
+          .footer-note p { font-size: 10.5px; color: #94a3b8; line-height: 1.6; }
+          @media print {
+            body { background: #fff; padding: 0; }
+            .invoice { box-shadow: none; border-radius: 0; width: 100%; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice">
+          <div class="header">
+            <div class="header-row">
+              <div>
+                <div class="receipt-label">Payment Receipt</div>
+                <div class="invoice-num">${inv.invoice_number}</div>
+                <div class="company-name">EV Rental Platform</div>
+              </div>
+            </div>
+            <div class="status-row">
+              <div class="status-badge">
+                <div class="status-dot"></div>
+                <span class="status-text">${inv.status === 'paid' ? 'PAYMENT SUCCESSFUL' : 'PAYMENT PENDING'}</span>
+              </div>
+              <span class="date-text">${new Date(inv.issue_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+            </div>
+          </div>
+
+          <div class="body">
+            <div class="grid-2">
+              <div class="info-card green">
+                <div class="info-label">Billed To</div>
+                <div class="info-name">${inv.user?.name || '—'}</div>
+                <div class="info-sub">
+                  ${inv.user?.mobile ? `📞 ${inv.user.mobile}<br/>` : ''}
+                  ${inv.user?.email ? `✉️ ${inv.user.email}` : ''}
+                </div>
+              </div>
+              <div class="info-card blue">
+                <div class="info-label">Issued By</div>
+                <div class="info-name">${inv.franchise ? inv.franchise.store_name : 'EV Rental Platform'}</div>
+                <div class="info-sub">
+                  ${inv.booking?.booking_id ? `🔖 Booking: ${inv.booking.booking_id}` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="line-table">
+              <div class="line-head">
+                <span>Description</span>
+                <span>Amount</span>
+              </div>
+              <div class="line-body">
+                <div class="line-row">
+                  <div>
+                    <div class="line-title">Vehicle Rental Charge</div>
+                    <div class="line-sub">Booking ID: ${inv.booking?.booking_id || '—'}</div>
+                  </div>
+                  <div class="line-amount">₹${(inv.amount || 0).toLocaleString('en-IN')}</div>
+                </div>
+                ${inv.gst_amount > 0 ? `
+                <div class="line-row">
+                  <div>
+                    <div class="line-title">GST / Taxes</div>
+                    <div class="line-sub">Applied as per government norms</div>
+                  </div>
+                  <div class="line-amount">₹${inv.gst_amount.toLocaleString('en-IN')}</div>
+                </div>` : ''}
+                ${inv.discount_amount > 0 ? `
+                <div class="line-row line-discount">
+                  <div>
+                    <div class="line-title">🎉 Discount Applied</div>
+                    <div class="line-sub">Offer / Coupon savings</div>
+                  </div>
+                  <div class="line-amount">- ₹${inv.discount_amount.toLocaleString('en-IN')}</div>
+                </div>` : ''}
+                <div class="line-row line-total">
+                  <div class="line-title">Total Paid</div>
+                  <div class="line-amount">₹${(inv.total_amount || 0).toLocaleString('en-IN')}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="footer-note">
+              <p>🔒 This is a computer-generated invoice. No physical signature is required.<br/>
+              For disputes, contact support with Invoice No. <strong>${inv.invoice_number}</strong></p>
+            </div>
+          </div>
+        </div>
+        <script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); }<\/script>
+      </body>
+      </html>
+    `;
+    const win = window.open('', '_blank', 'width=700,height=900');
+    win.document.write(html);
+    win.document.close();
+  };
 
   const handleTrack = () => {
     const found = bookings.find((b) => b.bookingId.toLowerCase() === trackId.trim().toLowerCase());
@@ -569,6 +734,9 @@ const Bookings = () => {
                       <div className="bk-actions">
                         <button className="btn-icon" title="View Details" onClick={() => setSelected(b)}>
                           <Eye size={15} />
+                        </button>
+                        <button className="btn-icon" title="View Bill" onClick={() => handleViewBill(b.id)} style={{ color: '#10b981' }}>
+                          <Receipt size={15} />
                         </button>
                         {b.status === 'Pending' && (
                           <>
@@ -1106,6 +1274,169 @@ const Bookings = () => {
         </div>,
         document.body
       )}
+      {/* Invoice Modal — Premium Design */}
+      {showInvoiceModal && invoiceData && createPortal(
+        <div className="modal-overlay" onClick={() => setShowInvoiceModal(false)} style={{ backdropFilter: 'blur(6px)' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: '#fff',
+            borderRadius: '20px',
+            width: '100%',
+            maxWidth: '580px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.25)',
+            fontFamily: "'Inter', -apple-system, sans-serif",
+            position: 'relative'
+          }}>
+            {/* Header gradient */}
+            <div style={{
+              background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #10b981 100%)',
+              borderRadius: '20px 20px 0 0',
+              padding: '28px 28px 20px 28px',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              {/* Decorative circles */}
+              <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+              <div style={{ position: 'absolute', top: 10, right: 50, width: 60, height: 60, borderRadius: '50%', background: 'rgba(16,185,129,0.15)' }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                    <div style={{ background: 'rgba(16,185,129,0.2)', borderRadius: '8px', padding: '8px', display: 'flex' }}>
+                      <Receipt size={22} color="#10b981" />
+                    </div>
+                    <div>
+                      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Payment Receipt</div>
+                      <div style={{ color: '#fff', fontWeight: 700, fontSize: '18px', letterSpacing: '0.5px' }}>{invoiceData.invoice_number}</div>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={() => setShowInvoiceModal(false)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', padding: '8px', cursor: 'pointer', color: '#fff', display: 'flex' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Status pill */}
+              <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  background: invoiceData.status === 'paid' ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.25)',
+                  border: `1px solid ${invoiceData.status === 'paid' ? 'rgba(16,185,129,0.5)' : 'rgba(245,158,11,0.5)'}`,
+                  borderRadius: '20px', padding: '5px 14px'
+                }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: invoiceData.status === 'paid' ? '#10b981' : '#f59e0b' }} />
+                  <span style={{ color: invoiceData.status === 'paid' ? '#10b981' : '#f59e0b', fontSize: '12px', fontWeight: 600, letterSpacing: '0.5px' }}>
+                    {invoiceData.status === 'paid' ? 'PAYMENT SUCCESSFUL' : 'PAYMENT PENDING'}
+                  </span>
+                </div>
+                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>
+                  {new Date(invoiceData.issue_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px 28px' }}>
+
+              {/* Billed To / Issued By */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', borderLeft: '3px solid #10b981' }}>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>Billed To</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px', marginBottom: '4px' }}>{invoiceData.user?.name || '—'}</div>
+                  <div style={{ color: '#64748b', fontSize: '12px', lineHeight: '1.6' }}>
+                    {invoiceData.user?.mobile && <div>📞 {invoiceData.user.mobile}</div>}
+                    {invoiceData.user?.email && <div>✉️ {invoiceData.user.email}</div>}
+                  </div>
+                </div>
+                <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', borderLeft: '3px solid #3b82f6' }}>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>Issued By</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px', marginBottom: '4px' }}>
+                    {invoiceData.franchise ? invoiceData.franchise.store_name : 'EV Rental Platform'}
+                  </div>
+                  <div style={{ color: '#64748b', fontSize: '12px', lineHeight: '1.6' }}>
+                    {invoiceData.booking?.booking_id && <div>🔖 Booking: {invoiceData.booking.booking_id}</div>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Line items */}
+              <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
+                <div style={{ background: '#f1f5f9', padding: '10px 16px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '1px' }}>Description</span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</span>
+                </div>
+
+                <div style={{ padding: '0 16px' }}>
+                  {/* Base amount */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px dashed #e2e8f0' }}>
+                    <div>
+                      <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '14px' }}>Vehicle Rental Charge</div>
+                      <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Booking ID: {invoiceData.booking?.booking_id || '—'}</div>
+                    </div>
+                    <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(invoiceData.amount || 0).toLocaleString('en-IN')}</div>
+                  </div>
+
+                  {/* GST */}
+                  {(invoiceData.gst_amount > 0) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px dashed #e2e8f0' }}>
+                      <div>
+                        <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '14px' }}>GST / Taxes</div>
+                        <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Applied as per government norms</div>
+                      </div>
+                      <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(invoiceData.gst_amount).toLocaleString('en-IN')}</div>
+                    </div>
+                  )}
+
+                  {/* Discount */}
+                  {(invoiceData.discount_amount > 0) && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px dashed #e2e8f0' }}>
+                      <div>
+                        <div style={{ fontWeight: 500, color: '#10b981', fontSize: '14px' }}>🎉 Discount Applied</div>
+                        <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Offer / Coupon savings</div>
+                      </div>
+                      <div style={{ fontWeight: 600, color: '#10b981', fontSize: '14px' }}>- ₹{(invoiceData.discount_amount).toLocaleString('en-IN')}</div>
+                    </div>
+                  )}
+
+                  {/* Total */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', background: '#fff' }}>
+                    <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '16px' }}>Total Paid</div>
+                    <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '20px' }}>₹{(invoiceData.total_amount || 0).toLocaleString('en-IN')}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer note */}
+              <div style={{ textAlign: 'center', padding: '12px', background: '#f8fafc', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
+                <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>
+                  🔒 This is a computer-generated invoice. No physical signature is required. <br/>
+                  For disputes or queries, contact support with Invoice No. <strong>{invoiceData.invoice_number}</strong>
+                </p>
+              </div>
+            </div>
+
+            {/* Footer actions */}
+            <div style={{ padding: '16px 28px 24px 28px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button onClick={() => setShowInvoiceModal(false)} style={{
+                padding: '10px 20px', borderRadius: '10px', border: '1px solid #e2e8f0',
+                background: '#fff', color: '#475569', fontWeight: 600, cursor: 'pointer', fontSize: '14px'
+              }}>Close</button>
+              <button onClick={() => printInvoice(invoiceData)} style={{
+                padding: '10px 22px', borderRadius: '10px', border: 'none',
+                background: 'linear-gradient(135deg, #0f172a, #10b981)',
+                color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '14px',
+                display: 'flex', alignItems: 'center', gap: '8px',
+                boxShadow: '0 4px 15px rgba(16,185,129,0.3)'
+              }}>
+                <Download size={16} /> Print / Save PDF
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </div>
   );
 };

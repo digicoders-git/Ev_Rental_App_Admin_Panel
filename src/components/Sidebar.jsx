@@ -26,7 +26,8 @@ import {
   UserCheck,
   AlertCircle,
   BarChart,
-  Headphones
+  Headphones,
+  Receipt
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -50,6 +51,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Damage Reports', path: '/damage-reports', icon: AlertTriangle },
     { name: 'Content',    path: '/content',    icon: Layers },
     { name: 'Analytics',  path: '/analytics',  icon: BarChart2 },
+    { name: 'Settlements', path: '/settlements', icon: Receipt },
     { name: 'Payments', path: '/payments', icon: CreditCard },
     { name: 'Notifications', path: '/notifications', icon: Bell },
   ];
@@ -65,6 +67,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Reports',       path: '/f/reports',      icon: BarChart },
     { name: 'Notifications', path: '/f/notifications', icon: Bell },
     { name: 'Complaints',    path: '/f/complaints',   icon: Headphones },
+    { name: 'Settlements',   path: '/settlements',    icon: Receipt },
     { name: 'Profile & Settings', path: '/f/profile', icon: Settings },
   ];
 

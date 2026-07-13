@@ -50,6 +50,7 @@ const AdminLayout = ({ setIsAuthenticated }) => {
       case '/complaints': return 'User Complaints';
       case '/content': return 'Content Management';
       case '/analytics': return 'Business Analytics';
+      case '/settlements': return 'Settlements & Bills';
       case '/payments': return 'Payments Records';
       case '/notifications': return 'System Alerts';
       case '/settings': return 'System Settings';

@@ -143,6 +143,14 @@ export const updateDocument   = (id, data) => api.put(`/documents/${id}`, data, 
 export const deleteDocument   = (id)   => api.delete(`/documents/${id}`);
 export const renewDocument    = (id, data) => api.put(`/documents/${id}/renew`, data);
 
+/* ── INVOICES (RIDER BILLS) ── */
+export const getInvoiceByBooking = (bookingId) => api.get(`/invoices/booking/${bookingId}`);
+export const getAllInvoices      = (params) => api.get('/invoices', { params });
+
+/* ── SETTLEMENTS (B2B BILLS) ── */
+export const getSettlements      = (params) => api.get('/settlements', { params });
+export const generateSettlement  = (data)   => api.post('/settlements/generate', data);
+
 /* ── REVIEWS ── */
 export const addReview         = (data) => api.post('/reviews', data);
 export const getVehicleReviews = (id)   => api.get(`/reviews/vehicle/${id}`);

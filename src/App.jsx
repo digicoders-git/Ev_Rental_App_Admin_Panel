@@ -23,6 +23,7 @@ import Complaints from './pages/Complaints';
 import Content from './pages/Content';
 import DamageReports from './pages/DamageReports';
 import Analytics from './pages/Analytics';
+import Settlements from './pages/Settlements';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 
@@ -147,6 +148,7 @@ function App() {
           <Route path="complaints" element={<Complaints />} />
           <Route path="content" element={<Content />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="settlements" element={<Settlements />} />
           <Route path="profile" element={<Profile />} />
           <Route path="payments" element={<Payments />} />
           <Route path="notifications" element={<Notifications />} />
@@ -183,6 +185,7 @@ function App() {
                 <Route path="/damage-reports" element={<DamageReports />} />
                 <Route path="/content" element={<Content />} />
                 <Route path="/analytics" element={<Analytics />} />
+                <Route path="/settlements" element={<Settlements />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/notifications" element={<Notifications />} />
