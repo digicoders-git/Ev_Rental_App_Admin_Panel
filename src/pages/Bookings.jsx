@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge, changeBookingVehicle, getAllVehicles } from '../services/apiServices';
 import useApi from '../services/useApi';
+import api from '../services/api';
 import './Bookings.css';
 
 const STATUS_CONFIG = {
@@ -89,6 +90,17 @@ const Bookings = () => {
       alert(err.response?.data?.message || 'Failed to swap vehicle');
     } finally {
       setSwapping(false);
+    }
+  };
+
+  const handleUnassignVehicle = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to unassign the vehicle? The booking status will revert to Pending.')) return;
+    try {
+      await api.put(`/bookings/${bookingId}/unassign`);
+      setSelected(null);
+      fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to unassign vehicle');
     }
   };
 
@@ -646,10 +658,15 @@ const Bookings = () => {
                 <div className="bk-detail-section">
                   <div className="bk-detail-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Car size={13} /> Vehicle Info</div>
-                    {['Pending', 'Active', 'Ongoing'].includes(selected.status) && (
-                      <button className="btn btn-outline btn-sm" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }} onClick={() => handleOpenSwapModal(selected.id)}>
-                        Swap Vehicle
-                      </button>
+                    {['Pending', 'Active', 'Ongoing'].includes(selected.status) && selected.vehicle && (
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-outline btn-sm" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }} onClick={() => handleOpenSwapModal(selected.id)}>
+                          Swap Vehicle
+                        </button>
+                        <button className="btn btn-outline btn-sm" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', color: '#ef4444', borderColor: '#ef4444' }} onClick={() => handleUnassignVehicle(selected.id)}>
+                          Unassign
+                        </button>
+                      </div>
                     )}
                   </div>
                   <div className="bk-detail-rows">
