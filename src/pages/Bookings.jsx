@@ -7,7 +7,7 @@ import {
   Navigation, PackageCheck, Hourglass, TrendingUp, Loader, AlertTriangle,
   Plus, Trash2, CalendarDays, CheckCircle2, AlertOctagon
 } from 'lucide-react';
-import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge } from '../services/apiServices';
+import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge, changeBookingVehicle, getAllVehicles } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Bookings.css';
 
@@ -59,6 +59,38 @@ const Bookings = () => {
   const [showDamageModal, setShowDamageModal] = useState(false);
   const [damageForm, setDamageForm] = useState({ description: '', amount: '' });
   const [damageBookingId, setDamageBookingId] = useState(null);
+
+  const [showSwapModal, setShowSwapModal] = useState(false);
+  const [swapVehiclesList, setSwapVehiclesList] = useState([]);
+  const [swapping, setSwapping] = useState(false);
+  const [swapBookingId, setSwapBookingId] = useState(null);
+
+  const handleOpenSwapModal = async (bookingId) => {
+    try {
+      setSwapBookingId(bookingId);
+      setShowSwapModal(true);
+      const res = await getAllVehicles();
+      const vData = res.data?.data || res.data || [];
+      setSwapVehiclesList(vData.filter(v => v.status === 'active'));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to fetch available vehicles');
+    }
+  };
+
+  const handleConfirmSwap = async (newVehicleId) => {
+    try {
+      setSwapping(true);
+      await changeBookingVehicle(swapBookingId, newVehicleId);
+      setShowSwapModal(false);
+      setSelected(null);
+      fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to swap vehicle');
+    } finally {
+      setSwapping(false);
+    }
+  };
 
   useEffect(() => {
     fetchBookings();
@@ -612,7 +644,14 @@ const Bookings = () => {
 
                 {/* Vehicle */}
                 <div className="bk-detail-section">
-                  <div className="bk-detail-section-title"><Car size={13} /> Vehicle Info</div>
+                  <div className="bk-detail-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Car size={13} /> Vehicle Info</div>
+                    {['Pending', 'Active', 'Ongoing'].includes(selected.status) && (
+                      <button className="btn btn-outline btn-sm" style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }} onClick={() => handleOpenSwapModal(selected.id)}>
+                        Swap Vehicle
+                      </button>
+                    )}
+                  </div>
                   <div className="bk-detail-rows">
                     <div className="bk-detail-row"><span>Vehicle</span><span>{selected.vehicle}</span></div>
                     <div className="bk-detail-row"><span>Reg. No.</span><span>{selected.regNo}</span></div>
@@ -1004,6 +1043,47 @@ const Bookings = () => {
               >
                 {loading ? <Loader size={15} className="spinner" /> : <><AlertOctagon size={15} /> Add Charge</>}
               </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── SWAP VEHICLE MODAL ── */}
+      {showSwapModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowSwapModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+            <div className="modal-header">
+              <h3>Swap Assigned Vehicle</h3>
+              <button className="btn-icon" onClick={() => setShowSwapModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                Select an available vehicle to replace the currently assigned one. The booking amount will remain unchanged.
+              </p>
+              <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                {swapVehiclesList.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No available vehicles found.</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {swapVehiclesList.map(v => (
+                      <div key={v._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-color)', fontSize: '0.9rem' }}>{v.vehicle_name || v.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Reg: {v.registration_number || v.regNo || 'N/A'} | Type: {v.vehicle_type || v.type}</div>
+                        </div>
+                        <button 
+                          className="btn btn-outline btn-sm"
+                          onClick={() => handleConfirmSwap(v._id || v.id)}
+                          disabled={swapping}
+                        >
+                          {swapping ? 'Swapping...' : 'Select'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>,

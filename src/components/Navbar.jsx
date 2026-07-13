@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, User, Menu, Settings, LogOut, UserCircle, ChevronDown, Calendar, Clock, X, AlertTriangle } from 'lucide-react';
+import { Bell, User, Menu, Settings, LogOut, UserCircle, ChevronDown, Calendar, Clock, X, AlertTriangle, Download, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getNotifications } from '../services/apiServices';
+import { getNotifications, exportDatabaseBackup } from '../services/apiServices';
 import './Navbar.css';
 
 const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
@@ -10,6 +10,7 @@ const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -47,6 +48,24 @@ const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const handleExport = async () => {
+    try {
+      setDownloading(true);
+      const res = await exportDatabaseBackup();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'EV_Rental_Backup.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      alert('Failed to download backup');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleLogout = () => {
@@ -106,6 +125,17 @@ const Navbar = ({ onMenuClick, setIsAuthenticated }) => {
       </div>
 
       <div className="navbar-right">
+        {userRole !== 'franchise' && (
+          <button 
+            className="btn btn-outline" 
+            onClick={handleExport} 
+            disabled={downloading}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', padding: '0.35rem 0.75rem', borderColor: '#10b981', color: '#10b981', background: '#dcfce7', fontWeight: 600 }}
+          >
+            {downloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+            <span className="hide-on-mobile">Export DB</span>
+          </button>
+        )}
         <button className="nav-icon-btn" onClick={() => navigate(userRole === 'franchise' ? '/f/notifications' : '/notifications')}>
           <Bell size={20} />
           {unreadCount > 0 && (

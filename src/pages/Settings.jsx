@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { 
   Save, Shield, IndianRupee, Percent,
-  User, Lock, Mail, Phone, Loader2, CheckCircle, AlertCircle
+  User, Lock, Mail, Phone, Loader2, CheckCircle, AlertCircle, Download, FileText
 } from 'lucide-react';
 import { 
   getProfile, updateProfile, changePassword, 
-  getPlatformSettings, updatePlatformSettings, deleteOldRecords
+  getPlatformSettings, updatePlatformSettings, deleteOldRecords, exportDatabaseBackup
 } from '../services/apiServices';
 import './Settings.css';
 
@@ -19,7 +19,8 @@ const Settings = () => {
     commission_pct: 15,
     payout_cycle: 'Weekly',
     mandatory_kyc: true,
-    auto_approve_franchise: false
+    auto_approve_franchise: false,
+    terms_and_conditions: ''
   });
 
   const [loading, setLoading]   = useState(true);
@@ -27,6 +28,7 @@ const Settings = () => {
   const [msg, setMsg]           = useState({ type: '', text: '' });
   const [cleanupMonths, setCleanupMonths] = useState(6);
   const [cleaning, setCleaning] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
@@ -49,7 +51,7 @@ const Settings = () => {
 
   const showMsg = (type, text) => {
     setMsg({ type, text });
-    setTimeout(() => setMsg({ type: '', text: '' }), 4000);
+    setTimeout(() => setMsg({ type: '', text: '' }), 3500);
   };
 
   const handleProfileSave = async (e) => {
@@ -111,6 +113,25 @@ const Settings = () => {
     }
   };
 
+  const handleExportBackup = async () => {
+    try {
+      setDownloading(true);
+      const res = await exportDatabaseBackup();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'EV_Rental_Backup.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      showMsg('success', 'Backup downloaded successfully');
+    } catch (error) {
+      showMsg('error', 'Failed to download backup');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="cp-page-loading">
@@ -122,22 +143,48 @@ const Settings = () => {
 
   return (
     <div className="settings-page">
+
+      {/* ── FIXED TOAST NOTIFICATION ── */}
+      {msg.text && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '28px',
+            right: '28px',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '14px 20px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.18)',
+            background: msg.type === 'success' ? '#10b981' : '#ef4444',
+            color: '#fff',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            minWidth: '260px',
+            animation: 'slideInToast 0.3s ease',
+          }}
+        >
+          {msg.type === 'success'
+            ? <CheckCircle size={18} />
+            : <AlertCircle size={18} />}
+          {msg.text}
+        </div>
+      )}
+
       <div className="page-header">
         <div>
-          <h1>Settings & Configurations</h1>
+          <h1>Settings &amp; Configurations</h1>
           <p>Manage your admin profile, security, and global platform preferences.</p>
         </div>
-        {msg.text && (
-          <div className={`settings-msg ${msg.type}`}>
-            {msg.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
-            {msg.text}
-          </div>
-        )}
       </div>
 
       <div className="settings-grid-layout">
-        {/* LEFT COLUMN: Admin Profile & Security */}
+        {/* LEFT COLUMN */}
         <div className="settings-column">
+
+          {/* Admin Profile */}
           <div className="card">
             <div className="settings-card-header">
               <User size={18} className="primary-text" />
@@ -171,25 +218,26 @@ const Settings = () => {
             </form>
           </div>
 
+          {/* Security */}
           <div className="card">
             <div className="settings-card-header">
               <Lock size={18} className="danger-text" />
-              <h3>Security & Password</h3>
+              <h3>Security &amp; Password</h3>
             </div>
             <form onSubmit={handlePasswordChange} className="settings-form">
               <div className="form-group">
                 <label>Current Password</label>
-                <input type="password" value={passwords.oldPassword} 
+                <input type="password" value={passwords.oldPassword}
                   onChange={e => setPasswords({...passwords, oldPassword: e.target.value})} />
               </div>
               <div className="form-group">
                 <label>New Password</label>
-                <input type="password" value={passwords.newPassword} 
+                <input type="password" value={passwords.newPassword}
                   onChange={e => setPasswords({...passwords, newPassword: e.target.value})} />
               </div>
               <div className="form-group">
                 <label>Confirm New Password</label>
-                <input type="password" value={passwords.confirmPassword} 
+                <input type="password" value={passwords.confirmPassword}
                   onChange={e => setPasswords({...passwords, confirmPassword: e.target.value})} />
               </div>
               <button type="submit" className="btn btn-outline" style={{ borderColor: '#ef4444', color: '#ef4444' }} disabled={saving}>
@@ -197,62 +245,12 @@ const Settings = () => {
               </button>
             </form>
           </div>
-        </div>
 
-        {/* RIGHT COLUMN: Platform & Pricing */}
-        <div className="settings-column">
-          <div className="card">
-            <div className="settings-card-header">
-              <IndianRupee size={18} className="success-text" />
-              <h3>Global Pricing</h3>
-            </div>
-            <div className="settings-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Base Fare (per km)</label>
-                  <input type="number" value={platform.base_fare} 
-                    onChange={e => setPlatform({...platform, base_fare: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>Booking Fee</label>
-                  <input type="number" value={platform.booking_fee} 
-                    onChange={e => setPlatform({...platform, booking_fee: e.target.value})} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Cancellation Fee</label>
-                <input type="number" value={platform.cancellation_fee} 
-                  onChange={e => setPlatform({...platform, cancellation_fee: e.target.value})} />
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="settings-card-header">
-              <Percent size={18} className="secondary-text" />
-              <h3>Commission & Settlement</h3>
-            </div>
-            <div className="settings-form">
-              <div className="form-group">
-                <label>Platform Commission (%)</label>
-                <input type="number" value={platform.commission_pct} 
-                  onChange={e => setPlatform({...platform, commission_pct: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label>Payout Cycle</label>
-                <select value={platform.payout_cycle} onChange={e => setPlatform({...platform, payout_cycle: e.target.value})}>
-                  <option>Weekly</option>
-                  <option>Fortnightly</option>
-                  <option>Monthly</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
+          {/* Policies & Switches */}
           <div className="card">
             <div className="settings-card-header">
               <Shield size={18} style={{ color: '#8b5cf6' }} />
-              <h3>Policies & Switches</h3>
+              <h3>Policies &amp; Switches</h3>
             </div>
             <div className="settings-toggle-list">
               <div className="toggle-item">
@@ -278,15 +276,95 @@ const Settings = () => {
             </div>
             <div className="card-footer-action">
               <button className="btn btn-primary btn-full" onClick={handlePlatformSave} disabled={saving}>
-                 {saving ? <Loader2 className="spinner" size={16} /> : <><Save size={16} /> Save Platform Settings</>}
+                {saving ? <Loader2 className="spinner" size={16} /> : <><Save size={16} /> Save Platform Settings</>}
               </button>
             </div>
           </div>
 
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="settings-column">
+
+          {/* Global Pricing */}
+          <div className="card">
+            <div className="settings-card-header">
+              <IndianRupee size={18} className="success-text" />
+              <h3>Global Pricing</h3>
+            </div>
+            <div className="settings-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Base Fare (per km)</label>
+                  <input type="number" value={platform.base_fare}
+                    onChange={e => setPlatform({...platform, base_fare: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label>Booking Fee</label>
+                  <input type="number" value={platform.booking_fee}
+                    onChange={e => setPlatform({...platform, booking_fee: e.target.value})} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Cancellation Fee</label>
+                <input type="number" value={platform.cancellation_fee}
+                  onChange={e => setPlatform({...platform, cancellation_fee: e.target.value})} />
+              </div>
+            </div>
+          </div>
+
+          {/* Commission */}
+          <div className="card">
+            <div className="settings-card-header">
+              <Percent size={18} className="secondary-text" />
+              <h3>Commission &amp; Settlement</h3>
+            </div>
+            <div className="settings-form">
+              <div className="form-group">
+                <label>Platform Commission (%)</label>
+                <input type="number" value={platform.commission_pct}
+                  onChange={e => setPlatform({...platform, commission_pct: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Payout Cycle</label>
+                <select value={platform.payout_cycle} onChange={e => setPlatform({...platform, payout_cycle: e.target.value})}>
+                  <option>Weekly</option>
+                  <option>Fortnightly</option>
+                  <option>Monthly</option>
+                </select>
+              </div>
+              <button className="btn btn-primary btn-full" onClick={handlePlatformSave} disabled={saving}>
+                {saving ? <Loader2 className="spinner" size={16} /> : <><Save size={16} /> Save Pricing Settings</>}
+              </button>
+            </div>
+          </div>
+
+          {/* System Backups */}
+          <div className="card">
+            <div className="settings-card-header">
+              <Download size={18} style={{ color: '#10b981' }} />
+              <h3>System Backups</h3>
+            </div>
+            <div className="settings-form">
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                Download a complete backup of your database (Users, Vehicles, Bookings, Franchises) in Excel format.
+              </p>
+              <button
+                className="btn btn-primary btn-full"
+                style={{ background: '#10b981', borderColor: '#10b981' }}
+                onClick={handleExportBackup}
+                disabled={downloading}
+              >
+                {downloading ? <Loader2 className="spinner" size={16} /> : <><Download size={16} /> Download Full Backup (Excel)</>}
+              </button>
+            </div>
+          </div>
+
+          {/* Data Cleanup */}
           <div className="card" style={{ border: '1px solid #ef4444' }}>
             <div className="settings-card-header">
               <AlertCircle size={18} className="danger-text" />
-              <h3 className="danger-text">Data Management & Cleanup</h3>
+              <h3 className="danger-text">Data Management &amp; Cleanup</h3>
             </div>
             <div className="settings-form">
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
@@ -302,10 +380,10 @@ const Settings = () => {
                   <option value={24}>2 Years</option>
                 </select>
               </div>
-              <button 
-                className="btn btn-outline btn-full" 
-                style={{ borderColor: '#ef4444', color: '#ef4444', marginTop: '0.5rem' }} 
-                onClick={handleCleanup} 
+              <button
+                className="btn btn-outline btn-full"
+                style={{ borderColor: '#ef4444', color: '#ef4444', marginTop: '0.5rem' }}
+                onClick={handleCleanup}
                 disabled={cleaning}
               >
                 {cleaning ? <Loader2 className="spinner" size={16} /> : 'Delete Old Records'}
@@ -315,6 +393,33 @@ const Settings = () => {
 
         </div>
       </div>
+
+      {/* FULL-WIDTH: Terms & Conditions */}
+      <div className="card" style={{ marginTop: '1.5rem' }}>
+        <div className="settings-card-header">
+          <FileText size={18} style={{ color: '#6366f1' }} />
+          <h3>Terms &amp; Conditions</h3>
+        </div>
+        <div className="settings-form">
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            This text will be shown to riders in the app before they can confirm a booking. They must click <strong>"I Consent"</strong> to proceed.
+          </p>
+          <div className="form-group">
+            <label>Terms &amp; Conditions Text</label>
+            <textarea
+              rows={10}
+              value={platform.terms_and_conditions || ''}
+              onChange={e => setPlatform({ ...platform, terms_and_conditions: e.target.value })}
+              placeholder="Enter your full Terms & Conditions text here..."
+              style={{ resize: 'vertical', fontFamily: 'inherit', fontSize: '0.85rem', lineHeight: '1.6', width: '100%' }}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={handlePlatformSave} disabled={saving} style={{ minWidth: '200px' }}>
+            {saving ? <Loader2 className="spinner" size={16} /> : <><Save size={16} /> Save Terms &amp; Conditions</>}
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 };

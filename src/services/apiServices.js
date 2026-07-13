@@ -80,6 +80,7 @@ export const updateBookingStatus = (id, data) => api.patch(`/bookings/${id}/stat
 export const approveBooking      = (id)     => api.patch(`/bookings/${id}/approve`);
 export const rejectBooking       = (id, reason) => api.patch(`/bookings/${id}/reject`, { reason });
 export const cancelBooking       = (id, reason) => api.post(`/bookings/${id}/cancel`, { reason });
+export const changeBookingVehicle = (id, newVehicleId) => api.put(`/bookings/${id}/change-vehicle`, { newVehicleId });
 export const returnVehicle       = (id)     => api.post(`/bookings/${id}/return`);
 export const extendBooking       = (id, extra_days) => api.post(`/bookings/${id}/extend`, { extra_days });
 export const calculateLateFee    = (id)     => api.get(`/bookings/${id}/calculate-late-fee`);
@@ -156,6 +157,7 @@ export const deleteCategory   = (id)   => api.delete(`/v-categories/${id}`);
 export const getPlatformSettings = ()     => api.get('/settings');
 export const updatePlatformSettings = (settings) => api.put('/settings', { settings });
 export const deleteOldRecords = (months)  => api.delete('/settings/cleanup', { params: { months } });
+export const exportDatabaseBackup = ()    => api.get('/settings/backup', { responseType: 'blob' });
 
 /* ── DAMAGE REPORTS ── */
 export const getDamageReports = () => api.get('/damage-reports/admin');

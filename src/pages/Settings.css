@@ -167,6 +167,11 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes slideInToast {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
 .danger-text { color: #ef4444; }
 .success-text { color: #10b981; }
 
