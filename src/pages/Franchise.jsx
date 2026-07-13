@@ -4,7 +4,7 @@ import {
   Building2, Check, X, MapPin, Plus, Search, MoreVertical, TrendingUp,
   Users, Car, XCircle, CheckCircle, Eye, DollarSign, ArrowUpRight,
   ArrowDownRight, KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle,
-  History
+  History, Pencil
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
@@ -26,10 +26,16 @@ const Franchise = () => {
   const [enquiries, setEnquiries] = useState([]);
   const [performance, setPerformance] = useState([]);
   const [dashStats, setDashStats] = useState(null);
-  const [form, setForm] = useState({
+  const initialFormState = {
     store_name: '', owner_name: '', mobile: '', email: '', 
-    address: '', city: '', state: '', password: '', confirmPassword: ''
-  });
+    address: '', city: '', state: '', password: '', confirmPassword: '',
+    payment_model: 'platform', franchise_share_percentage: 80,
+    razorpay_linked_account_id: '', razorpay_key_id: '', razorpay_key_secret: ''
+  };
+
+  const [form, setForm] = useState(initialFormState);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
 
   const { loading, call } = useApi();
@@ -60,13 +66,55 @@ const Franchise = () => {
     }
     call(() => createStore(form), () => {
       setShowAddModal(false);
-      setForm({
-        store_name: '', owner_name: '', mobile: '', email: '', 
-        address: '', city: '', state: '', password: '', confirmPassword: ''
-      });
+      setForm(initialFormState);
       fetchData();
       alert("Partnership created successfully!");
     }, (err) => alert(err.message || "Failed to create partnership"));
+  };
+
+  const handleEditClick = (f) => {
+    setEditId(f._id);
+    setForm({
+      store_name: f.store_name || '',
+      owner_name: f.owner_name || '',
+      mobile: f.mobile || '',
+      email: f.email || '',
+      address: f.address || '',
+      city: f.city || '',
+      state: f.state || '',
+      password: '',
+      confirmPassword: '',
+      payment_model: f.payment_model || 'platform',
+      franchise_share_percentage: f.franchise_share_percentage || 80,
+      razorpay_linked_account_id: f.razorpay_linked_account_id || '',
+      razorpay_key_id: f.razorpay_key_id || '',
+      razorpay_key_secret: f.razorpay_key_secret || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdate = (e) => {
+    e.preventDefault();
+    if (form.password && form.password !== form.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    
+    import('../services/apiServices').then(({ updateStore }) => {
+      const updateData = { ...form };
+      if (!updateData.password) {
+        delete updateData.password;
+      }
+      delete updateData.confirmPassword;
+
+      call(() => updateStore(editId, updateData), () => {
+        setShowEditModal(false);
+        setForm(initialFormState);
+        setEditId(null);
+        fetchData();
+        alert("Partnership updated successfully!");
+      }, (err) => alert(err.message || "Failed to update partnership"));
+    });
   };
 
   const handleDeleteStore = (id) => {
@@ -128,7 +176,7 @@ const Franchise = () => {
           <h1>Franchise Network</h1>
           <p>Expand and manage your TRIS Electric partner ecosystem.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+        <button className="btn btn-primary" onClick={() => { setForm(initialFormState); setShowAddModal(true); }}>
           <Plus size={18} />
           <span>Add New Partner</span>
         </button>
@@ -273,6 +321,7 @@ const Franchise = () => {
                   <td>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button className="btn-icon" title="View Profile" onClick={() => openViewModal(f)}><Eye size={16} /></button>
+                      <button className="btn-icon" title="Edit Franchise" onClick={() => handleEditClick(f)} style={{ color: '#3b82f6' }}><Pencil size={16} /></button>
                       <button className="btn-icon history" title="View History" onClick={() => openHistoryModal(f)} style={{ color: '#8b5cf6' }}><History size={16} /></button>
                       <button className="btn-icon delete" title="Delete Franchise" onClick={() => setDeleteId(f._id)} style={{ color: '#ef4444' }}><Trash2 size={16} /></button>
                     </div>
@@ -284,17 +333,17 @@ const Franchise = () => {
         </div>
       </div>
 
-      {showAddModal && createPortal(
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+      {(showAddModal || showEditModal) && createPortal(
+        <div className="modal-overlay" onClick={() => { setShowAddModal(false); setShowEditModal(false); }}>
           <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Onboard New Partner</h3>
-              <button className="btn-icon" onClick={() => setShowAddModal(false)}>
+              <h3>{showEditModal ? 'Edit Partner' : 'Onboard New Partner'}</h3>
+              <button className="btn-icon" onClick={() => { setShowAddModal(false); setShowEditModal(false); }}>
                 <X size={20} />
               </button>
             </div>
             <div className="modal-body">
-              <form className="user-form" id="onboard-form" onSubmit={handleOnboard}>
+              <form className="user-form" id="onboard-form" onSubmit={showEditModal ? handleUpdate : handleOnboard}>
 
                 {/* Section 1: Business Info */}
                 <div className="form-section-title">
@@ -356,10 +405,10 @@ const Franchise = () => {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Password</label>
+                    <label>Password {showEditModal && "(Leave blank to keep current)"}</label>
                     <div className="input-icon-wrap">
                       <Lock size={15} className="input-icon" />
-                      <input type={showPassword ? 'text' : 'password'} placeholder="Create password" required value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
+                      <input type={showPassword ? 'text' : 'password'} placeholder={showEditModal ? "New password" : "Create password"} required={!showEditModal} value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
                       <button type="button" className="input-icon-right" onClick={() => setShowPassword(!showPassword)}>
                         {showPassword ? <EyeOff size={15} /> : <EyeIcon size={15} />}
                       </button>
@@ -369,19 +418,57 @@ const Franchise = () => {
                     <label>Confirm Password</label>
                     <div className="input-icon-wrap">
                       <Lock size={15} className="input-icon" />
-                      <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter password" required value={form.confirmPassword} onChange={e => setForm({...form, confirmPassword: e.target.value})} />
+                      <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter password" required={!!form.password} value={form.confirmPassword} onChange={e => setForm({...form, confirmPassword: e.target.value})} />
                       <button type="button" className="input-icon-right" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
                         {showConfirmPassword ? <EyeOff size={15} /> : <EyeIcon size={15} />}
                       </button>
                     </div>
                   </div>
                 </div>
+
+                {/* Section 4: Payment Gateway Configuration */}
+                <div className="form-section-title" style={{ marginTop: '1.25rem' }}>
+                  <DollarSign size={15} />
+                  Payment Gateway Configuration
+                </div>
+                <div className="form-group">
+                  <label>Payment Model</label>
+                  <select style={{ width: '100%', padding: '0.6rem', borderRadius: '8px', border: '1px solid var(--border)' }} required value={form.payment_model} onChange={e => setForm({...form, payment_model: e.target.value})}>
+                    <option value="platform">Platform (Default)</option>
+                    <option value="split">Split / Route</option>
+                    <option value="direct">Direct</option>
+                  </select>
+                </div>
+                {form.payment_model === 'split' && (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Franchise Share Percentage (%)</label>
+                      <input type="number" required value={form.franchise_share_percentage} onChange={e => setForm({...form, franchise_share_percentage: e.target.value})} />
+                    </div>
+                    <div className="form-group">
+                      <label>Razorpay Linked Account ID</label>
+                      <input type="text" placeholder="acc_..." required value={form.razorpay_linked_account_id} onChange={e => setForm({...form, razorpay_linked_account_id: e.target.value})} />
+                    </div>
+                  </div>
+                )}
+                {form.payment_model === 'direct' && (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Razorpay Key ID</label>
+                      <input type="text" placeholder="rzp_..." required value={form.razorpay_key_id} onChange={e => setForm({...form, razorpay_key_id: e.target.value})} />
+                    </div>
+                    <div className="form-group">
+                      <label>Razorpay Key Secret</label>
+                      <input type="text" placeholder="..." required value={form.razorpay_key_secret} onChange={e => setForm({...form, razorpay_key_secret: e.target.value})} />
+                    </div>
+                  </div>
+                )}
               </form>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
+              <button className="btn btn-outline" onClick={() => { setShowAddModal(false); setShowEditModal(false); }}>Cancel</button>
               <button className="btn btn-primary" type="submit" form="onboard-form" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" size={18} /> : "Create Partnership"}
+                {loading ? <Loader2 className="animate-spin" size={18} /> : (showEditModal ? "Update Partnership" : "Create Partnership")}
               </button>
             </div>
           </div>

@@ -249,6 +249,45 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Franchise Rider Operations */}
+      {stats.franchise?.riderStats && stats.franchise.riderStats.length > 0 && (
+        <div className="card table-card" style={{ marginTop: '1.5rem' }}>
+          <div className="card-header">
+            <h3>Franchise Rider Operations</h3>
+          </div>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Franchise Name</th>
+                  <th>Active Riders</th>
+                  <th>Offboarded Riders</th>
+                  <th>Total Interacted</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.franchise.riderStats.map((stat, idx) => (
+                  <tr key={idx}>
+                    <td className="font-medium">{stat.store_name}</td>
+                    <td>
+                      <span className="badge badge-success" style={{ fontSize: '0.85rem', padding: '4px 8px' }}>
+                        {stat.activeRiders} Active
+                      </span>
+                    </td>
+                    <td>
+                      <span className="badge" style={{ backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '0.85rem', padding: '4px 8px' }}>
+                        {stat.offboardedRiders} Offboarded
+                      </span>
+                    </td>
+                    <td className="font-medium">{stat.totalRiders}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Custom Confirmation Modal */}
       {showCleanupModal && createPortal(
         <div className="modal-overlay" style={{ zIndex: 9999 }}>
