@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Plus, Edit, Trash2, X, Briefcase } from 'lucide-react';
 import api from '../services/api';
 
@@ -125,7 +126,7 @@ const GigCompanies = () => {
       <div className="card">
         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 className="card-title">All Companies ({filteredCompanies.length})</h2>
-          <div className="search-bar" style={{ maxWidth: '300px' }}>
+          <div className="search-wrapper" style={{ maxWidth: '300px' }}>
             <Search size={20} className="search-icon" />
             <input 
               type="text" 
@@ -164,7 +165,7 @@ const GigCompanies = () => {
                     </td>
                     <td>{new Date(company.createdAt).toLocaleDateString()}</td>
                     <td>
-                      <div className="action-buttons">
+                      <div className="action-buttons" style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', justifyContent: 'center' }}>
                         <button className="btn-icon btn-edit" onClick={() => openEditModal(company)} title="Edit">
                           <Edit size={18} />
                         </button>
@@ -191,7 +192,7 @@ const GigCompanies = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      {showModal && (
+      {showModal && createPortal(
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
             <div className="modal-header">
@@ -232,11 +233,12 @@ const GigCompanies = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation */}
-      {showDeleteConfirm && (
+      {showDeleteConfirm && createPortal(
         <div className="modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
           <div className="modal-content delete-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="modal-header">
@@ -259,7 +261,8 @@ const GigCompanies = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
