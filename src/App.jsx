@@ -26,6 +26,7 @@ import Analytics from './pages/Analytics';
 import Settlements from './pages/Settlements';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
+import GigCompanies from './pages/GigCompanies';
 
 import AdminLayout from './pages/AdminLayout';
 
@@ -138,6 +139,7 @@ function App() {
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="kyc" element={<KYC />} />
+          <Route path="gig-companies" element={<GigCompanies />} />
           <Route path="plans" element={<RentalPlans />} />
           <Route path="recharge-plans" element={<RechargePlans />} />
           <Route path="franchise" element={<Franchise />} />
@@ -174,6 +176,7 @@ function App() {
                 <Route path="/vehicles" element={<Vehicles />} />
                 <Route path="/bookings" element={<Bookings />} />
                 <Route path="/kyc" element={<KYC />} />
+                <Route path="/gig-companies" element={<GigCompanies />} />
                 <Route path="/plans" element={<RentalPlans />} />
                 <Route path="/recharge-plans" element={<RechargePlans />} />
                 <Route path="/franchise" element={<Franchise />} />
