@@ -279,7 +279,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="card table-card" style={{ gridColumn: '1 / -1' }}>
+        <div className="card table-card" style={{ gridColumn: 'span 1' }}>
           <div className="card-header">
             <h3>Recent Bookings</h3>
             <Link to="/bookings" className="btn-text">View All</Link>
@@ -290,16 +290,14 @@ const Dashboard = () => {
                 <tr>
                   <th>ID</th>
                   <th>User</th>
-                  <th>Vehicle</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {stats.recentBookings.map((b) => (
+                {stats.recentBookings?.map((b) => (
                   <tr key={b.id}>
                     <td className="font-medium">{b.id}</td>
                     <td>{b.user}</td>
-                    <td>{b.vehicle}</td>
                     <td>
                       <span className={`badge badge-${
                         b.status === 'Active' || b.status === 'Ongoing' ? 'success' : 
@@ -313,6 +311,40 @@ const Dashboard = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Recent Settlements Widget */}
+        <div className="card table-card" style={{ gridColumn: 'span 1' }}>
+          <div className="card-header">
+            <h3>Recent Settlements (B2B)</h3>
+            <Link to="/settlements" className="btn-text">View All</Link>
+          </div>
+          <div className="table-container">
+            {(!stats.recentSettlements || stats.recentSettlements.length === 0) ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
+                <p>No recent settlements generated.</p>
+              </div>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Settlement ID</th>
+                    <th>Franchise</th>
+                    <th>Payout</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentSettlements.map((s) => (
+                    <tr key={s.id}>
+                      <td className="font-medium" style={{ color: '#3b82f6' }}>{s.id}</td>
+                      <td>{s.franchise}</td>
+                      <td className="font-bold text-success">₹{s.amount?.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>

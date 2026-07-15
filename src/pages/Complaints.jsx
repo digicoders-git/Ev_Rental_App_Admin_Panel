@@ -37,9 +37,9 @@ const Complaints = () => {
     fetchTickets();
   }, []);
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const { data } = await getAllTickets();
       const list = (data.data || []).map(t => ({
         id: t._id,
@@ -120,7 +120,7 @@ const Complaints = () => {
     try {
       const apiStatus = STATUS_CFG[statusLabel].api;
       await updateTicket(id, { status: apiStatus });
-      fetchTickets();
+      fetchTickets(false);
       if (selected && selected.id === id) {
         setSelected(prev => ({ ...prev, status: statusLabel }));
       }
@@ -177,10 +177,24 @@ const Complaints = () => {
               </button>
             ))}
           </div>
-          <div className="search-wrapper">
-            <Search size={15} className="search-icon" />
-            <input type="text" placeholder="Search ID, user, subject..."
-              value={search} onChange={e => setSearch(e.target.value)} />
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <select 
+              value={activeTab} 
+              onChange={e => setActiveTab(e.target.value)}
+              style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.85rem', background: 'var(--surface)' }}
+            >
+              <option value="All">All Statuses</option>
+              <option value="Active">Active (Open + In Progress)</option>
+              <option value="Open">Open Only</option>
+              <option value="In Progress">In Progress Only</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+            <div className="search-wrapper">
+              <Search size={15} className="search-icon" />
+              <input type="text" placeholder="Search ID, user, subject..."
+                value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
           </div>
         </div>
 
@@ -283,7 +297,7 @@ const Complaints = () => {
               <div className="cmp-status-row">
                 <span className="cmp-status-label">Update Status:</span>
                 <div className="cmp-status-btns">
-                  {TABS.filter(t => t !== 'All').map(s => (
+                  {TABS.filter(t => t !== 'All' && t !== 'Active').map(s => (
                     <button key={s}
                       className={`cmp-status-btn ${selected.status === s ? 'active-status' : ''}`}
                       onClick={() => handleStatusChange(selected.id, s)}>
