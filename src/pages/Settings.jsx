@@ -20,7 +20,8 @@ const Settings = () => {
     payout_cycle: 'Weekly',
     mandatory_kyc: true,
     auto_approve_franchise: false,
-    terms_and_conditions: ''
+    terms_and_conditions: '',
+    global_payment_mode: 'central'
   });
 
   const [loading, setLoading]   = useState(true);
@@ -313,13 +314,27 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Commission */}
+          {/* Commission & Settlement */}
           <div className="card">
             <div className="settings-card-header">
               <Percent size={18} className="secondary-text" />
               <h3>Commission &amp; Settlement</h3>
             </div>
             <div className="settings-form">
+              <div className="form-group">
+                <label>Global Settlement Mode</label>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Choose how customer payments are processed globally.
+                </div>
+                <select 
+                  value={platform.global_payment_mode} 
+                  onChange={e => setPlatform({...platform, global_payment_mode: e.target.value})}
+                  style={{ border: '1px solid var(--primary)' }}
+                >
+                  <option value="central">Central Collection (Sab payment Super Admin ko)</option>
+                  <option value="direct">Direct Settlement (Payment seedha Franchise ko)</option>
+                </select>
+              </div>
               <div className="form-group">
                 <label>Platform Commission (%)</label>
                 <input type="number" value={platform.commission_pct}
@@ -334,7 +349,7 @@ const Settings = () => {
                 </select>
               </div>
               <button className="btn btn-primary btn-full" onClick={handlePlatformSave} disabled={saving}>
-                {saving ? <Loader2 className="spinner" size={16} /> : <><Save size={16} /> Save Pricing Settings</>}
+                {saving ? <Loader2 className="spinner" size={16} /> : <><Save size={16} /> Save Pricing & Settlement</>}
               </button>
             </div>
           </div>
