@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   Bike, Search, Eye, Battery, MapPin, X, Loader, Plus, Upload, Edit,
   Shield, CheckCircle, Wrench, BatteryCharging, AlertTriangle, IndianRupee,
-  LayoutGrid, Trash2, Hash
+  LayoutGrid, Trash2, Hash, SlidersHorizontal, RefreshCw, AlertCircle
 } from 'lucide-react';
 import useApi from '../../services/useApi';
 import api from '../../services/api';
@@ -12,7 +12,8 @@ import {
   updateFranchiseVehicle,
   getAllCategories, 
   createCategory, 
-  deleteCategory 
+  deleteCategory,
+  updateVehicleStatus
 } from '../../services/apiServices';
 import { io } from 'socket.io-client';
 
@@ -45,6 +46,9 @@ const FVehicles = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const { loading, call } = useApi();
+  const [manageStatusVehicle, setManageStatusVehicle] = useState(null); // for status modal
+  const [statusTarget, setStatusTarget] = useState('');
+  const [forceConfirm, setForceConfirm] = useState(null);
 
   useEffect(() => { 
     fetchVehicles(); 
@@ -173,6 +177,53 @@ const FVehicles = () => {
   const batteryColor = (b) => b < 20 ? '#ef4444' : b < 50 ? '#f59e0b' : '#10b981';
   const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
 
+  // ── Status Management ──
+  const openManageStatus = (v) => {
+    const displayStatus = v.status === 'active' ? 'Available' : v.status === 'maintenance' ? 'Maintenance' : v.status === 'out_of_order' ? 'Out of Order' : v.status;
+    setManageStatusVehicle({ ...v, displayStatus });
+    setStatusTarget(displayStatus);
+    setForceConfirm(null);
+  };
+
+  const handleStatusSave = async () => {
+    let apiStatus;
+    if (statusTarget === 'Available') apiStatus = 'available';
+    else if (statusTarget === 'Maintenance') apiStatus = 'maintenance';
+    else if (statusTarget === 'Out of Order') apiStatus = 'out_of_order';
+    else return;
+
+    try {
+      await updateVehicleStatus(manageStatusVehicle._id, apiStatus, false);
+      setManageStatusVehicle(null);
+      fetchVehicles();
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.conflict) {
+        setForceConfirm({
+          vehicleId: manageStatusVehicle._id,
+          vehicleName: manageStatusVehicle.vehicle_name,
+          booking_id: data.booking_id,
+          booking_status: data.booking_status,
+          targetStatus: apiStatus
+        });
+      } else {
+        alert(data?.message || 'Failed to update vehicle status');
+      }
+    }
+  };
+
+  const handleForceOverride = async () => {
+    if (!forceConfirm) return;
+    try {
+      await updateVehicleStatus(forceConfirm.vehicleId, forceConfirm.targetStatus, true);
+      setForceConfirm(null);
+      setManageStatusVehicle(null);
+      fetchVehicles();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Force override failed');
+    }
+  };
+
   return (
     <div className="fade-in">
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -291,6 +342,9 @@ const FVehicles = () => {
                       </button>
                       <button className="btn-icon" title="Edit Vehicle" style={{ color: '#3b82f6', marginLeft: '4px' }} onClick={() => openEdit(v)}>
                         <Edit size={16} />
+                      </button>
+                      <button className="btn-icon" title="Manage Status" style={{ color: '#8b5cf6', marginLeft: '4px' }} onClick={() => openManageStatus(v)}>
+                        <SlidersHorizontal size={16} />
                       </button>
                     </td>
                   </tr>
@@ -662,6 +716,106 @@ const FVehicles = () => {
         </div>,
         document.body
       )}
+
+      {/* ── MANAGE STATUS MODAL (Franchise) ── */}
+      {manageStatusVehicle && createPortal(
+        <div className="modal-overlay" onClick={() => { setManageStatusVehicle(null); setForceConfirm(null); }}>
+          <div className="modal-content" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <SlidersHorizontal size={18} color="var(--primary)" />
+                <h3>Manage Vehicle Status</h3>
+              </div>
+              <button className="btn-icon" onClick={() => { setManageStatusVehicle(null); setForceConfirm(null); }}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div style={{ background: 'var(--background)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{manageStatusVehicle.vehicle_name} • {manageStatusVehicle.registration_number}</span>
+                <span className={`badge ${getStatusBadge(manageStatusVehicle.status)}`} style={{ textTransform: 'capitalize' }}>{manageStatusVehicle.status}</span>
+              </div>
+
+              {manageStatusVehicle.status === 'active' && manageStatusVehicle.is_busy && (
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '0.75rem', marginBottom: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <AlertCircle size={15} color="#2563eb" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span style={{ fontSize: '0.83rem', color: '#1e40af', lineHeight: 1.5 }}>
+                    This vehicle has an <strong>active booking</strong>. Selecting Available and saving will prompt a confirmation to cancel the booking.
+                  </span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {['Available', 'Maintenance', 'Out of Order'].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setStatusTarget(s)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.75rem',
+                      padding: '0.75rem 1rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 500,
+                      border: statusTarget === s ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      background: statusTarget === s ? 'var(--primary-light)' : 'transparent',
+                      color: statusTarget === s ? 'var(--primary)' : 'var(--text-primary)',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    {s === 'Available' && <CheckCircle size={16} />}
+                    {s === 'Maintenance' && <Wrench size={16} />}
+                    {s === 'Out of Order' && <AlertTriangle size={16} />}
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => { setManageStatusVehicle(null); setForceConfirm(null); }}>Cancel</button>
+              <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleStatusSave}>
+                <CheckCircle size={15} /> Save Status
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── FORCE OVERRIDE CONFIRMATION MODAL (Franchise) ── */}
+      {forceConfirm && createPortal(
+        <div className="modal-overlay" onClick={() => setForceConfirm(null)}>
+          <div className="modal-content" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <AlertTriangle size={20} color="#dc2626" />
+                <h3 style={{ color: '#dc2626' }}>Active Booking Conflict</h3>
+              </div>
+              <button className="btn-icon" onClick={() => setForceConfirm(null)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '1rem', marginBottom: '1rem' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#991b1b', lineHeight: 1.6 }}>
+                  ⚠️ <strong>Vehicle "{forceConfirm.vehicleName}"</strong> has an active booking:<br />
+                  <strong>Booking ID:</strong> {forceConfirm.booking_id}&nbsp;•&nbsp;
+                  <strong>Status:</strong> <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{forceConfirm.booking_status}</span>
+                </p>
+              </div>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Proceeding will <strong>cancel the active booking</strong> and mark the vehicle as <strong>Available</strong>.
+                <br /><br />
+                ⚠️ This <strong>cannot be undone</strong>. Please communicate with the customer first.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setForceConfirm(null)}>Go Back</button>
+              <button
+                className="btn"
+                style={{ background: '#dc2626', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}
+                onClick={handleForceOverride}
+              >
+                <AlertTriangle size={15} /> Force Override & Mark Available
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </div>
   );
 };

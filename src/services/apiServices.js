@@ -30,6 +30,8 @@ export const updateVehicle      = (id, data) => api.put(`/vehicles/${id}`, data,
 export const deleteVehicle      = (id)   => api.delete(`/vehicles/${id}`);
 export const assignVehicle      = (id, franchiseId) => api.put(`/vehicles/${id}/assign`, { franchiseId });
 export const checkAvailability  = (id, start_date, end_date) => api.get(`/vehicles/${id}/availability`, { params: { start_date, end_date } });
+export const updateVehicleStatus = (id, status, force = false) => api.patch(`/vehicles/${id}/status`, { status, force });
+
 
 /* ── OFFERS / COUPONS ── */
 export const getAllOffers    = ()     => api.get('/offers');

@@ -5,11 +5,12 @@ import {
   Eye, Car, CheckCircle, Clock, Wrench, IndianRupee,
   BatteryCharging, Shield, 
   AlertTriangle, RefreshCw, SlidersHorizontal, Loader,
-  LayoutGrid, Hash
+  LayoutGrid, Hash, AlertCircle
 } from 'lucide-react';
 import { 
   getAllVehicles, createVehicle, deleteVehicle, updateVehicle, getAllStores,
-  getAllCategories, createCategory, deleteCategory, updateCategory
+  getAllCategories, createCategory, deleteCategory, updateCategory,
+  updateVehicleStatus
 } from '../services/apiServices';
 import useApi from '../services/useApi';
 import { io } from 'socket.io-client';
@@ -51,6 +52,7 @@ const Vehicles = () => {
   const [editForm, setEditForm]         = useState({});
   const [avail, setAvail]               = useState({ status: '', battery: '', location: '', reason: '' });
   const [franchises, setFranchises]     = useState([]);
+  const [forceConfirm, setForceConfirm] = useState(null); // holds conflict info for force-override modal
   const fileInputRef = useRef(null);
   const { loading, error, call }        = useApi();
 
@@ -198,17 +200,65 @@ const Vehicles = () => {
   const openManage = (v) => {
     setManageVehicle(v);
     setAvail({ status: v.status, battery: v.battery, location: v.location, reason: '' });
+    setForceConfirm(null);
   };
 
-  const handleAvailSave = () => {
-    const apiStatus = avail.status === 'Available' ? 'active' : (avail.status === 'Out of Order' ? 'out_of_order' : (avail.status === 'Maintenance' ? 'maintenance' : 'booked'));
-    call(
-      () => updateVehicle(manageVehicle.id, { status: apiStatus }),
-      () => {
+  const handleAvailSave = async () => {
+    // 'Booked' is a computed display status — it means the DB status is 'active'
+    // but there is an active booking. We handle this via the conflict flow.
+    let targetStatus;
+    if (avail.status === 'Booked') {
+      // User is trying to change to 'Booked' manually — this is not a real DB status
+      // We treat it as a no-op or show info. The vehicle is already effectively booked.
+      alert('"Booked" is set automatically when there is an active booking. To mark as Available, please select Available instead.');
+      return;
+    } else if (avail.status === 'Available') {
+      targetStatus = 'available';
+    } else if (avail.status === 'Maintenance') {
+      targetStatus = 'maintenance';
+    } else if (avail.status === 'Out of Order') {
+      targetStatus = 'out_of_order';
+    } else {
+      targetStatus = avail.status.toLowerCase();
+    }
+
+    try {
+      const res = await updateVehicleStatus(manageVehicle.id, targetStatus, false);
+      if (res.data?.success) {
+        setManageVehicle(null);
+        setForceConfirm(null);
+        fetchVehicles();
+      }
+    } catch (err) {
+      const data = err.response?.data;
+      if (data?.conflict) {
+        // Vehicle has an active booking — show force-override confirmation
+        setForceConfirm({
+          vehicleId: manageVehicle.id,
+          booking_id: data.booking_id,
+          booking_status: data.booking_status,
+          booking_db_id: data.booking_db_id,
+          targetStatus,
+          vehicleName: manageVehicle.name
+        });
+      } else {
+        alert(data?.message || 'Failed to update vehicle status');
+      }
+    }
+  };
+
+  const handleForceOverride = async () => {
+    if (!forceConfirm) return;
+    try {
+      const res = await updateVehicleStatus(forceConfirm.vehicleId, forceConfirm.targetStatus, true);
+      if (res.data?.success) {
+        setForceConfirm(null);
         setManageVehicle(null);
         fetchVehicles();
       }
-    );
+    } catch (err) {
+      alert(err.response?.data?.message || 'Force override failed');
+    }
   };
 
   const quickStatus = (id, status) =>
@@ -624,17 +674,26 @@ const Vehicles = () => {
                 </span>
               </div>
 
+              {/* Status info for Booked vehicles */}
+              {manageVehicle.status === 'Booked' && (
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '0.5rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                  <AlertCircle size={16} color="#2563eb" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ fontSize: '0.85rem', color: '#1e40af', lineHeight: 1.5 }}>
+                    <strong>Auto-Booked:</strong> This vehicle is currently linked to an active booking. To mark it as Available again, click <strong>Available</strong> below — you will be asked to confirm if you want to cancel the active booking.
+                  </div>
+                </div>
+              )}
+
               {/* Quick status buttons */}
               <div className="form-section-title" style={{ marginTop: '1rem' }}><RefreshCw size={13} /> Change Status</div>
               <div className="avail-status-btns" style={{ flexWrap: 'wrap' }}>
-                {['Available', 'Booked', 'Maintenance', 'Out of Order'].map((s) => (
+                {['Available', 'Maintenance', 'Out of Order'].map((s) => (
                   <button
                     key={s}
                     className={`avail-status-btn ${avail.status === s ? 'active-' + s.toLowerCase().replace(/\s+/g, '-') : ''}`}
                     onClick={() => setAvail((p) => ({ ...p, status: s }))}
                   >
                     {s === 'Available' && <CheckCircle size={15} />}
-                    {s === 'Booked'    && <Clock size={15} />}
                     {s === 'Maintenance' && <Wrench size={15} />}
                     {s === 'Out of Order' && <AlertTriangle size={15} />}
                     {s}
@@ -695,6 +754,46 @@ const Vehicles = () => {
               <button className="btn btn-outline" onClick={() => setManageVehicle(null)} disabled={loading}>Cancel</button>
               <button className="btn btn-primary" onClick={handleAvailSave} disabled={loading}>
                 {loading ? <Loader size={16} className="spinner" /> : <><CheckCircle size={15} /> Save Changes</>}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── FORCE OVERRIDE CONFIRMATION MODAL ── */}
+      {forceConfirm && createPortal(
+        <div className="modal-overlay" onClick={() => setForceConfirm(null)}>
+          <div className="modal-content" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <AlertTriangle size={20} color="#dc2626" />
+                <h3 style={{ color: '#dc2626' }}>Active Booking Conflict</h3>
+              </div>
+              <button className="btn-icon" onClick={() => setForceConfirm(null)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '1rem 1.25rem', marginBottom: '1rem' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#991b1b', lineHeight: 1.6 }}>
+                  ⚠️ <strong>Vehicle "{forceConfirm.vehicleName}"</strong> has an active booking:<br />
+                  <strong>Booking ID:</strong> {forceConfirm.booking_id}&nbsp;•&nbsp;
+                  <strong>Status:</strong> <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{forceConfirm.booking_status}</span>
+                </p>
+              </div>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                If you proceed, the active booking will be <strong>automatically cancelled</strong> and the vehicle will be marked as <strong>Available</strong>.
+                <br /><br />
+                ⚠️ This action <strong>cannot be undone</strong>. Ensure you have communicated with the customer before forcing.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setForceConfirm(null)}>Go Back</button>
+              <button
+                className="btn"
+                style={{ background: '#dc2626', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}
+                onClick={handleForceOverride}
+              >
+                <AlertTriangle size={15} /> Force Override & Mark Available
               </button>
             </div>
           </div>
