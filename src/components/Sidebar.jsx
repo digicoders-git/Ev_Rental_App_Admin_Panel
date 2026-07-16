@@ -41,7 +41,6 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Users', path: '/users', icon: Users },
     { name: 'Vehicles', path: '/vehicles', icon: Car },
     { name: 'Rental Plans', path: '/plans', icon: Zap },
-    { name: 'Wallet Plans', path: '/recharge-plans', icon: Wallet },
     { name: 'Bookings', path: '/bookings', icon: CalendarCheck },
     { name: 'Weekly Payments', path: '/weekly-payments', icon: CalendarDays },
     { name: 'KYC Management', path: '/kyc', icon: ShieldCheck },

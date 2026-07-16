@@ -5,9 +5,9 @@ import {
   Car, User, MapPin, CreditCard, X, Download,
   IndianRupee, Ban, CircleCheck, Activity,
   Navigation, PackageCheck, Hourglass, TrendingUp, Loader, AlertTriangle,
-  Plus, Trash2, CalendarDays, CheckCircle2, AlertOctagon, Receipt
+  Plus, Trash2, CalendarDays, CheckCircle2, AlertOctagon, Receipt, Check
 } from 'lucide-react';
-import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge, changeBookingVehicle, getAllVehicles, getInvoiceByBooking } from '../services/apiServices';
+import { getAllBookings, approveBooking, rejectBooking, cancelBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge, changeBookingVehicle, getAllVehicles, getInvoiceByBooking, approveVehicleSubmission, rejectVehicleSubmission } from '../services/apiServices';
 import useApi from '../services/useApi';
 import api from '../services/api';
 import './Bookings.css';
@@ -105,6 +105,28 @@ const Bookings = () => {
       fetchBookings();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to unassign vehicle');
+    }
+  };
+
+  const handleApproveSubmission = async (bookingId) => {
+    try {
+      await approveVehicleSubmission(bookingId);
+      alert('Vehicle submission approved!');
+      setSelected(null);
+      fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to approve submission');
+    }
+  };
+
+  const handleRejectSubmission = async (bookingId) => {
+    try {
+      await rejectVehicleSubmission(bookingId);
+      alert('Vehicle submission rejected!');
+      setSelected(null);
+      fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reject submission');
     }
   };
 
@@ -728,6 +750,11 @@ const Bookings = () => {
                         <span className={`badge badge-icon ${PAYMENT_STATUS_CONFIG[b.payment_status].cls}`} style={{ marginTop: '4px', fontSize: '10px' }}>
                           {PAYMENT_STATUS_CONFIG[b.payment_status].label}
                         </span>
+                        {b.raw?.return_status === 'submission_pending' && (
+                          <span className="badge badge-warning" style={{ marginTop: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <AlertOctagon size={12} /> Return Pending
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td>
@@ -875,10 +902,16 @@ const Bookings = () => {
                     </div>
                     <div className="bk-detail-row">
                       <span>Status</span>
-                      <span className={`badge badge-icon ${PAYMENT_STATUS_CONFIG[selected.payment_status].cls}`}
-                        style={{ fontSize: '0.72rem' }}>
-                        {PAYMENT_STATUS_CONFIG[selected.payment_status].icon}
-                        {PAYMENT_STATUS_CONFIG[selected.payment_status].label}
+                      <span className="bk-status-stack">
+                        <span className={`badge badge-icon ${PAYMENT_STATUS_CONFIG[selected.payment_status].cls}`} style={{ fontSize: '0.72rem' }}>
+                          {PAYMENT_STATUS_CONFIG[selected.payment_status].icon}
+                          {PAYMENT_STATUS_CONFIG[selected.payment_status].label}
+                        </span>
+                        {selected.raw?.return_status === 'submission_pending' && (
+                          <span className="badge badge-warning" style={{ marginTop: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <AlertOctagon size={12} /> Return Pending
+                          </span>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -1078,6 +1111,19 @@ const Bookings = () => {
                     <button className="btn btn-primary"
                       onClick={() => updateStatus(selected.id, 'Completed')}>
                       <CircleCheck size={15} /> Complete
+                    </button>
+                  </>
+                )}
+                {selected.raw?.return_status === 'submission_pending' && (
+                  <>
+                    <button className="btn btn-outline reject-btn"
+                      onClick={() => handleRejectSubmission(selected.id)}>
+                      <XCircle size={15} /> Reject Return
+                    </button>
+                    <button className="btn btn-primary"
+                      onClick={() => handleApproveSubmission(selected.id)}
+                      style={{ background: '#10b981', borderColor: '#10b981' }}>
+                      <Check size={15} /> Approve Return
                     </button>
                   </>
                 )}

@@ -5,7 +5,7 @@ import {
   CreditCard, Tag, IndianRupee, Star, ToggleLeft, ToggleRight,
   Bike, AlertCircle, Loader2
 } from 'lucide-react';
-import { getAllPlans, createPlan, updatePlan, deletePlan, togglePlan } from '../services/apiServices';
+import { getAllPlans, createPlan, updatePlan, deletePlan, togglePlan, getPlatformSettings, updatePlatformSettings } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './RentalPlans.css';
 
@@ -52,7 +52,7 @@ const RentalPlans = () => {
         badge: '', // Can be added to schema later if needed
         active: p.status === 'active',
         kmLimit: 'Unlimited',
-        extraKmCharge: String(p.late_fee_per_hour || 0),
+        extraKmCharge: String(p.late_fee_per_day || 0),
         helmetIncluded: true,
         insurance: 'Basic',
         description: p.description || '',
@@ -68,7 +68,7 @@ const RentalPlans = () => {
       const s = res.data || {};
       setGlobal({
         deposit: s.security_deposit || '2000',
-        lateFee: s.late_fee_per_hour || '150',
+        lateFee: s.late_fee_per_day || s.late_fee_per_hour || '200',
         gst: s.gst_percentage || '18',
         serviceFee: s.service_fee || '49'
       });
@@ -78,12 +78,14 @@ const RentalPlans = () => {
   const handleGlobalSave = () => {
     const payload = {
       security_deposit: global.deposit,
-      late_fee_per_hour: global.lateFee,
+      late_fee_per_day: global.lateFee,
       gst_percentage: global.gst,
       service_fee: global.serviceFee
     };
     call(() => updatePlatformSettings(payload), () => {
       alert("Global pricing rules updated!");
+    }, (err) => {
+      alert("Failed to save: " + err);
     });
   };
 
@@ -123,7 +125,7 @@ const RentalPlans = () => {
       status: form.active ? 'active' : 'inactive',
       description: form.description,
       features: form.features,
-      late_fee_per_hour: Number(form.extraKmCharge) || 0,
+      late_fee_per_day: Number(form.extraKmCharge) || 0,
       security_deposit: Number(global.deposit) // Default from global for now
     };
     if (editId) {
@@ -196,7 +198,7 @@ const RentalPlans = () => {
             </div>
           </div>
           <div className="form-group">
-            <label>Late Fee / Hour (₹)</label>
+            <label>Late Fee / Day (₹)</label>
             <div className="price-input-group">
               <span className="currency-symbol">₹</span>
               <input type="number" value={global.lateFee} onChange={g('lateFee')} />
@@ -377,7 +379,7 @@ const RentalPlans = () => {
                     <input type="text" placeholder="e.g. 50 or Unlimited" value={form.kmLimit} onChange={f('kmLimit')} />
                   </div>
                   <div className="form-group">
-                    <label>Extra KM Charge (₹/km)</label>
+                    <label>Late Fee / Day (₹)</label>
                     <div className="price-input-group">
                       <span className="currency-symbol">₹</span>
                       <input type="number" placeholder="0" value={form.extraKmCharge} onChange={f('extraKmCharge')} />
