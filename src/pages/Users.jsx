@@ -86,6 +86,7 @@ const Users = () => {
             name: u.name || '',
             email: u.email || '',
             phone: u.mobile || u.phone || '',
+            assigned_vehicle: u.assigned_vehicle || null,
             city: u.city || '',
             kyc: u.isKycVerified ? 'Approved' : 'Pending',
             status: u.status === 'blocked' ? 'Blocked' : 'Active',
@@ -271,6 +272,7 @@ const Users = () => {
                 <th>#</th>
                 <th>User</th>
                 <th>Phone</th>
+                <th>Assigned Vehicle</th>
                 <th>City</th>
                 <th>KYC</th>
                 <th>Wallet</th>
@@ -308,6 +310,17 @@ const Users = () => {
                       </div>
                     </td>
                     <td className="td-muted">{u.phone}</td>
+                    <td>
+                      {u.assigned_vehicle ? (
+                        <span className="badge badge-success" style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
+                          {u.assigned_vehicle.registration_number || u.assigned_vehicle.vehicle_name}
+                        </span>
+                      ) : (
+                        <span className="badge badge-secondary" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' }}>
+                          Not Assigned
+                        </span>
+                      )}
+                    </td>
                     <td className="td-muted">{u.city}</td>
                     <td>
                       <span className={`badge badge-icon ${KYC_CONFIG[u.kyc].cls}`}>
