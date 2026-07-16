@@ -84,10 +84,11 @@ const Analytics = () => {
   const kpis = [
     { label: 'Total Revenue',    value: fmtINR(stats.revenue.total), sub: 'Overall earnings', up: true, icon: <IndianRupee size={20} />, color: 'green' },
     { label: 'Total Bookings',   value: stats.bookings.total,  sub: `${stats.bookings.completed} completed`, up: true, icon: <CalendarCheck size={20} />, color: 'blue' },
-    { label: 'Riders/Users',     value: stats.users.total,     sub: `${stats.users.kyc_verified} verified`, up: true, icon: <Users size={20} />, color: 'purple' },
-    { label: 'Total Fleet',      value: stats.fleet.total,     sub: `${stats.fleet.active} active`, up: true, icon: <Car size={20} />, color: 'orange' },
-    { label: 'Active Stores',    value: stats.franchise.total_stores, sub: 'Franchise partners', up: true, icon: <Building2 size={20} />, color: 'teal' },
-    { label: 'Ongoing Rides',    value: stats.bookings.ongoing, sub: 'Current active rides', up: true, icon: <Activity size={20} />, color: 'indigo' },
+    { label: 'Total Riders',     value: stats.users.total,     sub: 'Registered accounts', up: true, icon: <Users size={20} />, color: 'purple' },
+    { label: 'Active Riders',    value: stats.users.active || 0, sub: 'Working with vehicles', up: true, icon: <Activity size={20} />, color: 'teal' },
+    { label: 'Inactive Riders',  value: stats.users.total - (stats.users.active || 0), sub: 'Not assigned', up: false, icon: <Users size={20} />, color: 'red' },
+    { label: 'Total Fleet',      value: stats.fleet.total,     sub: `${stats.fleet.active} active vehicles`, up: true, icon: <Car size={20} />, color: 'orange' },
+    { label: 'Active Stores',    value: stats.franchise.total_stores, sub: 'Franchise partners', up: true, icon: <Building2 size={20} />, color: 'indigo' }
   ];
 
   const vehicleStatusData = [

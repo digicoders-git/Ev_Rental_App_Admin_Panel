@@ -9,12 +9,13 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { getRevenueReport } from '../services/apiServices';
+import { getRevenueReport, exportBookings } from '../services/apiServices';
 import './Revenue.css';
 
 const Revenue = () => {
   const [period, setPeriod] = useState('This Week');
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [data, setData] = useState({
     chartData: [],
     franchiseRevenue: [],
@@ -39,6 +40,28 @@ const Revenue = () => {
       console.error("Error fetching revenue data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const timeframe = period === 'This Week' ? 'weekly' : 'yearly';
+      const response = await exportBookings(timeframe);
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `revenue_report_${timeframe}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Failed to export data.");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -77,7 +100,10 @@ const Revenue = () => {
                 onClick={() => setPeriod(p)}>{p}</button>
             ))}
           </div>
-          <button className="btn btn-outline"><Download size={15} /> Export</button>
+          <button className="btn btn-outline" onClick={handleExport} disabled={exporting}>
+            {exporting ? <Loader2 size={15} className="spinner" /> : <Download size={15} />} 
+            {exporting ? 'Exporting...' : 'Export'}
+          </button>
         </div>
       </div>
 

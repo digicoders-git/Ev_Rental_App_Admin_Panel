@@ -125,6 +125,7 @@ export const getBroadcastHistory = () => api.get('/notifications/broadcast-histo
 
 /* ── REPORTS ── */
 export const getDashboardStats      = ()       => api.get('/reports/dashboard-stats');
+export const resetDashboardStats    = (data)   => api.post('/reports/reset-stats', data);
 export const getRevenueAnalysis     = (timeframe) => api.get('/reports/revenue-analysis', { params: { timeframe } });
 export const getRevenueReport       = (timeframe) => api.get('/reports/revenue-report', { params: { timeframe } });
 export const getFranchisePerformance = ()      => api.get('/reports/franchise-performance');

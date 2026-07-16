@@ -10,7 +10,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, 
   ResponsiveContainer, AreaChart, Area
 } from 'recharts';
-import { getDashboardStats, getRevenueReport, deleteOldRecords, getInstallmentHealth } from '../services/apiServices';
+import { getDashboardStats, getRevenueReport, deleteOldRecords, getInstallmentHealth, resetDashboardStats } from '../services/apiServices';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -23,6 +23,11 @@ const Dashboard = () => {
   const [showCleanupModal, setShowCleanupModal] = useState(false);
   const [cleanupMonths, setCleanupMonths] = useState(6);
   const [cleaning, setCleaning] = useState(false);
+
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetFromDate, setResetFromDate] = useState('');
+  const [resetToDate, setResetToDate] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -60,6 +65,23 @@ const Dashboard = () => {
     }
   };
 
+  const handleConfirmReset = async () => {
+    if (!resetFromDate || !resetToDate) return alert('Please select both From Date and To Date.');
+    try {
+      setResetting(true);
+      const res = await resetDashboardStats({ fromDate: resetFromDate, toDate: resetToDate });
+      setShowResetModal(false);
+      setResetFromDate('');
+      setResetToDate('');
+      alert(res.data?.message || 'Statistics reset successfully');
+      fetchData(); // Refresh dashboard
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to reset statistics');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   if (loading || !stats) {
     return (
       <div className="cp-page-loading">
@@ -88,6 +110,9 @@ const Dashboard = () => {
           <p>Real-time analytics and operations monitoring.</p>
         </div>
         <div className="header-actions">
+          <button className="btn btn-outline" style={{ borderColor: '#f97316', color: '#f97316', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowResetModal(true)}>
+            <Trash2 size={16} /> Reset Statistics
+          </button>
           <button className="btn btn-outline" style={{ borderColor: '#ef4444', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowCleanupModal(true)}>
             <Trash2 size={16} /> Clear Old History
           </button>
@@ -432,6 +457,56 @@ const Dashboard = () => {
                 >
                   {cleaning ? <Loader2 size={16} className="spinner" /> : <Trash2 size={16} />}
                   Delete History
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Reset Statistics Modal */}
+      {showResetModal && createPortal(
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal" style={{ maxWidth: '400px', backgroundColor: 'var(--card-bg, #ffffff)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: '0', backgroundColor: 'transparent' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f97316' }}>
+                <AlertTriangle size={24} />
+                <h3 style={{ margin: 0, color: '#f97316' }}>Reset Dashboard Statistics</h3>
+              </div>
+              <button className="btn-icon" onClick={() => setShowResetModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ paddingTop: '10px', backgroundColor: 'transparent' }}>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '15px' }}>
+                This will delete all rides (bookings) and their revenue within the selected date range. Income and ride statistics will be permanently reset to zero for this period.
+              </p>
+              <div className="form-group">
+                <label>From Date:</label>
+                <input type="date" value={resetFromDate} onChange={(e) => setResetFromDate(e.target.value)} max={resetToDate || undefined} />
+              </div>
+              <div className="form-group" style={{ marginTop: '15px' }}>
+                <label>To Date:</label>
+                <input type="date" value={resetToDate} onChange={(e) => setResetToDate(e.target.value)} min={resetFromDate || undefined} />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px', paddingBottom: '10px' }}>
+                <button 
+                  className="btn btn-outline" 
+                  style={{ flex: 1 }} 
+                  onClick={() => setShowResetModal(false)}
+                  disabled={resetting}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1, backgroundColor: '#f97316', borderColor: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} 
+                  onClick={handleConfirmReset}
+                  disabled={resetting}
+                >
+                  {resetting ? <Loader2 size={16} className="spinner" /> : <Trash2 size={16} />}
+                  Confirm Reset
                 </button>
               </div>
             </div>
