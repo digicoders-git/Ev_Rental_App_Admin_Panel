@@ -218,7 +218,7 @@ const Dashboard = () => {
         <div className="card table-card">
           <div className="card-header">
             <h3>Weekly Installment Alerts</h3>
-            <Link to="/bookings" className="btn-text">Manage</Link>
+            <Link to="/weekly-payments" className="btn-text">Manage</Link>
           </div>
           <div className="table-container" style={{ maxHeight: '350px', overflowY: 'auto' }}>
             {(!installmentHealth || (installmentHealth.overdue.length === 0 && installmentHealth.due_today.length === 0 && installmentHealth.upcoming.length === 0)) ? (

@@ -20,6 +20,7 @@ import Documents from './pages/Documents';
 import Revenue from './pages/Revenue';
 import Coupons from './pages/Coupons';
 import Complaints from './pages/Complaints';
+import WeeklyPayments from './pages/WeeklyPayments';
 import Content from './pages/Content';
 import DamageReports from './pages/DamageReports';
 import Analytics from './pages/Analytics';
@@ -138,6 +139,7 @@ function App() {
           <Route path="users" element={<Users />} />
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="bookings" element={<Bookings />} />
+          <Route path="weekly-payments" element={<WeeklyPayments />} />
           <Route path="kyc" element={<KYC />} />
           <Route path="gig-companies" element={<GigCompanies />} />
           <Route path="plans" element={<RentalPlans />} />
@@ -175,6 +177,7 @@ function App() {
                 <Route path="/users" element={<Users />} />
                 <Route path="/vehicles" element={<Vehicles />} />
                 <Route path="/bookings" element={<Bookings />} />
+                <Route path="/weekly-payments" element={<WeeklyPayments />} />
                 <Route path="/kyc" element={<KYC />} />
                 <Route path="/gig-companies" element={<GigCompanies />} />
                 <Route path="/plans" element={<RentalPlans />} />
