@@ -435,12 +435,22 @@ const KYC = () => {
                     <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.user?.mobile}</span>
                   </div>
                   <div className="detail-item" style={{ gridColumn: '1/-1' }}>
-                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>RESIDENTIAL ADDRESS</label>
-                    <span style={{ fontWeight: '500', fontSize: '0.9rem', color: 'var(--text-main)' }}>{selected.user?.address || 'Not Provided'}</span>
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>CURRENT ADDRESS</label>
+                    <span style={{ fontWeight: '500', fontSize: '0.9rem', color: 'var(--text-main)' }}>{selected.user?.current_address || 'Not Provided'}</span>
+                  </div>
+                  <div className="detail-item" style={{ gridColumn: '1/-1' }}>
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>PERMANENT ADDRESS</label>
+                    <span style={{ fontWeight: '500', fontSize: '0.9rem', color: 'var(--text-main)' }}>{selected.user?.permanent_address || 'Not Provided'}</span>
                   </div>
                   <div className="detail-item">
                     <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>DATE OF BIRTH</label>
-                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.user?.dob || 'N/A'}</span>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.user?.dob ? new Date(selected.user.dob).toLocaleDateString('en-IN') : 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>KYC FEE (₹49)</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem', color: selected.user?.kyc_fee_paid ? 'green' : 'red' }}>
+                      {selected.user?.kyc_fee_paid ? `✅ Paid (Txn: ${selected.user?.kyc_fee_transaction_id})` : '❌ Not Paid'}
+                    </span>
                   </div>
                   <div className="detail-item">
                     <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>SUBMISSION DATE</label>
