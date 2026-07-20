@@ -889,6 +889,10 @@ const Bookings = () => {
                   <div className="bk-detail-section-title"><CreditCard size={13} /> Payment Details</div>
                   <div className="bk-detail-rows">
                     <div className="bk-detail-row">
+                      <span>Method</span>
+                      <span style={{ textTransform: 'capitalize' }}>{selected.raw?.payment_method || 'online'}</span>
+                    </div>
+                    <div className="bk-detail-row">
                       <span>Grand Total</span>
                       <span className="bk-amount">₹{selected.amount.toLocaleString()}</span>
                     </div>
