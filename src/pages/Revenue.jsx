@@ -14,6 +14,8 @@ import './Revenue.css';
 
 const Revenue = () => {
   const [period, setPeriod] = useState('This Week');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [data, setData] = useState({
@@ -25,14 +27,28 @@ const Revenue = () => {
   });
 
   useEffect(() => {
-    fetchRevenueData();
+    if (period !== 'Custom Date') {
+      fetchRevenueData();
+    }
   }, [period]);
 
   const fetchRevenueData = async () => {
     try {
       setLoading(true);
-      const timeframe = period === 'This Week' ? 'weekly' : 'yearly';
-      const response = await getRevenueReport(timeframe);
+      let timeframe = 'weekly';
+      if (period === 'This Year') timeframe = 'yearly';
+      if (period === 'Custom Date') timeframe = 'custom';
+
+      if (period === 'Custom Date' && (!startDate || !endDate)) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await getRevenueReport(
+        timeframe, 
+        period === 'Custom Date' ? startDate : undefined, 
+        period === 'Custom Date' ? endDate : undefined
+      );
       if (response.data.success) {
         setData(response.data.data);
       }
@@ -95,11 +111,19 @@ const Revenue = () => {
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <div className="rev-period-tabs">
-            {['This Week', 'This Year'].map(p => (
+            {['This Week', 'This Year', 'Custom Date'].map(p => (
               <button key={p} className={`rev-period-btn ${period === p ? 'active' : ''}`}
                 onClick={() => setPeriod(p)}>{p}</button>
             ))}
           </div>
+          {period === 'Custom Date' && (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.9rem', color: 'var(--text-main)', background: 'var(--bg-card)' }} />
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>to</span>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.9rem', color: 'var(--text-main)', background: 'var(--bg-card)' }} />
+              <button className="btn btn-primary" onClick={fetchRevenueData} style={{ padding: '0.5rem 1rem' }}>Apply</button>
+            </div>
+          )}
           <button className="btn btn-outline" onClick={handleExport} disabled={exporting}>
             {exporting ? <Loader2 size={15} className="spinner" /> : <Download size={15} />} 
             {exporting ? 'Exporting...' : 'Export'}

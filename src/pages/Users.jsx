@@ -87,6 +87,10 @@ const Users = () => {
             email: u.email || '',
             phone: u.mobile || u.phone || '',
             assigned_vehicle: u.assigned_vehicle || null,
+            booking_date: u.booking_date ? new Date(u.booking_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A',
+            paid_amount: u.paid_amount || 0,
+            due_amount: u.due_amount || 0,
+            next_installment_date: u.next_installment_date ? new Date(u.next_installment_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A',
             city: u.city || '',
             kyc: u.isKycVerified ? 'Approved' : 'Pending',
             status: u.status === 'blocked' ? 'Blocked' : 'Active',
@@ -94,6 +98,7 @@ const Users = () => {
             totalRides: u.totalRides || 0,
             totalSpent: u.totalSpent || 0,
             walletBalance: u.wallet_balance || 0,
+            franchise_name: (u.franchise_name && u.franchise_name.trim() !== '') ? u.franchise_name : 'Main Branch',
           }));
         setUsers(mapped);
       }
@@ -272,13 +277,16 @@ const Users = () => {
                 <th>#</th>
                 <th>User</th>
                 <th>Phone</th>
-                <th>Assigned Vehicle</th>
+                <th>Vehicle Name</th>
+                <th>Vehicle Number</th>
+                <th>Booking Date</th>
+                <th>Paid</th>
+                <th>Due</th>
+                <th>Next EMI</th>
+                <th>Franchise</th>
                 <th>City</th>
                 <th>KYC</th>
                 <th>Wallet</th>
-                <th>Total Rides</th>
-                <th>Total Spent</th>
-                <th>Joined</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -313,13 +321,37 @@ const Users = () => {
                     <td>
                       {u.assigned_vehicle ? (
                         <span className="badge badge-success" style={{ fontSize: '0.8rem', padding: '4px 8px' }}>
-                          {u.assigned_vehicle.registration_number || u.assigned_vehicle.vehicle_name}
+                          {u.assigned_vehicle.vehicle_name || 'N/A'}
                         </span>
                       ) : (
                         <span className="badge badge-secondary" style={{ fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' }}>
                           Not Assigned
                         </span>
                       )}
+                    </td>
+                    <td>
+                      {u.assigned_vehicle ? (
+                        <span style={{ fontWeight: 600, color: '#334155' }}>
+                          {u.assigned_vehicle.registration_number || 'N/A'}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#94a3b8' }}>-</span>
+                      )}
+                    </td>
+                    <td className="td-muted">{u.booking_date}</td>
+                    <td><span style={{ color: '#10b981', fontWeight: 600 }}>₹{u.paid_amount.toLocaleString()}</span></td>
+                    <td><span style={{ color: '#ef4444', fontWeight: 600 }}>₹{u.due_amount.toLocaleString()}</span></td>
+                    <td>
+                      {u.next_installment_date !== 'N/A' ? (
+                        <span className="badge badge-warning" style={{ fontSize: '0.75rem', padding: '3px 6px' }}>{u.next_installment_date}</span>
+                      ) : (
+                        <span style={{ color: '#94a3b8' }}>-</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`badge ${u.franchise_name === 'Main Branch' ? 'badge-primary' : 'badge-secondary'}`} style={{ fontSize: '0.75rem', padding: '4px 8px' }}>
+                        {u.franchise_name}
+                      </span>
                     </td>
                     <td className="td-muted">{u.city}</td>
                     <td>
@@ -328,9 +360,6 @@ const Users = () => {
                       </span>
                     </td>
                     <td><span className="usr-spent" style={{ color: '#10b981', fontWeight: 600 }}>₹{u.walletBalance.toLocaleString()}</span></td>
-                    <td className="cell-main" style={{ textAlign: 'center' }}>{u.totalRides}</td>
-                    <td><span className="usr-spent">₹{u.totalSpent.toLocaleString()}</span></td>
-                    <td className="td-muted">{u.joined}</td>
                     <td>
                       <span className={`badge badge-icon ${u.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
                         {u.status === 'Active' ? <CheckCircle size={11} /> : <Ban size={11} />}

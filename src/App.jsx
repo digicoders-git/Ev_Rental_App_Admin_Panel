@@ -44,6 +44,7 @@ import FDues from './pages/franchisePanel/FDues';
 import FReports from './pages/franchisePanel/FReports';
 import FNotifications from './pages/franchisePanel/FNotifications';
 import FComplaints from './pages/franchisePanel/FComplaints';
+import FWallet from './pages/franchisePanel/FWallet';
 
 import './App.css';
 
@@ -123,6 +124,7 @@ function App() {
           <Route path="reports" element={<FReports />} />
           <Route path="notifications" element={<FNotifications />} />
           <Route path="complaints" element={<FComplaints />} />
+          <Route path="wallet" element={<FWallet />} />
           <Route path="profile" element={<FranchiseProfile setIsAuthenticated={setIsAuthenticated} />} />
         </Route>
         <Route path="/f/*" element={<Navigate to="/f" />} />
@@ -203,7 +205,7 @@ function App() {
                 <Route path="/f" element={<FranchiseDashboard />} />
                 <Route path="/f/vehicles" element={<FranchiseVehicles />} />
                 <Route path="/f/rides" element={<FranchiseRides />} />
-                <Route path="/f/earnings" element={<FranchiseEarnings />} />
+                <Route path="/f/wallet" element={<FWallet />} />
                 <Route path="/f/customers" element={<FCustomers />} />
                 <Route path="/f/kyc" element={<FKYC />} />
                 <Route path="/f/dues" element={<FDues />} />

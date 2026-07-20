@@ -52,9 +52,14 @@ export const getStoreById   = (id)   => api.get(`/franchise-enquiry/stores/${id}
 export const createStore    = (data) => api.post('/franchise-enquiry/stores', data);
 export const updateStore    = (id, data) => api.put(`/franchise-enquiry/stores/${id}`, data);
 export const deleteStore    = (id)   => api.delete(`/franchise-enquiry/stores/${id}`);
+export const uploadStoreAgreement = (id, data) => api.put(`/franchise-enquiry/admin/stores/${id}/agreement`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const getAllWithdrawalsAdmin = () => api.get('/franchise-enquiry/admin/withdrawals');
+export const approveWithdrawalAdmin = (id, data) => api.put(`/franchise-enquiry/admin/withdrawals/${id}/approve`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const rejectWithdrawalAdmin = (id, data) => api.put(`/franchise-enquiry/admin/withdrawals/${id}/reject`, data);
+export const uploadFranchiseAgreementSelf = (data) => api.put('/franchise-enquiry/store/agreement', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getFranchiseRevenue      = (params) => api.get('/franchise-enquiry/revenue', { params });
 export const getAdminFranchiseRevenue = (id, params) => api.get(`/franchise-enquiry/admin/revenue/${id}`, { params });
-export const getFranchiseHistory      = (id)   => api.get(`/franchise-enquiry/stores/${id}/history`);
+export const getFranchiseHistory      = (id, startDate, endDate) => api.get(`/franchise-enquiry/stores/${id}/history`, { params: { startDate, endDate } });
 
 /* ── FRANCHISE OWNER (Self) ── */
 export const getMyFranchiseVehicles   = ()     => api.get('/vehicles/franchise/my');
@@ -63,6 +68,9 @@ export const updateFranchiseVehicle   = (id, data) => api.put(`/vehicles/franchi
 export const getFranchiseProfile      = ()     => api.get('/franchise-enquiry/profile');
 export const updateFranchiseProfile   = (data) => api.put('/franchise-enquiry/profile', data);
 export const changeFranchisePassword  = (data) => api.put('/franchise-enquiry/change-password', data);
+export const getFranchiseWallet       = ()     => api.get('/franchise-enquiry/wallet');
+export const requestWithdrawal        = (data) => api.post('/franchise-enquiry/wallet/withdraw', data);
+export const getFranchiseWithdrawals  = ()     => api.get('/franchise-enquiry/wallet/withdrawals');
 
 /* ── RENTAL PLANS ── */
 export const getAllPlans    = ()     => api.get('/plans');
@@ -129,7 +137,7 @@ export const getBroadcastHistory = () => api.get('/notifications/broadcast-histo
 export const getDashboardStats      = ()       => api.get('/reports/dashboard-stats');
 export const resetDashboardStats    = (data)   => api.post('/reports/reset-stats', data);
 export const getRevenueAnalysis     = (timeframe) => api.get('/reports/revenue-analysis', { params: { timeframe } });
-export const getRevenueReport       = (timeframe) => api.get('/reports/revenue-report', { params: { timeframe } });
+export const getRevenueReport       = (timeframe, startDate, endDate) => api.get('/reports/revenue-report', { params: { timeframe, startDate, endDate } });
 export const getFranchisePerformance = ()      => api.get('/reports/franchise-performance');
 export const exportBookings         = (timeframe) => api.get('/reports/export/bookings', { params: { timeframe }, responseType: 'blob' });
 export const getInstallmentHealth   = ()       => api.get('/reports/installment-health');

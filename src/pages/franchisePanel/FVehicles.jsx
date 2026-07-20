@@ -179,7 +179,7 @@ const FVehicles = () => {
 
   // ── Status Management ──
   const openManageStatus = (v) => {
-    const displayStatus = v.status === 'active' ? 'Available' : v.status === 'maintenance' ? 'Maintenance' : v.status === 'out_of_order' ? 'Out of Order' : v.status;
+    const displayStatus = v.is_busy ? 'On Ride' : (v.status === 'active' ? 'Available' : v.status === 'maintenance' ? 'Maintenance' : v.status === 'out_of_order' ? 'Out of Order' : v.status);
     setManageStatusVehicle({ ...v, displayStatus });
     setStatusTarget(displayStatus);
     setForceConfirm(null);
@@ -229,15 +229,7 @@ const FVehicles = () => {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h1>My Fleet</h1>
-          <p>Vehicles assigned to or owned by your franchise store.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="btn btn-outline" onClick={() => setShowCatModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <LayoutGrid size={18} /> Categories
-          </button>
-          <button className="btn btn-primary" onClick={() => { setForm(emptyForm); setImagePreview(null); setShowModal(true); }}>
-            <Plus size={18} /> Add Own Vehicle
-          </button>
+          <p>Vehicles assigned to your franchise store.</p>
         </div>
       </div>
 
@@ -248,16 +240,12 @@ const FVehicles = () => {
           <p style={{ margin: 0, fontSize: '0.85rem' }}>Total Fleet</p>
         </div>
         <div className="card" style={{ textAlign: 'center' }}>
-          <h2 style={{ color: '#10b981' }}>{vehicles.filter(v => v.status === 'active').length}</h2>
+          <h2 style={{ color: '#10b981' }}>{vehicles.filter(v => v.status === 'active' && !v.is_busy).length}</h2>
           <p style={{ margin: 0, fontSize: '0.85rem' }}>Available</p>
         </div>
         <div className="card" style={{ textAlign: 'center' }}>
-          <h2 style={{ color: '#8b5cf6' }}>{vehicles.filter(v => v.added_by_franchise).length}</h2>
-          <p style={{ margin: 0, fontSize: '0.85rem' }}>Franchise Owned</p>
-        </div>
-        <div className="card" style={{ textAlign: 'center' }}>
-          <h2 style={{ color: '#3b82f6' }}>{vehicles.filter(v => !v.added_by_franchise).length}</h2>
-          <p style={{ margin: 0, fontSize: '0.85rem' }}>Assigned by Admin</p>
+          <h2 style={{ color: '#f59e0b' }}>{vehicles.filter(v => v.is_busy).length}</h2>
+          <p style={{ margin: 0, fontSize: '0.85rem' }}>On Ride</p>
         </div>
       </div>
 
@@ -335,17 +323,19 @@ const FVehicles = () => {
                         {(v.current_battery != null) ? `${v.current_battery}%` : (v.battery_level != null ? `${v.battery_level}%` : '100%')}
                       </div>
                     </td>
-                    <td><span className={`badge ${getStatusBadge(v.status)}`}>{v.status}</span></td>
+                    <td><span className={`badge ${v.is_busy ? 'badge-warning' : getStatusBadge(v.status)}`}>{v.is_busy ? 'On Ride' : v.status}</span></td>
                     <td>
-                      <button className="btn-icon" title="View Details" onClick={() => setSelected(v)}>
-                        <Eye size={16} />
-                      </button>
-                      <button className="btn-icon" title="Edit Vehicle" style={{ color: '#3b82f6', marginLeft: '4px' }} onClick={() => openEdit(v)}>
-                        <Edit size={16} />
-                      </button>
-                      <button className="btn-icon" title="Manage Status" style={{ color: '#8b5cf6', marginLeft: '4px' }} onClick={() => openManageStatus(v)}>
-                        <SlidersHorizontal size={16} />
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button className="btn-icon" title="View Details" onClick={() => setSelected(v)}>
+                          <Eye size={16} />
+                        </button>
+                        <button className="btn-icon" title="Edit Vehicle" style={{ color: '#3b82f6' }} onClick={() => openEdit(v)}>
+                          <Edit size={16} />
+                        </button>
+                        <button className="btn-icon" title="Manage Status" style={{ color: '#8b5cf6' }} onClick={() => openManageStatus(v)}>
+                          <SlidersHorizontal size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -585,7 +575,7 @@ const FVehicles = () => {
                   ['Reg. Number', selected.registration_number], ['Category', selected.category?.name || selected.vehicle_type],
                   ['Battery', (selected.current_battery != null) ? `${selected.current_battery}%` : (selected.battery_level != null ? `${selected.battery_level}%` : '100%')],
                   ['Range', selected.range_per_charge ? `${selected.range_per_charge} km` : (selected.range_km ? `${selected.range_km} km` : 'N/A')],
-                  ['Status', selected.status], ['Vehicle ID', selected.vehicle_id],
+                  ['Status', selected.is_busy ? 'On Ride' : selected.status], ['Vehicle ID', selected.vehicle_id],
                 ].map(([label, value]) => (
                   <div key={label} style={{ background: 'var(--background)', padding: '0.75rem', borderRadius: '8px' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>{label}</div>

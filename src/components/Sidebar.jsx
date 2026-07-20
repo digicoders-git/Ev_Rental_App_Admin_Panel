@@ -63,14 +63,13 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Dashboard',     path: '/f',              icon: LayoutDashboard },
     { name: 'My Vehicles',   path: '/f/vehicles',     icon: Car },
     { name: 'Rides',         path: '/f/rides',        icon: CalendarCheck },
-    { name: 'Earnings',      path: '/f/earnings',     icon: Wallet },
+    { name: 'Wallet & Agreement', path: '/f/wallet',     icon: Wallet },
     { name: 'Customers',     path: '/f/customers',    icon: Users },
     { name: 'KYC Status',    path: '/f/kyc',          icon: UserCheck },
     { name: 'Due Payments',  path: '/f/dues',         icon: AlertCircle },
     { name: 'Reports',       path: '/f/reports',      icon: BarChart },
     { name: 'Notifications', path: '/f/notifications', icon: Bell },
     { name: 'Complaints',    path: '/f/complaints',   icon: Headphones },
-    { name: 'Settlements',   path: '/settlements',    icon: Receipt },
     { name: 'Profile & Settings', path: '/f/profile', icon: Settings },
   ];
 

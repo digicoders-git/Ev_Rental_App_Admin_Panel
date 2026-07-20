@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User, Shield, CreditCard, LogOut, Save, Eye, EyeOff, X, Loader, CheckCircle } from 'lucide-react';
+import { User, Shield, CreditCard, LogOut, Save, Eye, EyeOff, X, Loader, CheckCircle, FileSignature } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { updateFranchiseProfile, changeFranchisePassword } from '../../services/apiServices';
+import { updateFranchiseProfile, changeFranchisePassword, uploadFranchiseAgreementSelf, getFranchiseProfile } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const FProfile = ({ setIsAuthenticated }) => {
@@ -14,9 +14,11 @@ const FProfile = ({ setIsAuthenticated }) => {
   const [showPass, setShowPass] = useState({});
   const [showLogout, setShowLogout] = useState(false);
   const [success, setSuccess] = useState('');
+  const [agreementFile, setAgreementFile] = useState(null);
   const { loading, call } = useApi();
 
   useEffect(() => {
+    // Load initial from localStorage to prevent flicker
     const data = JSON.parse(localStorage.getItem('userData') || '{}');
     setUserData(data);
     setForm({
@@ -27,6 +29,22 @@ const FProfile = ({ setIsAuthenticated }) => {
       address: data.address || '',
       city: data.city || '',
       state: data.state || '',
+    });
+
+    // Fetch fresh data
+    call(() => getFranchiseProfile(), (res) => {
+      const freshData = res.data?.data || res.data;
+      localStorage.setItem('userData', JSON.stringify(freshData));
+      setUserData(freshData);
+      setForm({
+        store_name: freshData.store_name || '',
+        owner_name: freshData.owner_name || '',
+        mobile: freshData.mobile || '',
+        email: freshData.email || '',
+        address: freshData.address || '',
+        city: freshData.city || '',
+        state: freshData.state || '',
+      });
     });
   }, []);
 
@@ -59,6 +77,21 @@ const FProfile = ({ setIsAuthenticated }) => {
     });
   };
 
+  const handleAgreementUpload = (e) => {
+    e.preventDefault();
+    if (!agreementFile) return alert('Please select a file');
+    const fd = new FormData();
+    fd.append('franchise_agreement_document', agreementFile);
+    call(() => uploadFranchiseAgreementSelf(fd), (res) => {
+      setSuccess('Agreement uploaded successfully!');
+      setAgreementFile(null);
+      const updatedData = res.data?.data || res.data;
+      localStorage.setItem('userData', JSON.stringify(updatedData));
+      setUserData(updatedData);
+      setTimeout(() => setSuccess(''), 3000);
+    }, (err) => alert(err.message));
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     setIsAuthenticated(false);
@@ -71,6 +104,7 @@ const FProfile = ({ setIsAuthenticated }) => {
     { key: 'profile', label: 'Profile Details', icon: <User size={16} /> },
     { key: 'password', label: 'Security', icon: <Shield size={16} /> },
     { key: 'store', label: 'Store Info', icon: <CreditCard size={16} /> },
+    { key: 'agreements', label: 'Agreements', icon: <FileSignature size={16} /> },
   ];
 
   return (
@@ -211,6 +245,69 @@ const FProfile = ({ setIsAuthenticated }) => {
             <button className="btn btn-primary" style={{ marginTop: '1rem' }} disabled={loading} onClick={handleProfileSave}>
               {loading ? <Loader size={16} className="spinner" /> : <><Save size={16} /> Save Store Info</>}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Agreements Tab */}
+      {tab === 'agreements' && (
+        <div className="card">
+          <h3 style={{ marginBottom: '1.5rem' }}>Legal & Agreements</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ padding: '1.5rem', border: '1px solid var(--border)', borderRadius: '12px', background: '#f8fafc' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div style={{ background: '#ede9fe', color: '#8b5cf6', padding: '0.5rem', borderRadius: '8px' }}>
+                  <FileSignature size={24} />
+                </div>
+                <div>
+                  <h4 style={{ margin: 0 }}>Admin Agreement</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Signed by Platform Admin</p>
+                </div>
+              </div>
+              
+              {userData?.admin_agreement_document ? (
+                <a href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${userData.admin_agreement_document}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }}>
+                  <Eye size={16} /> View Document
+                </a>
+              ) : (
+                <div style={{ background: '#fef2f2', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', fontSize: '0.875rem', textAlign: 'center' }}>
+                  Not uploaded by Admin yet
+                </div>
+              )}
+            </div>
+
+            <div style={{ padding: '1.5rem', border: '1px solid #10b981', borderRadius: '12px', background: '#ecfdf5' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div style={{ background: '#d1fae5', color: '#10b981', padding: '0.5rem', borderRadius: '8px' }}>
+                  <FileSignature size={24} />
+                </div>
+                <div>
+                  <h4 style={{ margin: 0 }}>Franchise Agreement</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Signed by You</p>
+                </div>
+              </div>
+              
+              {userData?.franchise_agreement_document ? (
+                <a href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${userData.franchise_agreement_document}`} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+                  <Eye size={16} /> View Your Document
+                </a>
+              ) : (
+                <div style={{ marginBottom: '1rem', color: '#065f46', fontSize: '0.875rem' }}>
+                  You haven't uploaded your signed agreement yet.
+                </div>
+              )}
+
+              <form onSubmit={handleAgreementUpload}>
+                <div className="form-group" style={{ marginBottom: '1rem' }}>
+                  <input type="file" accept="image/*,application/pdf" className="form-input" onChange={e => setAgreementFile(e.target.files[0])} style={{ background: '#fff', border: '1px solid #6ee7b7' }} required />
+                  <small style={{ color: '#047857', display: 'block', marginTop: '4px' }}>Upload PDF or Image</small>
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>
+                  {loading ? 'Uploading...' : userData?.franchise_agreement_document ? 'Upload Replacement' : 'Upload Agreement'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}

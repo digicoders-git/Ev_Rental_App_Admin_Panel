@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { 
+import { FileSignature, IndianRupee, FileText, UploadCloud, Clock, 
   Building2, Check, X, MapPin, Plus, Search, MoreVertical, TrendingUp,
   Users, Car, XCircle, CheckCircle, Eye, DollarSign, ArrowUpRight,
   ArrowDownRight, KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle,
@@ -11,7 +11,8 @@ import {
 } from 'recharts';
 import { 
   getFranchiseEnquiries, getAllStores, createStore, deleteStore, getStoreById,
-  updateEnquiryStatus, getFranchisePerformance, getDashboardStats, getFranchiseHistory
+  updateEnquiryStatus, getFranchisePerformance, getDashboardStats, getFranchiseHistory,
+  uploadStoreAgreement, getAllWithdrawalsAdmin, approveWithdrawalAdmin, rejectWithdrawalAdmin
 } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Franchise.css';
@@ -26,6 +27,8 @@ const Franchise = () => {
   const [enquiries, setEnquiries] = useState([]);
   const [performance, setPerformance] = useState([]);
   const [dashStats, setDashStats] = useState(null);
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [activeTab, setActiveTab] = useState('partners'); // Add this for tabs
   const initialFormState = {
     store_name: '', owner_name: '', mobile: '', email: '', 
     address: '', city: '', state: '', password: '', confirmPassword: '',
@@ -49,6 +52,7 @@ const Franchise = () => {
     call(() => getFranchisePerformance(), (res) => setPerformance(res.data || []));
     call(() => getFranchiseEnquiries(), (res) => setEnquiries(res.data?.data || res.data || []));
     call(() => getAllStores(), (res) => setStores(res.data?.data || res.data || []));
+    call(() => getAllWithdrawalsAdmin(), (res) => setWithdrawals(res.data?.data || res.data || []));
   };
 
   const handleEnquiryAction = (id, status) => {
@@ -127,10 +131,19 @@ const Franchise = () => {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showAllRequestsModal, setShowAllRequestsModal] = useState(false);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
+  const [agreementFile, setAgreementFile] = useState(null);
+
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
+  const [paymentProof, setPaymentProof] = useState(null);
+  const [adminNote, setAdminNote] = useState('');
 
   const [historyPartner, setHistoryPartner] = useState(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [activeHistoryTab, setActiveHistoryTab] = useState('overview');
+  const [historyStartDate, setHistoryStartDate] = useState('');
+  const [historyEndDate, setHistoryEndDate] = useState('');
 
   const openViewModal = (partner) => {
     call(() => getStoreById(partner._id), (res) => {
@@ -141,9 +154,18 @@ const Franchise = () => {
 
   const openHistoryModal = (partner) => {
     setActiveHistoryTab('overview');
+    setHistoryStartDate('');
+    setHistoryEndDate('');
     call(() => getFranchiseHistory(partner._id), (res) => {
       setHistoryPartner(res.data);
       setShowHistoryModal(true);
+    });
+  };
+
+  const applyHistoryDateFilter = () => {
+    if (!historyPartner?.store?._id) return;
+    call(() => getFranchiseHistory(historyPartner.store._id, historyStartDate, historyEndDate), (res) => {
+      setHistoryPartner(res.data);
     });
   };
 
@@ -182,6 +204,15 @@ const Franchise = () => {
         </button>
       </div>
 
+      <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+        <button onClick={() => setActiveTab('partners')} style={{ background: activeTab === 'partners' ? 'var(--primary)' : 'transparent', color: activeTab === 'partners' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Partners & Applications</button>
+        <button onClick={() => setActiveTab('withdrawals')} style={{ background: activeTab === 'withdrawals' ? 'var(--primary)' : 'transparent', color: activeTab === 'withdrawals' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          Withdrawals {withdrawals.filter(w => w.status === 'pending').length > 0 && <span style={{ background: '#ef4444', color: '#fff', borderRadius: '50%', padding: '2px 6px', fontSize: '10px' }}>{withdrawals.filter(w => w.status === 'pending').length}</span>}
+        </button>
+      </div>
+      
+      {activeTab === 'partners' && (
+        <>
       <div className="franchise-stats">
         {statsList.map((stat, i) => (
           <div key={i} className="card" style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1.25rem' }}>
@@ -323,6 +354,7 @@ const Franchise = () => {
                       <button className="btn-icon" title="View Profile" onClick={() => openViewModal(f)}><Eye size={16} /></button>
                       <button className="btn-icon" title="Edit Franchise" onClick={() => handleEditClick(f)} style={{ color: '#3b82f6' }}><Pencil size={16} /></button>
                       <button className="btn-icon history" title="View History" onClick={() => openHistoryModal(f)} style={{ color: '#8b5cf6' }}><History size={16} /></button>
+                      <button className="btn-icon" title="Upload Agreement" onClick={() => { setSelectedPartner(f); setShowAgreementModal(true); }} style={{ color: '#10b981' }}><FileSignature size={16} /></button>
                       <button className="btn-icon delete" title="Delete Franchise" onClick={() => setDeleteId(f._id)} style={{ color: '#ef4444' }}><Trash2 size={16} /></button>
                     </div>
                   </td>
@@ -332,6 +364,64 @@ const Franchise = () => {
           </table>
         </div>
       </div>
+      </>
+      )}
+
+      {activeTab === 'withdrawals' && (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.125rem' }}>Withdrawal Requests</h3>
+          </div>
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Franchise</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {withdrawals.length === 0 ? (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No withdrawal requests found</td></tr>
+                ) : withdrawals.map(w => (
+                  <tr key={w._id}>
+                    <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{w.withdrawal_id}</td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{w.franchise?.store_name}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{w.franchise?.owner_name} | {w.franchise?.mobile}</div>
+                    </td>
+                    <td>{new Date(w.createdAt).toLocaleString()}</td>
+                    <td style={{ fontWeight: 600, color: '#10b981' }}>₹{w.amount.toLocaleString()}</td>
+                    <td>
+                      <span style={{ 
+                        color: w.status === 'approved' ? '#10b981' : w.status === 'rejected' ? '#ef4444' : '#f59e0b', 
+                        display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.05)', 
+                        padding: '4px 8px', borderRadius: '4px', fontWeight: 600, fontSize: '0.85rem' 
+                      }}>
+                        {w.status === 'approved' ? <CheckCircle size={14}/> : w.status === 'rejected' ? <XCircle size={14}/> : <Clock size={14}/>}
+                        {w.status.charAt(0).toUpperCase() + w.status.slice(1)}
+                      </span>
+                    </td>
+                    <td>
+                      {w.status === 'pending' ? (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button className="btn btn-sm btn-primary" onClick={() => { setSelectedWithdrawal(w); setShowWithdrawalModal(true); }}>Process</button>
+                        </div>
+                      ) : w.payment_proof ? (
+                        <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${w.payment_proof}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', textDecoration: 'none', fontSize: '0.9rem' }}><FileText size={14} /> View Proof</a>
+                      ) : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {(showAddModal || showEditModal) && createPortal(
         <div className="modal-overlay" onClick={() => { setShowAddModal(false); setShowEditModal(false); }}>
@@ -545,6 +635,33 @@ const Franchise = () => {
                 </div>
               </div>
 
+              {/* Agreements Section */}
+              <div className="veh-detail-section" style={{ marginTop: '1.5rem', padding: '1.25rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div className="veh-detail-section-title" style={{ color: '#8b5cf6', marginBottom: '1rem', borderBottom: '2px solid #ede9fe', paddingBottom: '0.5rem' }}>Agreements</div>
+                  <div className="veh-detail-rows" style={{ display: 'flex', gap: '2rem' }}>
+                    <div className="veh-info-item" style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Admin Agreement</label>
+                      {selectedPartner.store?.admin_agreement_document ? (
+                        <a href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${selectedPartner.store.admin_agreement_document}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}>
+                          <Eye size={14} /> View Admin Signed
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Not uploaded</span>
+                      )}
+                    </div>
+                    <div className="veh-info-item" style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Franchise Agreement</label>
+                      {selectedPartner.store?.franchise_agreement_document ? (
+                        <a href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${selectedPartner.store.franchise_agreement_document}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', padding: '0.4rem 0.8rem', borderColor: '#10b981', color: '#10b981' }}>
+                          <Eye size={14} /> View Franchise Signed
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Not uploaded</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
               {/* Assigned EVs Section */}
               <div className="veh-detail-section" style={{ marginTop: '1.5rem' }}>
                 <div className="veh-detail-section-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -620,23 +737,34 @@ const Franchise = () => {
       {showHistoryModal && historyPartner && createPortal(
         <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
           <div className="modal-content modal-xl" style={{ maxWidth: '1000px' }} onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div className="app-icon" style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: '1 1 min-content' }}>
+                <div className="app-icon" style={{ width: '48px', height: '48px', minWidth: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <History size={24} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '700', margin: 0, color: 'var(--text-main)' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '700', margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                     {historyPartner.store?.store_name} History
                   </h3>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-                    Owner: <strong>{historyPartner.store?.owner_name}</strong> | ID: <span style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 600 }}>{historyPartner.store?.store_id}</span>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    <span>Owner: <strong>{historyPartner.store?.owner_name}</strong> | ID: </span>
+                    <span style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace', fontWeight: 600, wordBreak: 'break-all' }}>{historyPartner.store?.store_id}</span>
                   </p>
                 </div>
               </div>
-              <button className="btn-icon" onClick={() => setShowHistoryModal(false)}>
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input type="date" value={historyStartDate} onChange={e => setHistoryStartDate(e.target.value)} style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--text-main)', background: 'var(--bg-card)', minWidth: '130px' }} />
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>to</span>
+                  <input type="date" value={historyEndDate} onChange={e => setHistoryEndDate(e.target.value)} style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--text-main)', background: 'var(--bg-card)', minWidth: '130px' }} />
+                  <button className="btn btn-primary" onClick={applyHistoryDateFilter} disabled={loading} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {loading ? <Loader2 size={14} className="spinner" /> : 'Filter'}
+                  </button>
+                </div>
+                <button className="btn-icon" onClick={() => setShowHistoryModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
             <div className="modal-body" style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
@@ -1097,6 +1225,104 @@ const Franchise = () => {
                 {loading ? <Loader2 size={16} className="spinner" /> : 'Yes, Remove Partner'}
               </button>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showAgreementModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowAgreementModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3>Upload Agreement</h3>
+              <button className="btn-icon" onClick={() => setShowAgreementModal(false)}><X size={20} /></button>
+            </div>
+            <form className="modal-body" onSubmit={(e) => {
+              e.preventDefault();
+              if (!agreementFile) return alert('Please select a file');
+              const fd = new FormData();
+              fd.append('agreement_document', agreementFile);
+              call(() => uploadStoreAgreement(selectedPartner._id, fd), () => {
+                alert('Agreement uploaded successfully!');
+                setShowAgreementModal(false);
+                setAgreementFile(null);
+                fetchData();
+              }, (err) => alert(err.message));
+            }}>
+              <div className="form-group">
+                <label>Franchise: {selectedPartner?.store_name}</label>
+                <input type="file" accept="image/*,application/pdf" className="form-input" onChange={e => setAgreementFile(e.target.files[0])} required />
+                <small style={{ color: 'var(--text-muted)' }}>Upload PDF or Image of the signed agreement</small>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={() => setShowAgreementModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Uploading...' : 'Upload'}</button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showWithdrawalModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowWithdrawalModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3>Process Withdrawal</h3>
+              <button className="btn-icon" onClick={() => setShowWithdrawalModal(false)}><X size={20} /></button>
+            </div>
+            <form className="modal-body" onSubmit={(e) => {
+              e.preventDefault();
+              if (!paymentProof) return alert('Please upload payment screenshot to approve.');
+              const fd = new FormData();
+              fd.append('payment_proof', paymentProof);
+              fd.append('admin_note', adminNote);
+              call(() => approveWithdrawalAdmin(selectedWithdrawal._id, fd), () => {
+                alert('Withdrawal approved successfully!');
+                setShowWithdrawalModal(false);
+                setPaymentProof(null);
+                setAdminNote('');
+                fetchData();
+              }, (err) => alert(err.message));
+            }}>
+              <div className="form-group" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Franchise:</span>
+                  <span style={{ fontWeight: 600 }}>{selectedWithdrawal?.franchise?.store_name}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Amount Requested:</span>
+                  <span style={{ fontWeight: 700, color: '#10b981', fontSize: '1.2rem' }}>₹{(selectedWithdrawal?.amount || 0).toLocaleString()}</span>
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label>Payment Proof (Screenshot)</label>
+                <input type="file" accept="image/*" className="form-input" onChange={e => setPaymentProof(e.target.files[0])} required />
+              </div>
+
+              <div className="form-group">
+                <label>Admin Note (Optional)</label>
+                <input type="text" className="form-input" placeholder="e.g. UTR Number, Remarks" value={adminNote} onChange={e => setAdminNote(e.target.value)} />
+              </div>
+
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <button type="button" className="btn btn-outline" style={{ color: '#ef4444', borderColor: '#ef4444' }} 
+                  onClick={() => {
+                    const note = prompt("Reason for rejection:");
+                    if (note === null) return;
+                    call(() => rejectWithdrawalAdmin(selectedWithdrawal._id, { admin_note: note }), () => {
+                      alert('Withdrawal rejected');
+                      setShowWithdrawalModal(false);
+                      fetchData();
+                    }, (err) => alert(err.message));
+                  }}>Reject</button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowWithdrawalModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{ background: '#10b981' }} disabled={loading}>{loading ? 'Processing...' : 'Approve & Pay'}</button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>,
         document.body
