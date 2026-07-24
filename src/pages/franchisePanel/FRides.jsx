@@ -4,8 +4,8 @@ import {
   Calendar, Search, Eye, CheckCircle, XCircle, Clock,
   Car, User, CreditCard, X, IndianRupee, Ban, CircleCheck,
   Activity, Loader, AlertTriangle, CalendarDays, CheckCircle2, Plus, Trash2, AlertOctagon
-, Receipt, Download} from 'lucide-react';
-import { getFranchiseBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, returnVehicle, setupInstallments, payInstallment, addDamageCharge , getInvoiceByBooking} from '../../services/apiServices';
+, Receipt, Download, RefreshCw} from 'lucide-react';
+import { getFranchiseBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, returnVehicle, setupInstallments, payInstallment, addDamageCharge , getInvoiceByBooking, changeBookingVehicle, getMyFranchiseVehicles } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const STATUS_CONFIG = {
@@ -36,6 +36,9 @@ const FRides = () => {
   const [invoiceList, setInvoiceList] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [loadingInvoice, setLoadingInvoice] = useState(false);
+  const [showSwapModal, setShowSwapModal] = useState(false);
+  const [availableVehicles, setAvailableVehicles] = useState([]);
+  const [selectedSwapVehicle, setSelectedSwapVehicle] = useState('');
   const { loading, call } = useApi();
 
   useEffect(() => { fetchBookings(); }, []);
@@ -147,6 +150,24 @@ const FRides = () => {
     } finally {
       setLoadingInvoice(false);
     }
+  };
+
+  const openSwapModal = () => {
+    call(() => getMyFranchiseVehicles(), (res) => {
+      const activeAvail = (res.data || []).filter(v => v.status === 'active' && !v.is_busy);
+      setAvailableVehicles(activeAvail);
+      setSelectedSwapVehicle('');
+      setShowSwapModal(true);
+    });
+  };
+
+  const handleSwapSubmit = () => {
+    if (!selectedSwapVehicle) return alert('Please select a vehicle');
+    call(() => changeBookingVehicle(selected._id, selectedSwapVehicle), () => {
+      setShowSwapModal(false);
+      setSelected(null);
+      fetchBookings();
+    }, (err) => alert(err || 'Failed to swap vehicle'));
   };
 
   const printInvoice = (inv) => {
@@ -282,7 +303,6 @@ const FRides = () => {
             </div>
           </div>
         </div>
-        <script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); }<\/script>
       </body>
       </html>
     `;
@@ -460,7 +480,7 @@ const FRides = () => {
                 <span style={{ fontWeight: 700, color: 'var(--primary)', fontFamily: 'monospace' }}>{selected.booking_id}</span>
                 <span className={`badge ${STATUS_CONFIG[selected.booking_status]?.cls}`}>{STATUS_CONFIG[selected.booking_status]?.label}</span>
               </div>
-              <button className="btn-icon" onClick={() => { setSelected(null); setShowInstallSetup(false); setInstallRows([{ amount: '', due_date: '' }]); }}><X size={20} /></button>
+              <button className="btn-icon" onClick={() => { setSelected(null); setShowInstallSetup(false); setInstallRows([{ amount: '', due_date: '' }]); setShowSwapModal(false); }}><X size={20} /></button>
             </div>
             <div className="modal-body">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -487,6 +507,11 @@ const FRides = () => {
                       <span style={{ fontWeight: 500 }}>{v || 'N/A'}</span>
                     </div>
                   ))}
+                  {['confirmed', 'ongoing'].includes(selected.booking_status) && (
+                    <button onClick={openSwapModal} className="btn btn-outline" style={{ width: '100%', marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.4rem' }}>
+                      <RefreshCw size={14} style={{ marginRight: '4px' }} /> Swap Vehicle
+                    </button>
+                  )}
                 </div>
                 {/* Booking */}
                 <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '8px' }}>
@@ -1014,6 +1039,50 @@ const FRides = () => {
         </div>,
         document.body
       )}
+    {/* Swap Vehicle Modal */}
+    {showSwapModal && createPortal(
+      <div className="modal-overlay" onClick={() => setShowSwapModal(false)} style={{ zIndex: 10000 }}>
+        <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+          <div className="modal-header">
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RefreshCw size={18} color="var(--primary)" /> Swap Vehicle
+            </h3>
+            <button className="btn-icon" onClick={() => setShowSwapModal(false)}><X size={20} /></button>
+          </div>
+          <div className="modal-body" style={{ padding: '1.5rem' }}>
+            <div style={{ marginBottom: '1rem', padding: '0.8rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Current Vehicle</div>
+              <div style={{ fontWeight: 600, color: 'var(--text)' }}>{selected?.vehicle?.registration_number} - {selected?.vehicle?.vehicle_name}</div>
+            </div>
+            <div className="form-group">
+              <label>Select New Vehicle</label>
+              <select 
+                value={selectedSwapVehicle} 
+                onChange={e => setSelectedSwapVehicle(e.target.value)} 
+                style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }}
+              >
+                <option value="">-- Choose a vehicle --</option>
+                {availableVehicles.map(v => (
+                  <option key={v._id} value={v._id}>
+                    {v.registration_number} - {v.vehicle_name}
+                  </option>
+                ))}
+              </select>
+              {availableVehicles.length === 0 && (
+                <p style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.5rem' }}>No available active vehicles found.</p>
+              )}
+            </div>
+          </div>
+          <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', borderTop: '1px solid var(--border)', padding: '1rem 1.5rem' }}>
+            <button className="btn btn-outline" onClick={() => setShowSwapModal(false)} disabled={loading}>Cancel</button>
+            <button className="btn btn-primary" onClick={handleSwapSubmit} disabled={loading || !selectedSwapVehicle}>
+              {loading ? <Loader size={16} className="spinner" /> : 'Confirm Swap'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
 
     </div>
   );
