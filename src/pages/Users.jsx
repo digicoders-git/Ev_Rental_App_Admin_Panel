@@ -6,7 +6,7 @@ import {
   Mail, Clock,
   Lock, EyeOff, Users as UsersIcon, UserCheck, UserX, Ban, Loader2
 } from 'lucide-react';
-import { getAllUsers, getUserById, addRider, updateUser, deleteUser, addWalletFunds, deductWalletFunds } from '../services/apiServices';
+import { getAllUsers, getUserById, addRider, updateUser, deleteUser, addWalletFunds, deductWalletFunds, getUserWalletHistory } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Users.css';
 
@@ -37,6 +37,8 @@ const Users = () => {
   const [showCPwd, setShowCPwd]   = useState(false);
   const [walletUser, setWalletUser] = useState(null);
   const [walletForm, setWalletForm] = useState({ amount: '', description: '', action: 'add' });
+  const [walletHistory, setWalletHistory] = useState([]);
+  const [loadingWallet, setLoadingWallet] = useState(false);
   const [fullDetail, setFullDetail] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const { loading, error, call }  = useApi();
@@ -59,16 +61,24 @@ const Users = () => {
   const handleViewDetails = async (u) => {
     setViewUser(u);
     setFullDetail(null);
+    setWalletHistory([]);
     setLoadingDetail(true);
+    setLoadingWallet(true);
     try {
       const res = await getUserById(u.id);
       if (res.data.success) {
         setFullDetail(res.data.data);
       }
+
+      const resWallet = await getUserWalletHistory(u.id);
+      if (resWallet.data.success) {
+        setWalletHistory(resWallet.data.data.transactions || []);
+      }
     } catch (err) {
       console.error("Error fetching user details:", err);
     } finally {
       setLoadingDetail(false);
+      setLoadingWallet(false);
     }
   };
 
@@ -566,7 +576,49 @@ const Users = () => {
                       )}
                     </div>
                   ) : (
-                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontStyle: 'italic' }}>No KYC document record found.</span>
+                    <div style={{ color: '#64748b', fontSize: '0.85rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', textAlign: 'center' }}>
+                      No KYC record found.
+                    </div>
+                  )}
+                </div>
+
+                {/* Wallet History Section */}
+                <div style={{ gridColumn: '1 / -1', marginTop: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                  <div className="usr-detail-title" style={{ marginBottom: '1rem' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Wallet History
+                  </div>
+                  {loadingWallet ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748b' }}>
+                      <Loader2 size={16} className="spinner spin" />
+                      <span>Loading wallet history...</span>
+                    </div>
+                  ) : walletHistory.length > 0 ? (
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                      <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
+                        <thead style={{ position: 'sticky', top: 0, background: '#fff' }}>
+                          <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {walletHistory.map((tx, idx) => (
+                            <tr key={idx}>
+                              <td>{new Date(tx.createdAt).toLocaleDateString()} {new Date(tx.createdAt).toLocaleTimeString()}</td>
+                              <td>{tx.description || (tx.type === 'credit' ? 'Wallet Recharge' : 'Wallet Deduction')}</td>
+                              <td style={{ color: tx.type === 'credit' ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+                                {tx.type === 'credit' ? '+' : '-'}₹{tx.amount.toLocaleString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ color: '#64748b', fontSize: '0.85rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', textAlign: 'center' }}>
+                      No wallet transactions found.
+                    </div>
                   )}
                 </div>
 

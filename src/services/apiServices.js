@@ -21,6 +21,7 @@ export const updateUser     = (id, data) => api.put(`/user/admin/${id}`, data);
 export const deleteUser     = (id)   => api.delete(`/user/admin/${id}`);
 export const addWalletFunds = (data) => api.post('/wallet/admin/add', data);
 export const deductWalletFunds = (data) => api.post('/wallet/admin/deduct', data);
+export const getUserWalletHistory = (userId) => api.get(`/wallet/admin/history/${userId}`);
 
 /* ── VEHICLES ── */
 export const getAllVehicles      = (params) => api.get('/vehicles', { params });
