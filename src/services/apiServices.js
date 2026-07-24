@@ -92,7 +92,7 @@ export const rejectBooking       = (id, reason) => api.patch(`/bookings/${id}/re
 export const cancelBooking       = (id, reason) => api.post(`/bookings/${id}/cancel`, { reason });
 export const changeBookingVehicle = (id, newVehicleId) => api.put(`/bookings/${id}/change-vehicle`, { newVehicleId });
 export const returnVehicle       = (id)     => api.post(`/bookings/${id}/return`);
-export const extendBooking       = (id, extra_days) => api.post(`/bookings/${id}/extend`, { extra_days });
+export const extendBooking       = (id, extra_days, auto_renew) => api.post(`/bookings/${id}/extend`, { extra_days, auto_renew });
 export const calculateLateFee    = (id)     => api.get(`/bookings/${id}/calculate-late-fee`);
 export const getFranchiseBookings = ()      => api.get('/bookings/franchise/my');
 export const approveVehicleSubmission = (id) => api.post(`/bookings/${id}/approve-submission`);
