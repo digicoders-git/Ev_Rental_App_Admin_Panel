@@ -9,7 +9,6 @@ import useApi from '../../services/useApi';
 import api from '../../services/api';
 import { 
   createFranchiseVehicle, 
-  updateFranchiseVehicle,
   getAllCategories, 
   createCategory, 
   deleteCategory,
@@ -39,8 +38,6 @@ const FVehicles = () => {
   const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showCatModal, setShowCatModal] = useState(false);
-  const [editVehicle, setEditVehicle] = useState(null);
-  const [editForm, setEditForm] = useState({});
   const [form, setForm] = useState(emptyForm);
   const [catForm, setCatForm] = useState({ name: '', description: '', file: null });
   const [imagePreview, setImagePreview] = useState(null);
@@ -135,45 +132,6 @@ const FVehicles = () => {
   };
 
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
-  const ef = (k) => (e) => setEditForm(p => ({ ...p, [k]: e.target.value }));
-
-  const openEdit = (v) => {
-    setEditForm({
-      name: v.vehicle_name || '',
-      brand: v.brand || '',
-      regNo: v.registration_number || '',
-      vehicleId: v.vehicle_id || '',
-      category: v.category?._id || '',
-      type: v.vehicle_type || 'scooter',
-      range: v.range_per_charge || '',
-      battery: v.current_battery ?? 100,
-      batteryCapacity: v.battery_capacity || '',
-      chargingTime: v.charging_time || '',
-      features: Array.isArray(v.features) ? v.features.join(', ') : (v.features || ''),
-    });
-    setEditVehicle(v);
-  };
-
-  const handleEditSubmit = () => {
-    const fd = new FormData();
-    fd.append('vehicle_name', editForm.name);
-    fd.append('brand', editForm.brand);
-    fd.append('registration_number', editForm.regNo);
-    if (editForm.vehicleId) fd.append('vehicle_id', editForm.vehicleId);
-    if (editForm.category) fd.append('category', editForm.category);
-    fd.append('vehicle_type', editForm.type);
-    if (editForm.range) fd.append('range_per_charge', editForm.range);
-    if (editForm.battery) fd.append('current_battery', editForm.battery);
-    if (editForm.batteryCapacity) fd.append('battery_capacity', editForm.batteryCapacity);
-    if (editForm.chargingTime) fd.append('charging_time', editForm.chargingTime);
-    if (editForm.features) fd.append('features', editForm.features);
-    if (editForm.file) fd.append('thumbnail_image', editForm.file);
-    call(
-      () => updateFranchiseVehicle(editVehicle._id, fd),
-      () => { setEditVehicle(null); fetchVehicles(); },
-      (err) => alert(err || 'Failed to update vehicle')
-    );
-  };
   const batteryColor = (b) => b < 20 ? '#ef4444' : b < 50 ? '#f59e0b' : '#10b981';
   const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
 
@@ -328,9 +286,6 @@ const FVehicles = () => {
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button className="btn-icon" title="View Details" onClick={() => setSelected(v)}>
                           <Eye size={16} />
-                        </button>
-                        <button className="btn-icon" title="Edit Vehicle" style={{ color: '#3b82f6' }} onClick={() => openEdit(v)}>
-                          <Edit size={16} />
                         </button>
                         <button className="btn-icon" title="Manage Status" style={{ color: '#8b5cf6' }} onClick={() => openManageStatus(v)}>
                           <SlidersHorizontal size={16} />
@@ -596,111 +551,6 @@ const FVehicles = () => {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-      {/* Edit Vehicle Modal */}
-      {editVehicle && createPortal(
-        <div className="modal-overlay" onClick={() => setEditVehicle(null)}>
-          <div className="modal-content modal-xl" style={{ maxWidth: '800px' }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Edit size={18} color="var(--primary)" />
-                <div>
-                  <h3 style={{ margin: 0 }}>Edit Vehicle</h3>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{editVehicle.registration_number} • {editVehicle.vehicle_name}</span>
-                </div>
-              </div>
-              <button className="btn-icon" onClick={() => setEditVehicle(null)}><X size={20} /></button>
-            </div>
-            <div className="modal-body">
-              <div className="form-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem' }}><Bike size={16} /> Basic Information</div>
-              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="form-group">
-                  <label>Brand / Manufacturer *</label>
-                  <input type="text" value={editForm.brand} onChange={ef('brand')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                </div>
-                <div className="form-group">
-                  <label>Vehicle Model Name *</label>
-                  <input type="text" value={editForm.name} onChange={ef('name')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                </div>
-              </div>
-              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="form-group">
-                  <label>Registration Number *</label>
-                  <input type="text" value={editForm.regNo} onChange={ef('regNo')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                </div>
-                <div className="form-group">
-                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Vehicle ID</span>
-                    <button type="button"
-                      style={{ fontSize: '0.72rem', color: 'var(--primary)', background: '#eff6ff', border: 'none', borderRadius: '5px', padding: '2px 8px', cursor: 'pointer', fontWeight: 600 }}
-                      onClick={() => setEditForm(p => ({ ...p, vehicleId: 'VEH-' + Date.now().toString().slice(-6) }))}>
-                      Auto Generate
-                    </button>
-                  </label>
-                  <input type="text" value={editForm.vehicleId} onChange={ef('vehicleId')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                </div>
-              </div>
-              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="form-group">
-                  <label>Vehicle Category</label>
-                  <select value={editForm.category} onChange={ef('category')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }}>
-                    <option value="">Select Category</option>
-                    {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Vehicle Type</label>
-                  <select value={editForm.type} onChange={ef('type')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }}>
-                    <option value="scooter">Scooter</option>
-                    <option value="bike">Bike</option>
-                    <option value="car">Car</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem', marginTop: '1.5rem' }}><BatteryCharging size={16} /> Performance & EV Info</div>
-              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="form-group">
-                  <label>Range per Charge (km)</label>
-                  <input type="number" value={editForm.range} onChange={ef('range')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                </div>
-                <div className="form-group">
-                  <label>Battery Capacity (kWh)</label>
-                  <input type="text" value={editForm.batteryCapacity} onChange={ef('batteryCapacity')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                </div>
-              </div>
-              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="form-group">
-                  <label>Charging Time</label>
-                  <input type="text" value={editForm.chargingTime} onChange={ef('chargingTime')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                </div>
-                <div className="form-group">
-                  <label>Current Battery Level (%)</label>
-                  <input type="number" min="0" max="100" value={editForm.battery} onChange={ef('battery')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                </div>
-              </div>
-              <div className="form-group" style={{ marginBottom: '1rem' }}>
-                <label>Features (comma separated)</label>
-                <input type="text" value={editForm.features} onChange={ef('features')} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', borderRadius: '6px' }} />
-              </div>
-
-              <div className="form-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem', marginTop: '1.5rem' }}><Upload size={16} /> Update Image (Optional)</div>
-              <div className="form-group">
-                <input type="file" accept="image/*"
-                  onChange={e => { const file = e.target.files[0]; if (file) setEditForm(p => ({ ...p, file })); }}
-                  style={{ padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '6px', width: '100%' }} />
-                <small style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>Leave blank to keep existing image</small>
-              </div>
-            </div>
-            <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <button className="btn btn-outline" onClick={() => setEditVehicle(null)} disabled={loading}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleEditSubmit} disabled={loading}>
-                {loading ? <Loader size={16} className="spinner" /> : <><CheckCircle size={15} /> Save Changes</>}
-              </button>
             </div>
           </div>
         </div>,
