@@ -47,6 +47,18 @@ const FVehicles = () => {
   const [statusTarget, setStatusTarget] = useState('');
   const [forceConfirm, setForceConfirm] = useState(null);
 
+  const fetchVehicles = () => {
+    call(() => api.get('/vehicles/franchise/my'), (res) => {
+      setVehicles(res.data || []);
+    });
+  };
+
+  const fetchCategories = () => {
+    call(() => getAllCategories(), (res) => {
+      setCategories(res.data || []);
+    });
+  };
+
   useEffect(() => { 
     fetchVehicles(); 
     fetchCategories();
@@ -65,18 +77,6 @@ const FVehicles = () => {
       socket.disconnect();
     };
   }, []);
-
-  const fetchVehicles = () => {
-    call(() => api.get('/vehicles/franchise/my'), (res) => {
-      setVehicles(res.data || []);
-    });
-  };
-
-  const fetchCategories = () => {
-    call(() => getAllCategories(), (res) => {
-      setCategories(res.data || []);
-    });
-  };
 
   const filtered = vehicles.filter(v =>
     (v.vehicle_name || '').toLowerCase().includes(search.toLowerCase()) ||
