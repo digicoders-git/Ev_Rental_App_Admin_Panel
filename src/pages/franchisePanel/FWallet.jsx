@@ -4,7 +4,7 @@ import { getFranchiseWallet, requestWithdrawal, getFranchiseWithdrawals, getFran
 import { Wallet, ArrowUpRight, ArrowDownRight, IndianRupee, FileText, CheckCircle, Clock, XCircle, Download, FileSignature, X } from 'lucide-react';
 
 const FWallet = () => {
-  const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
+  const [wallet, setWallet] = useState({ balance: 0, totalRevenue: 0, totalWithdrawn: 0, pendingWithdrawn: 0, transactions: [] });
   const [withdrawals, setWithdrawals] = useState([]);
   const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
@@ -83,17 +83,44 @@ const FWallet = () => {
         )}
       </div>
 
-      {/* Balance Card */}
-      <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '16px', padding: '2rem', color: '#fff', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
-        <div>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem' }}>Available Balance</p>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '4px', color: '#fff' }}>
-            <IndianRupee size={32} color="#ffffff" /> {wallet.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+      {/* Metrics Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        {/* Available Balance (Main) */}
+        <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '16px', padding: '1.5rem', color: '#fff', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Available Balance</p>
+            <h2 style={{ fontSize: '2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '4px', color: '#fff' }}>
+              ₹{wallet.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+            </h2>
+          </div>
+          <button onClick={() => setShowWithdrawModal(true)} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.9rem', transition: 'all 0.2s', marginTop: '1rem', width: '100%' }}>
+            <ArrowUpRight size={18} /> Request Withdrawal
+          </button>
+        </div>
+
+        {/* Total Earnings */}
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Total Earnings</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>
+            ₹{(wallet.totalRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </h2>
         </div>
-        <button onClick={() => setShowWithdrawModal(true)} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>
-          <ArrowUpRight size={20} /> Request Withdrawal
-        </button>
+
+        {/* Total Withdrawn */}
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Total Withdrawn</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#10b981' }}>
+            ₹{(wallet.totalWithdrawn || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+          </h2>
+        </div>
+
+        {/* Pending Withdrawals */}
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Pending Withdrawals</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#f59e0b' }}>
+            ₹{(wallet.pendingWithdrawn || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+          </h2>
+        </div>
       </div>
 
       <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>

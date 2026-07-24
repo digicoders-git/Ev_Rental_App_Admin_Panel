@@ -828,7 +828,47 @@ const Franchise = () => {
                   {/* Stats Grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
                     
-                    {/* Revenue Card */}
+                    {/* Available Balance Card */}
+                    <div style={{ 
+                      padding: '1.25rem', 
+                      borderRadius: '16px', 
+                      background: 'linear-gradient(135deg, #0f172a, #1e293b)', 
+                      color: 'white',
+                      boxShadow: '0 4px 6px -1px rgba(15, 23, 42, 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Available Balance</span>
+                        <DollarSign size={20} />
+                      </div>
+                      <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
+                        ₹{historyPartner.revenue?.walletBalance?.toLocaleString('en-IN') || 0}
+                      </h3>
+                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', opacity: 0.8 }}>
+                        Current wallet balance
+                      </p>
+                    </div>
+
+                    {/* Total Earnings Card */}
+                    <div style={{ 
+                      padding: '1.25rem', 
+                      borderRadius: '16px', 
+                      background: 'linear-gradient(135deg, #3b82f6, #2563eb)', 
+                      color: 'white',
+                      boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Earnings</span>
+                        <DollarSign size={20} />
+                      </div>
+                      <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
+                        ₹{historyPartner.revenue?.totalEarnings?.toLocaleString('en-IN') || 0}
+                      </h3>
+                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', opacity: 0.8 }}>
+                        Total revenue generated
+                      </p>
+                    </div>
+
+                    {/* Total Withdrawn Card */}
                     <div style={{ 
                       padding: '1.25rem', 
                       borderRadius: '16px', 
@@ -837,14 +877,34 @@ const Franchise = () => {
                       boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Revenue</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Withdrawn</span>
                         <DollarSign size={20} />
                       </div>
                       <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
-                        ₹{historyPartner.revenue?.totalPaid?.toLocaleString('en-IN') || 0}
+                        ₹{historyPartner.revenue?.totalWithdrawn?.toLocaleString('en-IN') || 0}
                       </h3>
                       <p style={{ margin: '8px 0 0', fontSize: '0.75rem', opacity: 0.8 }}>
-                        Actual collected amount
+                        Approved withdrawals
+                      </p>
+                    </div>
+
+                    {/* Pending Withdrawal Card */}
+                    <div style={{ 
+                      padding: '1.25rem', 
+                      borderRadius: '16px', 
+                      background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                      color: 'white',
+                      boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Pending Withdrawal</span>
+                        <DollarSign size={20} />
+                      </div>
+                      <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
+                        ₹{historyPartner.revenue?.pendingWithdrawn?.toLocaleString('en-IN') || 0}
+                      </h3>
+                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', opacity: 0.8 }}>
+                        Requested but not approved
                       </p>
                     </div>
 
@@ -852,9 +912,9 @@ const Franchise = () => {
                     <div style={{ 
                       padding: '1.25rem', 
                       borderRadius: '16px', 
-                      background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', 
+                      background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', 
                       color: 'white',
-                      boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)'
+                      boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.2)'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Fleet Size</span>
@@ -874,9 +934,9 @@ const Franchise = () => {
                     <div style={{ 
                       padding: '1.25rem', 
                       borderRadius: '16px', 
-                      background: 'linear-gradient(135deg, #f59e0b, #d97706)', 
+                      background: 'linear-gradient(135deg, #ec4899, #db2777)', 
                       color: 'white',
-                      boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.2)'
+                      boxShadow: '0 4px 6px -1px rgba(236, 72, 153, 0.2)'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Bookings</span>
