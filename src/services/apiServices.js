@@ -125,10 +125,11 @@ export const getBookingTrip      = (id)   => api.get(`/tracking/booking/${id}`);
 export const getFleetTracking    = ()     => api.get('/tracking/franchise/fleet');
 
 /* ── SUPPORT / COMPLAINTS ── */
-export const createTicket    = (data) => api.post('/support/ticket', data, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const getMyTickets    = ()     => api.get('/support/my-tickets');
-export const getAllTickets    = ()     => api.get('/support/admin/all');
-export const updateTicket    = (id, data) => api.put(`/support/admin/ticket/${id}`, data);
+export const createTicket        = (data) => api.post('/support/ticket', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const getMyTickets        = ()     => api.get('/support/my-tickets');
+export const getFranchiseTickets = ()     => api.get('/support/franchise/tickets');
+export const getAllTickets       = ()     => api.get('/support/admin/all');
+export const updateTicket        = (id, data) => api.put(`/support/admin/ticket/${id}`, data);
 
 /* ── NOTIFICATIONS ── */
 export const getNotifications  = ()   => api.get('/notifications');

@@ -51,8 +51,8 @@ const Complaints = () => {
         subject: t.subject || '',
         description: t.description || '',
         bookingId: t.booking || 'N/A',
-        vehicle: '',
-        franchise: '',
+        vehicle: t.vehicle_number || t.vehicle?.registration_number || 'N/A',
+        franchise: t.franchise_name || t.franchise?.store_name || 'Direct / Super Admin',
         priority: t.priority || 'medium',
         status: t.status === 'open' ? 'Open' : t.status === 'in-progress' ? 'In Progress' : t.status === 'resolved' ? 'Resolved' : 'Closed',
         date: new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -93,7 +93,9 @@ const Complaints = () => {
       c.ticketId.toLowerCase().includes(q) ||
       c.user.toLowerCase().includes(q) ||
       c.subject.toLowerCase().includes(q) ||
-      c.category.toLowerCase().includes(q)
+      c.category.toLowerCase().includes(q) ||
+      c.vehicle.toLowerCase().includes(q) ||
+      c.franchise.toLowerCase().includes(q)
     );
   });
 
@@ -204,7 +206,9 @@ const Complaints = () => {
               <tr>
                 <th>#</th>
                 <th>Ticket ID</th>
-                <th>User</th>
+                <th>Franchise</th>
+                <th>Driver / User</th>
+                <th>Vehicle No.</th>
                 <th>Category</th>
                 <th>Subject</th>
                 <th>Priority</th>
@@ -215,20 +219,30 @@ const Complaints = () => {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={9} className="cmp-empty-row"><MessageSquare size={28} /><p>No complaints found.</p></td></tr>
+                <tr><td colSpan={11} className="cmp-empty-row"><MessageSquare size={28} /><p>No complaints found.</p></td></tr>
               ) : (
                 filtered.map((c, i) => (
                   <tr key={c.id}>
                     <td className="td-muted">{i + 1}</td>
                     <td><span className="cmp-id-badge">{c.ticketId}</span></td>
                     <td>
+                      <span style={{ fontWeight: 600, color: '#2563eb', background: '#eff6ff', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', display: 'inline-block' }}>
+                        {c.franchise}
+                      </span>
+                    </td>
+                    <td>
                       <div className="cmp-user-cell">
                         <div className="cmp-avatar">{c.user.split(' ').map(n => n[0]).join('')}</div>
                         <div>
                           <span className="cell-main">{c.user}</span>
-                          <span className="cell-sub">{c.email}</span>
+                          <span className="cell-sub">{c.email || c.phone}</span>
                         </div>
                       </div>
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: 600, color: '#334155', background: '#f1f5f9', padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.85rem', fontFamily: 'monospace', display: 'inline-block' }}>
+                        {c.vehicle}
+                      </span>
                     </td>
                     <td><span className="cmp-category">{c.category}</span></td>
                     <td>
@@ -286,6 +300,8 @@ const Complaints = () => {
               </div>
 
               <div className="cmp-info-grid">
+                <div className="cmp-info-item"><Building2 size={13} /><span>Franchise</span><strong>{selected.franchise}</strong></div>
+                <div className="cmp-info-item"><Car size={13} /><span>Vehicle No.</span><strong>{selected.vehicle}</strong></div>
                 <div className="cmp-info-item"><User size={13} /><span>User</span><strong>{selected.user}</strong></div>
                 <div className="cmp-info-item"><Calendar size={13} /><span>Date</span><strong>{selected.date}</strong></div>
                 <div className="cmp-info-item"><MessageSquare size={13} /><span>Category</span><strong>{selected.category}</strong></div>
