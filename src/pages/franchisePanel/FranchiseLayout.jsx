@@ -46,7 +46,7 @@ const FranchiseLayout = ({ setIsAuthenticated }) => {
       case '/f/reports': return 'Reports';
       case '/f/notifications': return 'Notifications';
       case '/f/complaints': return 'Complaints';
-      case '/f/wallet': return 'Wallet & Agreement';
+      case '/f/wallet': return 'Wallet & Earnings';
       case '/f/referrals': return 'Referrals';
       case '/f/profile': return 'Profile Settings';
       default: return 'Franchise Panel';

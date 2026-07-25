@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User, Shield, CreditCard, LogOut, Save, Eye, EyeOff, X, Loader, CheckCircle, FileSignature } from 'lucide-react';
+import { User, Shield, CreditCard, LogOut, Save, Eye, EyeOff, X, Loader, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { updateFranchiseProfile, changeFranchisePassword, uploadFranchiseAgreementSelf, getFranchiseProfile } from '../../services/apiServices';
+import { updateFranchiseProfile, changeFranchisePassword, getFranchiseProfile } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const FProfile = ({ setIsAuthenticated }) => {
@@ -14,7 +14,6 @@ const FProfile = ({ setIsAuthenticated }) => {
   const [showPass, setShowPass] = useState({});
   const [showLogout, setShowLogout] = useState(false);
   const [success, setSuccess] = useState('');
-  const [agreementFile, setAgreementFile] = useState(null);
   const { loading, call } = useApi();
 
   useEffect(() => {
@@ -77,21 +76,6 @@ const FProfile = ({ setIsAuthenticated }) => {
     });
   };
 
-  const handleAgreementUpload = (e) => {
-    e.preventDefault();
-    if (!agreementFile) return alert('Please select a file');
-    const fd = new FormData();
-    fd.append('franchise_agreement_document', agreementFile);
-    call(() => uploadFranchiseAgreementSelf(fd), (res) => {
-      setSuccess('Agreement uploaded successfully!');
-      setAgreementFile(null);
-      const updatedData = res.data?.data || res.data;
-      localStorage.setItem('userData', JSON.stringify(updatedData));
-      setUserData(updatedData);
-      setTimeout(() => setSuccess(''), 3000);
-    }, (err) => alert(err.message));
-  };
-
   const handleLogout = () => {
     localStorage.clear();
     setIsAuthenticated(false);
@@ -104,7 +88,6 @@ const FProfile = ({ setIsAuthenticated }) => {
     { key: 'profile', label: 'Profile Details', icon: <User size={16} /> },
     { key: 'password', label: 'Security', icon: <Shield size={16} /> },
     { key: 'store', label: 'Store Info', icon: <CreditCard size={16} /> },
-    { key: 'agreements', label: 'Agreements', icon: <FileSignature size={16} /> },
   ];
 
   return (
@@ -225,7 +208,6 @@ const FProfile = ({ setIsAuthenticated }) => {
             {[
               { label: 'Store Name', value: userData?.store_name },
               { label: 'Store ID', value: userData?.store_id },
-              { label: 'Agreement Date', value: userData?.agreement_date ? new Date(userData.agreement_date).toLocaleDateString('en-IN') : 'N/A' },
               { label: 'Expiry Date', value: userData?.expiry_date ? new Date(userData.expiry_date).toLocaleDateString('en-IN') : 'N/A' },
               { label: 'Status', value: userData?.status },
               { label: 'Registered On', value: userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN') : 'N/A' },
@@ -245,58 +227,6 @@ const FProfile = ({ setIsAuthenticated }) => {
             <button className="btn btn-primary" style={{ marginTop: '1rem' }} disabled={loading} onClick={handleProfileSave}>
               {loading ? <Loader size={16} className="spinner" /> : <><Save size={16} /> Save Store Info</>}
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Agreements Tab */}
-      {tab === 'agreements' && (
-        <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Agreements</h3>
-
-          <div style={{ padding: '2rem', border: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '1px solid #10b981' : '1px solid var(--border)', borderRadius: '12px', background: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#ecfdf5' : '#f8fafc' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ background: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#d1fae5' : '#e2e8f0', color: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#10b981' : '#334155', padding: '0.75rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FileSignature size={28} />
-              </div>
-              <div>
-                <h4 style={{ margin: 0, fontSize: '1.2rem', color: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#065f46' : 'var(--text)' }}>Signed Agreement</h4>
-                <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#047857' : 'var(--text-muted)' }}>
-                  {(userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? 'Your signed agreement is securely stored and verified.' : 'Please upload your signed franchise agreement document.'}
-                </p>
-              </div>
-            </div>
-
-            {(userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? (
-              <a
-                href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${userData.franchise_agreement_document || userData.admin_agreement_document || userData.agreement_document}`}
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-primary"
-                style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-              >
-                <Eye size={18} /> View Uploaded Agreement
-              </a>
-            ) : (
-              <form onSubmit={handleAgreementUpload}>
-                <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    className="form-input"
-                    onChange={e => setAgreementFile(e.target.files[0])}
-                    style={{ background: '#fff', border: '1px solid var(--border)', padding: '0.6rem', width: '100%', borderRadius: '8px' }}
-                    required
-                  />
-                  <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
-                    Note: Once uploaded, the agreement is finalized and cannot be edited, replaced, or deleted.
-                  </small>
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '0.75rem', fontSize: '0.95rem' }}>
-                  {loading ? <><Loader size={16} className="spinner" style={{ marginRight: '6px' }} /> Uploading...</> : 'Upload Agreement'}
-                </button>
-              </form>
-            )}
           </div>
         </div>
       )}

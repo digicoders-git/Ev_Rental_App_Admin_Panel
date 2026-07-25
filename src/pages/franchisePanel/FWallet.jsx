@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { getFranchiseWallet, requestWithdrawal, getFranchiseWithdrawals, getFranchiseProfile } from '../../services/apiServices';
-import { Wallet, ArrowUpRight, ArrowDownRight, IndianRupee, FileText, CheckCircle, Clock, XCircle, Download, FileSignature, X } from 'lucide-react';
+import { Wallet, ArrowUpRight, ArrowDownRight, IndianRupee, FileText, CheckCircle, Clock, XCircle, Download, X } from 'lucide-react';
 
 const FWallet = () => {
   const [wallet, setWallet] = useState({ balance: 0, totalRevenue: 0, totalWithdrawn: 0, pendingWithdrawn: 0, transactions: [] });
@@ -74,14 +74,6 @@ const FWallet = () => {
           <h1 className="page-title">Wallet & Earnings</h1>
           <p className="page-subtitle">Track your earnings and settlement history</p>
         </div>
-        
-        {/* Agreement Card */}
-        {(profile.franchise_agreement_document || profile.admin_agreement_document || profile.agreement_document) && (
-          <a href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${profile.franchise_agreement_document || profile.admin_agreement_document || profile.agreement_document}`} target="_blank" rel="noopener noreferrer" 
-             style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e0e7ff', color: '#4338ca', padding: '10px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}>
-            <FileSignature size={18} /> View Agreement
-          </a>
-        )}
       </div>
 
       {/* Metrics Grid */}

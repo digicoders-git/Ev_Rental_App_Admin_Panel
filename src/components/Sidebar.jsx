@@ -67,7 +67,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'My Vehicles',   path: '/f/vehicles',     icon: Car },
     { name: 'Rides',         path: '/f/rides',        icon: CalendarCheck },
     { name: 'Return Pending', path: '/f/return-pending', icon: RotateCcw },
-    { name: 'Wallet & Agreement', path: '/f/wallet',     icon: Wallet },
+    { name: 'Wallet & Earnings', path: '/f/wallet',     icon: Wallet },
     { name: 'Customers',     path: '/f/customers',    icon: Users },
     { name: 'Referrals',     path: '/f/referrals',    icon: GroupIcon },
     { name: 'KYC Status',    path: '/f/kyc',          icon: UserCheck },
