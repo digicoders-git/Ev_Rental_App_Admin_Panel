@@ -251,63 +251,52 @@ const FProfile = ({ setIsAuthenticated }) => {
 
       {/* Agreements Tab */}
       {tab === 'agreements' && (
-        <div className="card">
-          <h3 style={{ marginBottom: '1.5rem' }}>Legal & Agreements</h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div style={{ padding: '1.5rem', border: '1px solid var(--border)', borderRadius: '12px', background: '#f8fafc' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                <div style={{ background: '#ede9fe', color: '#8b5cf6', padding: '0.5rem', borderRadius: '8px' }}>
-                  <FileSignature size={24} />
-                </div>
-                <div>
-                  <h4 style={{ margin: 0 }}>Admin Agreement</h4>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Signed by Platform Admin</p>
-                </div>
+        <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>Agreements</h3>
+
+          <div style={{ padding: '2rem', border: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '1px solid #10b981' : '1px solid var(--border)', borderRadius: '12px', background: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#ecfdf5' : '#f8fafc' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ background: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#d1fae5' : '#e2e8f0', color: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#10b981' : '#334155', padding: '0.75rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileSignature size={28} />
               </div>
-              
-              {userData?.admin_agreement_document ? (
-                <a href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${userData.admin_agreement_document}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }}>
-                  <Eye size={16} /> View Document
-                </a>
-              ) : (
-                <div style={{ background: '#fef2f2', color: '#ef4444', padding: '0.75rem', borderRadius: '8px', fontSize: '0.875rem', textAlign: 'center' }}>
-                  Not uploaded by Admin yet
-                </div>
-              )}
+              <div>
+                <h4 style={{ margin: 0, fontSize: '1.2rem', color: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#065f46' : 'var(--text)' }}>Signed Agreement</h4>
+                <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: (userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? '#047857' : 'var(--text-muted)' }}>
+                  {(userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? 'Your signed agreement is securely stored and verified.' : 'Please upload your signed franchise agreement document.'}
+                </p>
+              </div>
             </div>
 
-            <div style={{ padding: '1.5rem', border: '1px solid #10b981', borderRadius: '12px', background: '#ecfdf5' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                <div style={{ background: '#d1fae5', color: '#10b981', padding: '0.5rem', borderRadius: '8px' }}>
-                  <FileSignature size={24} />
-                </div>
-                <div>
-                  <h4 style={{ margin: 0 }}>Franchise Agreement</h4>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Signed by You</p>
-                </div>
-              </div>
-              
-              {userData?.franchise_agreement_document ? (
-                <a href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${userData.franchise_agreement_document}`} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
-                  <Eye size={16} /> View Your Document
-                </a>
-              ) : (
-                <div style={{ marginBottom: '1rem', color: '#065f46', fontSize: '0.875rem' }}>
-                  You haven't uploaded your signed agreement yet.
-                </div>
-              )}
-
+            {(userData?.franchise_agreement_document || userData?.admin_agreement_document || userData?.agreement_document) ? (
+              <a
+                href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${userData.franchise_agreement_document || userData.admin_agreement_document || userData.agreement_document}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-primary"
+                style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              >
+                <Eye size={18} /> View Uploaded Agreement
+              </a>
+            ) : (
               <form onSubmit={handleAgreementUpload}>
-                <div className="form-group" style={{ marginBottom: '1rem' }}>
-                  <input type="file" accept="image/*,application/pdf" className="form-input" onChange={e => setAgreementFile(e.target.files[0])} style={{ background: '#fff', border: '1px solid #6ee7b7' }} required />
-                  <small style={{ color: '#047857', display: 'block', marginTop: '4px' }}>Upload PDF or Image</small>
+                <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="form-input"
+                    onChange={e => setAgreementFile(e.target.files[0])}
+                    style={{ background: '#fff', border: '1px solid var(--border)', padding: '0.6rem', width: '100%', borderRadius: '8px' }}
+                    required
+                  />
+                  <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
+                    Note: Once uploaded, the agreement is finalized and cannot be edited, replaced, or deleted.
+                  </small>
                 </div>
-                <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>
-                  {loading ? 'Uploading...' : userData?.franchise_agreement_document ? 'Upload Replacement' : 'Upload Agreement'}
+                <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '0.75rem', fontSize: '0.95rem' }}>
+                  {loading ? <><Loader size={16} className="spinner" style={{ marginRight: '6px' }} /> Uploading...</> : 'Upload Agreement'}
                 </button>
               </form>
-            </div>
+            )}
           </div>
         </div>
       )}

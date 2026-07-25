@@ -76,8 +76,8 @@ const FWallet = () => {
         </div>
         
         {/* Agreement Card */}
-        {profile.agreement_document && (
-          <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${profile.agreement_document}`} target="_blank" rel="noopener noreferrer" 
+        {(profile.franchise_agreement_document || profile.admin_agreement_document || profile.agreement_document) && (
+          <a href={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '')}${profile.franchise_agreement_document || profile.admin_agreement_document || profile.agreement_document}`} target="_blank" rel="noopener noreferrer" 
              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#e0e7ff', color: '#4338ca', padding: '10px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: 600 }}>
             <FileSignature size={18} /> View Agreement
           </a>
