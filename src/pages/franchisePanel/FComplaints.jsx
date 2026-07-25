@@ -362,8 +362,11 @@ const FComplaints = () => {
               <p style={{ color: 'rgba(255,255,255,0.85)', margin: '0 0 1rem', fontSize: '0.9rem' }}>
                 For urgent issues contact your franchise coordinator directly.
               </p>
+              <div style={{ background: 'rgba(255,255,255,0.25)', padding: '0.75rem', borderRadius: '8px', color: 'white', fontSize: '0.85rem', marginBottom: '8px', fontWeight: 'bold' }}>
+                🕙 Vehicle Service Timing: 10:00 AM – 6:00 PM
+              </div>
               <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.75rem', borderRadius: '8px', color: 'white', fontSize: '0.85rem' }}>
-                📞 Support: +91 94531 69279 (Available 24/7)
+                📞 Support: +91 94531 69279
               </div>
             </div>
 
