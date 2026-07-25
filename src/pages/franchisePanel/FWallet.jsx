@@ -72,7 +72,7 @@ const FWallet = () => {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 className="page-title">Wallet & Earnings</h1>
-          <p className="page-subtitle">Track your earnings and manage withdrawals</p>
+          <p className="page-subtitle">Track your earnings and settlement history</p>
         </div>
         
         {/* Agreement Card */}
@@ -94,8 +94,8 @@ const FWallet = () => {
               ₹{wallet.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
             </h2>
           </div>
-          <button onClick={() => setShowWithdrawModal(true)} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.9rem', transition: 'all 0.2s', marginTop: '1rem', width: '100%' }}>
-            <ArrowUpRight size={18} /> Request Withdrawal
+          <button onClick={() => setShowWithdrawModal(true)} style={{ background: '#6366f1', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.9rem', transition: 'all 0.2s', marginTop: '1rem', width: '100%' }}>
+            <ArrowUpRight size={18} /> Weekly Settlements
           </button>
         </div>
 
@@ -140,9 +140,18 @@ const FWallet = () => {
         </div>
       </div>
 
+      {/* Auto Settlement Note */}
+      <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '14px 18px', marginBottom: '1.5rem', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+        <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
+        <div>
+          <div style={{ fontWeight: 700, color: '#1d4ed8', marginBottom: '2px', fontSize: '0.95rem' }}>Auto Settlement Note</div>
+          <div style={{ color: '#1e40af', fontSize: '0.88rem' }}>Every <strong>Tuesday</strong>, your wallet balance will be automatically settled. You do not need to manually request a withdrawal — it will be processed automatically every week.</div>
+        </div>
+      </div>
+
       <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
         <button onClick={() => setActiveTab('transactions')} style={{ background: activeTab === 'transactions' ? 'var(--primary)' : 'transparent', color: activeTab === 'transactions' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Earnings History</button>
-        <button onClick={() => setActiveTab('withdrawals')} style={{ background: activeTab === 'withdrawals' ? 'var(--primary)' : 'transparent', color: activeTab === 'withdrawals' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Withdrawal Requests</button>
+        <button onClick={() => setActiveTab('withdrawals')} style={{ background: activeTab === 'withdrawals' ? 'var(--primary)' : 'transparent', color: activeTab === 'withdrawals' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Weekly Settlements</button>
       </div>
 
       {activeTab === 'transactions' && (
@@ -180,36 +189,38 @@ const FWallet = () => {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Req ID</th>
                 <th>Date</th>
+                <th>Time</th>
                 <th>Amount</th>
                 <th>Status</th>
-                <th>Admin Note</th>
+                <th>Note</th>
                 <th>Payment Proof</th>
               </tr>
             </thead>
             <tbody>
               {withdrawals.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No withdrawal requests found</td></tr>
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No settlement records found yet.</td></tr>
               ) : withdrawals.map(w => {
                 const cfg = getStatusConfig(w.status);
+                const date = new Date(w.createdAt);
                 return (
                   <tr key={w._id}>
-                    <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{w.withdrawal_id}</td>
-                    <td>{new Date(w.createdAt).toLocaleString()}</td>
-                    <td style={{ fontWeight: 600 }}>₹{w.amount.toLocaleString()}</td>
+                    <td>{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td style={{ fontWeight: 700, color: '#10b981', fontSize: '1rem' }}>₹{w.amount.toLocaleString('en-IN')}</td>
                     <td>
-                      <span style={{ color: cfg.color, display: 'inline-flex', alignItems: 'center', gap: '4px', background: `${cfg.color}15`, padding: '4px 8px', borderRadius: '4px', fontWeight: 600, fontSize: '0.85rem' }}>
+                      <span style={{ color: cfg.color, display: 'inline-flex', alignItems: 'center', gap: '4px', background: `${cfg.color}15`, padding: '4px 10px', borderRadius: '20px', fontWeight: 600, fontSize: '0.82rem' }}>
                         {cfg.icon} {cfg.label}
                       </span>
                     </td>
-                    <td>{w.admin_note || '-'}</td>
+                    <td style={{ color: 'var(--text-secondary)', maxWidth: '200px' }}>{w.admin_note || w.note || '—'}</td>
                     <td>
                       {w.payment_proof ? (
-                        <a href={`${BASE_URL}/${w.payment_proof.replace(/\\/g, '/').replace(/^\/+/, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>
-                          <FileText size={16} /> View Proof
+                        <a href={`${BASE_URL}/${w.payment_proof.replace(/\\/g, '/').replace(/^\/+/, '')}`} target="_blank" rel="noopener noreferrer"
+                          style={{ color: '#3b82f6', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem', background: '#eff6ff', padding: '4px 10px', borderRadius: '6px' }}>
+                          <FileText size={14} /> View Proof
                         </a>
-                      ) : '-'}
+                      ) : <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Not uploaded</span>}
                     </td>
                   </tr>
                 );

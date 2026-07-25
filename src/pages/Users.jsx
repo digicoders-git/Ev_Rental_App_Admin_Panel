@@ -4,7 +4,7 @@ import {
   Search, Trash2, Eye, X, UserPlus,
   CheckCircle, XCircle, ShieldCheck, ShieldOff,
   Mail, Clock,
-  Lock, EyeOff, Users as UsersIcon, UserCheck, UserX, Ban, Loader2
+  Lock, EyeOff, Users as UsersIcon, UserCheck, UserX, Ban, Loader2, Edit3, MessageSquare
 } from 'lucide-react';
 import { getAllUsers, getUserById, addRider, updateUser, deleteUser, addWalletFunds, deductWalletFunds, getUserWalletHistory } from '../services/apiServices';
 import useApi from '../services/useApi';
@@ -39,9 +39,26 @@ const Users = () => {
   const [walletForm, setWalletForm] = useState({ amount: '', description: '', action: 'add' });
   const [walletHistory, setWalletHistory] = useState([]);
   const [loadingWallet, setLoadingWallet] = useState(false);
-  const [fullDetail, setFullDetail] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [editingNoteUser, setEditingNoteUser] = useState(null);
+  const [selectedNoteTag, setSelectedNoteTag] = useState('');
+  const [customNoteText, setCustomNoteText] = useState('');
   const { loading, error, call }  = useApi();
+
+  const handleSaveNotes = () => {
+    if (!editingNoteUser) return;
+    const finalNote = customNoteText.trim();
+    call(
+      () => updateUser(editingNoteUser.id || editingNoteUser._id, { notes: finalNote }),
+      () => {
+        setUsers(prev => prev.map(u => (u.id === editingNoteUser.id) ? { ...u, notes: finalNote } : u));
+        if (viewUser && viewUser.id === editingNoteUser.id) {
+          setViewUser(prev => ({ ...prev, notes: finalNote }));
+        }
+        setEditingNoteUser(null);
+      }
+    );
+  };
 
   const getImageUrl = (path) => {
     if (!path || path.trim() === '') return null;
@@ -108,6 +125,7 @@ const Users = () => {
             totalRides: u.totalRides || 0,
             totalSpent: u.totalSpent || 0,
             walletBalance: u.wallet_balance || 0,
+            notes: u.notes || '',
             franchise_name: (u.franchise_name && u.franchise_name.trim() !== '') ? u.franchise_name : 'Main Branch',
           }));
         setUsers(mapped);
@@ -298,17 +316,18 @@ const Users = () => {
                 <th>KYC</th>
                 <th>Wallet</th>
                 <th>Status</th>
+                <th>Notes / Remarks</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={10} className="usr-empty-row"><Loader2 size={24} className="spin" /><p>Loading users...</p></td></tr>
+                <tr><td colSpan={16} className="usr-empty-row"><Loader2 size={24} className="spin" /><p>Loading users...</p></td></tr>
               ) : error ? (
-                <tr><td colSpan={10} className="usr-empty-row" style={{ color: '#ef4444' }}><p>{error}</p></td></tr>
+                <tr><td colSpan={16} className="usr-empty-row" style={{ color: '#ef4444' }}><p>{error}</p></td></tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="usr-empty-row">
+                  <td colSpan={16} className="usr-empty-row">
                     <UsersIcon size={28} /><p>No users found.</p>
                   </td>
                 </tr>
@@ -375,6 +394,36 @@ const Users = () => {
                         {u.status === 'Active' ? <CheckCircle size={11} /> : <Ban size={11} />}
                         {u.status}
                       </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {u.notes ? (
+                          <span style={{ 
+                            background: '#eff6ff', 
+                            color: '#1e3a8a', 
+                            padding: '4px 8px', 
+                            borderRadius: '6px', 
+                            fontSize: '0.78rem', 
+                            fontWeight: 600,
+                            border: '1px solid #bfdbfe',
+                            display: 'inline-block',
+                            maxWidth: '160px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            cursor: 'pointer'
+                          }} title={u.notes} onClick={() => { setEditingNoteUser(u); setSelectedNoteTag(u.notes); setCustomNoteText(u.notes); }}>
+                            💬 {u.notes}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontSize: '0.78rem', fontStyle: 'italic', cursor: 'pointer' }} onClick={() => { setEditingNoteUser(u); setSelectedNoteTag(''); setCustomNoteText(''); }}>
+                            + Add Remark
+                          </span>
+                        )}
+                        <button className="btn-icon" title="Edit Remark/Note" style={{ padding: '4px', height: 'auto', color: '#2563eb' }} onClick={() => { setEditingNoteUser(u); setSelectedNoteTag(u.notes || ''); setCustomNoteText(u.notes || ''); }}>
+                          <Edit3 size={14} />
+                        </button>
+                      </div>
                     </td>
                     <td>
                       <div className="usr-actions">
@@ -473,6 +522,24 @@ const Users = () => {
                     <div className="usr-detail-row"><span>Wallet Balance</span><span className="usr-spent" style={{ color: '#10b981' }}>₹{viewUser.walletBalance.toLocaleString()}</span></div>
                     <div className="usr-detail-row"><span>Total Rides</span><span>{viewUser.totalRides}</span></div>
                     <div className="usr-detail-row"><span>Total Spent</span><span className="usr-spent">₹{viewUser.totalSpent.toLocaleString()}</span></div>
+                    <div className="usr-detail-row">
+                      <span>Device Session</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className={`badge ${fullDetail?.user?.isLoggedIn ? 'badge-success' : 'badge-secondary'}`} style={{ fontSize: '0.7rem' }}>
+                          {fullDetail?.user?.isLoggedIn ? '🟢 Active on Device' : '⚪ Logged Out'}
+                        </span>
+                        {fullDetail?.user?.isLoggedIn && (
+                          <button className="btn btn-outline btn-sm" style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#ef4444', borderColor: '#ef4444' }} onClick={() => {
+                            call(() => updateUser(viewUser.id, { isLoggedIn: false }), () => {
+                              if (fullDetail?.user) fullDetail.user.isLoggedIn = false;
+                              setViewUser({ ...viewUser });
+                            });
+                          }}>
+                            Force Logout
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -789,6 +856,81 @@ const Users = () => {
               <button className="btn btn-outline" onClick={() => setWalletUser(null)} disabled={loading}>Cancel</button>
               <button className={`btn ${walletForm.action === 'add' ? 'btn-primary' : 'btn-danger'}`} onClick={handleWalletSubmit} disabled={loading || !walletForm.amount}>
                 {loading ? <Loader2 size={16} className="spinner" /> : (walletForm.action === 'add' ? 'Add Funds' : 'Deduct Funds')}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {editingNoteUser && createPortal(
+        <div className="modal-overlay" onClick={() => setEditingNoteUser(null)}>
+          <div className="modal-content usr-modal" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>📝 Driver Notes & Remarks</h3>
+              <button className="btn-icon" onClick={() => setEditingNoteUser(null)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem', lineHeight: '1.4' }}>
+                Add or update operational remarks for <b>{editingNoteUser.name}</b> ({editingNoteUser.phone}). These comments will be saved dynamically for management reference.
+              </p>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>Quick Select Remark (Client Presets):</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {[
+                    'Good Driver',
+                    'Late Payment',
+                    'KYC Pending',
+                    'Vehicle Damage Reported',
+                    'Documents Verified',
+                    'Blacklisted Warning',
+                    'Follow-up Required',
+                    'Clear Note / None'
+                  ].map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        if (tag === 'Clear Note / None') {
+                          setSelectedNoteTag('');
+                          setCustomNoteText('');
+                        } else {
+                          setSelectedNoteTag(tag);
+                          setCustomNoteText(tag);
+                        }
+                      }}
+                      style={{
+                        padding: '5px 11px',
+                        borderRadius: '20px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        border: customNoteText === tag ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                        background: customNoteText === tag ? '#eff6ff' : '#f8fafc',
+                        color: customNoteText === tag ? '#1d4ed8' : '#475569',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {tag === 'Clear Note / None' ? '❌ Clear Note' : `🏷️ ${tag}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Custom Comment / Detailed Note:</label>
+                <textarea
+                  rows="3"
+                  placeholder="Type any custom comment or remark about driver performance, documents, payment history..."
+                  value={customNoteText}
+                  onChange={(e) => { setCustomNoteText(e.target.value); setSelectedNoteTag(e.target.value); }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setEditingNoteUser(null)} disabled={loading}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveNotes} disabled={loading}>
+                {loading ? <Loader2 size={16} className="spinner" /> : 'Save Remark'}
               </button>
             </div>
           </div>

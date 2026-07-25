@@ -94,6 +94,10 @@ const WeeklyPayments = () => {
         </div>
       </div>
 
+      <div style={{ padding: '0.85rem 1.2rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', marginBottom: '1.25rem', color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', fontWeight: 500 }}>
+        <span>ℹ️ <b>Rent Collection Policy:</b> All drivers pay rent 100% online (UPI, Card, Net Banking) via Driver App. Super Admin and Franchisee have viewing access only; manual rent collection and "Mark as Paid" overrides are disabled.</span>
+      </div>
+
       {error && (
         <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
           <AlertCircle size={18} />
@@ -170,18 +174,13 @@ const WeeklyPayments = () => {
                         </div>
                         
                         {!isPaid && (
-                          <button 
-                            className="btn btn-primary btn-sm" 
-                            style={{ marginTop: 'auto', width: '100%', padding: '8px' }}
-                            onClick={() => handlePayInstallment(booking._id, inst._id)}
-                            disabled={processingId === inst._id}
-                          >
-                            {processingId === inst._id ? <Loader2 size={14} className="spinner"/> : 'Mark as Paid'}
-                          </button>
+                          <div style={{ marginTop: 'auto', background: '#fffbeb', border: '1px solid #fde68a', color: '#b45309', borderRadius: '6px', textAlign: 'center', fontWeight: 600, padding: '8px', fontSize: '0.82rem' }}>
+                            ⏳ Pending (Online Only)
+                          </div>
                         )}
                         {isPaid && (
-                          <div style={{ marginTop: 'auto', fontSize: '0.85rem', color: '#166534', textAlign: 'center', fontWeight: 500, padding: '8px' }}>
-                            ✅ Paid on {new Date(inst.paid_date || inst.updatedAt).toLocaleDateString()}
+                          <div style={{ marginTop: 'auto', background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: '0.82rem', color: '#166534', textAlign: 'center', fontWeight: 600, padding: '8px', borderRadius: '6px' }}>
+                            ✅ Paid Online ({new Date(inst.paid_date || inst.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
                           </div>
                         )}
                       </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Receipt, Download, Loader2, IndianRupee, X } from 'lucide-react';
-import { getSettlements, generateSettlement, getAllStores } from '../services/apiServices';
+import { Receipt, Download, Loader2, IndianRupee, X, FileText, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { getSettlements, generateSettlement, getAllStores, getAllWithdrawalsAdmin } from '../services/apiServices';
 import useApi from '../services/useApi';
 
 const Settlements = () => {
@@ -20,11 +20,19 @@ const Settlements = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [setRes, franRes] = await Promise.all([
+      const [setRes, franRes, wdRes] = await Promise.all([
         getSettlements(),
-        getAllStores() // Need stores for dropdown
+        getAllStores(),
+        getAllWithdrawalsAdmin()
       ]);
-      setSettlements(setRes.data.data || []);
+      // Merge both settlements and withdrawal records for a unified view
+      const settlementsData = setRes.data.data || [];
+      const withdrawalsData = wdRes.data.data || [];
+      // Attach withdrawal data to matching settlements or show withdrawals separately
+      setSettlements([
+        ...settlementsData,
+        ...withdrawalsData.map(w => ({ ...w, _type: 'withdrawal' }))
+      ]);
       setFranchises(franRes.data.data || []);
     } catch (error) {
       console.error(error);
@@ -73,43 +81,72 @@ const Settlements = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>
-                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Settlement ID</th>
-                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Franchise</th>
-                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Period</th>
-                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Total Collected</th>
-                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Commission (8%)</th>
-                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Final Payout</th>
+                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Franchisee</th>
+                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Date &amp; Time</th>
+                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Amount</th>
                 <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Status</th>
+                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Note</th>
+                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Payment Proof</th>
                 <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {settlements.map((s) => (
-                <tr key={s._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '12px 16px', fontWeight: 500, color: '#3b82f6' }}>{s.settlement_id}</td>
-                  <td style={{ padding: '12px 16px' }}>{s.franchise?.store_name}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#64748b' }}>
-                    {new Date(s.date_from).toLocaleDateString()} - {new Date(s.date_to).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>₹{s.total_collected.toLocaleString()}</td>
-                  <td style={{ padding: '12px 16px', color: '#ef4444' }}>-₹{s.commission_deducted.toLocaleString()}</td>
-                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#10b981' }}>₹{s.final_payout.toLocaleString()}</td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span className="badge badge-success" style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', background: '#dcfce7', color: '#16a34a' }}>
-                      {s.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <button className="btn-icon" onClick={() => setSelectedSettlement(s)} title="View Settlement Bill" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1' }}>
-                      <Receipt size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {settlements.map((s) => {
+                const isWithdrawal = s._type === 'withdrawal';
+                const franchiseName = isWithdrawal
+                  ? (s.franchise?.store_name || s.store?.store_name || '—')
+                  : (s.franchise?.store_name || '—');
+                const amount = isWithdrawal ? s.amount : s.final_payout;
+                const status = s.status || 'pending';
+                const note = s.admin_note || s.note || s.remarks || '—';
+                const date = new Date(s.createdAt || s.date_to);
+                const statusColor = status === 'approved' || status === 'paid' || status === 'completed'
+                  ? '#10b981' : status === 'rejected' ? '#ef4444' : '#f59e0b';
+                const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+                const proof = s.payment_proof;
+
+                return (
+                  <tr key={s._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#0f172a' }}>
+                      {franchiseName}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#64748b' }}>
+                      <div>{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                      <div style={{ color: '#94a3b8' }}>{date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontWeight: 700, color: '#10b981', fontSize: '1rem' }}>
+                      ₹{(amount || 0).toLocaleString('en-IN')}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span style={{ background: `${statusColor}15`, color: statusColor, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>
+                        {status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', color: '#64748b', maxWidth: '180px', fontSize: '13px' }}>{note}</td>
+                    <td style={{ padding: '12px 16px' }}>
+                      {proof ? (
+                        <a href={`${BASE_URL}/${proof.replace(/\\/g, '/').replace(/^\/+/, '')}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ color: '#3b82f6', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '0.82rem', background: '#eff6ff', padding: '4px 10px', borderRadius: '6px' }}>
+                          <FileText size={14} /> View Proof
+                        </a>
+                      ) : <span style={{ color: '#cbd5e1', fontSize: '13px' }}>Not uploaded</span>}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      {!isWithdrawal && (
+                        <button className="btn-icon" onClick={() => setSelectedSettlement(s)} title="View Settlement Bill"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1' }}>
+                          <Receipt size={18} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {settlements.length === 0 && (
                 <tr>
-                  <td colSpan="8" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
-                    No settlements found. Generate one to see it here.
+                  <td colSpan="7" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
+                    No settlements found.
                   </td>
                 </tr>
               )}

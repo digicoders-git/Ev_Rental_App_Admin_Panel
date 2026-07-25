@@ -372,14 +372,17 @@ const FRides = () => {
                   <th>Total</th>
                   <th>Paid</th>
                   <th>Due</th>
+                  <th>Payment Status</th>
                   <th>Extra Charges</th>
+                  <th>Submission Date</th>
+                  <th>Submission Time</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                  <tr><td colSpan={14} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                     <Calendar size={28} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
                     No bookings found.
                   </td></tr>
@@ -409,6 +412,21 @@ const FRides = () => {
                       <td style={{ color: '#10b981', fontWeight: 600 }}>₹{(b.total_paid || 0).toLocaleString()}</td>
                       <td style={{ color: dueAmt > 0 ? '#ef4444' : '#10b981', fontWeight: 600 }}>₹{dueAmt.toLocaleString()}</td>
                       <td>
+                        {b.payment_status === 'failed' ? (
+                          <span className="badge badge-danger" style={{ fontSize: '0.75rem', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            ❌ Failed
+                          </span>
+                        ) : dueAmt <= 0 && (b.total_paid || 0) > 0 ? (
+                          <span className="badge badge-success" style={{ fontSize: '0.75rem', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' }}>
+                            ✅ Paid Online
+                          </span>
+                        ) : (
+                          <span className="badge badge-warning" style={{ fontSize: '0.75rem', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
+                            ⏳ Pending
+                          </span>
+                        )}
+                      </td>
+                      <td>
                         {b.damage_charges?.length > 0 ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                             <span style={{ fontWeight: 700, color: '#f59e0b', fontSize: '0.85rem' }}>
@@ -429,7 +447,21 @@ const FRides = () => {
                           <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>
                         )}
                       </td>
-                      <td><span className={`badge ${cfg.cls}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{cfg.icon}{cfg.label}</span></td>
+                      <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: '#0369a1', fontSize: '0.85rem' }}>
+                        {(b.return_status === 'submission_pending' || b.return_status === 'approved' || b.booking_status === 'completed') ? 
+                          new Date(b.submission_date || b.actual_return_date || b.updatedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                          : <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>—</span>
+                        }
+                      </td>
+                      <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: '#15803d', fontSize: '0.85rem' }}>
+                        {(b.return_status === 'submission_pending' || b.return_status === 'approved' || b.booking_status === 'completed') ? 
+                          new Date(b.submission_date || b.actual_return_date || b.updatedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                          : <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>—</span>
+                        }
+                      </td>
+                      <td>
+                        <span className={`badge ${cfg.cls}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{cfg.icon}{cfg.label}</span>
+                      </td>
                       <td>
                         <div style={{ display: 'flex', gap: '6px' }}>
                           <button className="btn-icon" title="View Bill" style={{ color: '#10b981' }} onClick={() => handleViewBill(b._id)}><Receipt size={15} /></button>
@@ -530,6 +562,18 @@ const FRides = () => {
                       <span style={{ fontWeight: 500 }}>{v || 'N/A'}</span>
                     </div>
                   ))}
+                  {(selected.return_status === 'submission_pending' || selected.return_status === 'approved' || selected.booking_status === 'completed') && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Submission Date</span>
+                        <span style={{ color: '#0369a1', fontWeight: 700 }}>{new Date(selected.submission_date || selected.actual_return_date || selected.updatedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>Submission Time</span>
+                        <span style={{ color: '#15803d', fontWeight: 700 }}>{new Date(selected.submission_date || selected.actual_return_date || selected.updatedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 {/* Payment */}
                 <div style={{ background: 'var(--surface)', border: '1px solid var(--border-light)', padding: '1rem', borderRadius: '8px' }}>
@@ -644,7 +688,7 @@ const FRides = () => {
                               <span style={{ fontSize: '0.72rem', color: '#10b981' }}>Paid {fmtDate(inst.paid_date)}</span>
                             )}
                             {inst.status !== 'paid' && (
-                              <button className="btn btn-primary btn-sm" disabled={loading} onClick={() => handlePayInstallment(inst._id)}>Mark Paid</button>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#b45309', background: '#fef3c7', padding: '3px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>⏳ Pending Online Payment</span>
                             )}
                           </div>
                         </div>
@@ -658,19 +702,11 @@ const FRides = () => {
                     </p>
                   )}
 
-                  {/* Quick pay footer */}
-                  <div style={{ padding: '0.75rem 1rem', background: '#fff7ed', borderTop: '1px solid #fed7aa', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#92400e', flex: '0 0 auto' }}>Quick Pay:</span>
-                    <div className="inst-amount-field">
-                      <span className="inst-prefix">₹</span>
-                      <input type="number" placeholder="Amount" value={installmentAmount}
-                        onChange={e => setInstallmentAmount(e.target.value)}
-                        className="inst-field-input" />
-                    </div>
-                    <button className="btn btn-primary btn-sm" disabled={loading} onClick={() => handlePayment(selected._id, installmentAmount)}>
-                      {loading ? <Loader size={13} className="spinner" /> : 'Record'}
-                    </button>
-                    <button className="btn btn-outline btn-sm" disabled={loading} onClick={() => handlePayment(selected._id, null)}>Pay All</button>
+                  {/* Online payment policy notice */}
+                  <div style={{ padding: '0.75rem 1rem', background: '#eff6ff', borderTop: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 600 }}>
+                      ℹ️ Online Payment Requirement: Drivers must pay weekly rent strictly online via Driver App (UPI, Card, Net Banking). Franchisees cannot manually add rent or receive cash payments.
+                    </span>
                   </div>
                 </div>
               )}

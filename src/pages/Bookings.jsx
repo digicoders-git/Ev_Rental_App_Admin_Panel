@@ -709,6 +709,8 @@ const Bookings = () => {
                 <th>Paid</th>
                 <th>Due</th>
                 <th>Extra Charges</th>
+                <th>Submission Date</th>
+                <th>Submission Time</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -716,7 +718,7 @@ const Bookings = () => {
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="bk-empty-row">
+                  <td colSpan={14} className="bk-empty-row">
                     <Calendar size={28} />
                     <p>No bookings found.</p>
                   </td>
@@ -773,6 +775,18 @@ const Bookings = () => {
                       ) : (
                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>
                       )}
+                    </td>
+                    <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: '#0369a1', fontSize: '0.85rem' }}>
+                      {(b.raw?.return_status === 'submission_pending' || b.raw?.return_status === 'approved' || b.status === 'Completed') ? 
+                        new Date(b.raw?.submission_date || b.raw?.actual_return_date || b.raw?.updatedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>—</span>
+                      }
+                    </td>
+                    <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: '#15803d', fontSize: '0.85rem' }}>
+                      {(b.raw?.return_status === 'submission_pending' || b.raw?.return_status === 'approved' || b.status === 'Completed') ? 
+                        new Date(b.raw?.submission_date || b.raw?.actual_return_date || b.raw?.updatedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                        : <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>—</span>
+                      }
                     </td>
                     <td>
                       <div className="bk-status-stack">
@@ -919,6 +933,12 @@ const Bookings = () => {
                     <div className="bk-detail-row"><span>Start</span><span>{selected.startTime}</span></div>
                     <div className="bk-detail-row"><span>End</span><span>{selected.endTime}</span></div>
                     <div className="bk-detail-row"><span>Pickup</span><span>{selected.pickup}</span></div>
+                    {(selected.raw?.return_status === 'submission_pending' || selected.raw?.return_status === 'approved' || selected.status === 'Completed') && (
+                      <>
+                        <div className="bk-detail-row"><span>Submission Date</span><span style={{ color: '#0369a1', fontWeight: 700 }}>{new Date(selected.raw?.submission_date || selected.raw?.actual_return_date || selected.raw?.updatedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
+                        <div className="bk-detail-row"><span>Submission Time</span><span style={{ color: '#15803d', fontWeight: 700 }}>{new Date(selected.raw?.submission_date || selected.raw?.actual_return_date || selected.raw?.updatedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span></div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -1053,9 +1073,9 @@ const Bookings = () => {
                                   <CheckCircle2 size={12} /> Paid on {new Date(inst.paid_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                 </div>
                               ) : (
-                                <button className="btn btn-primary btn-sm" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => handlePayInstallment(inst._id)}>
-                                  Mark Paid
-                                </button>
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#b45309', background: '#fffbeb', padding: '4px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>
+                                  ⏳ Pending Online Pay
+                                </span>
                               )}
                             </div>
                           </div>
@@ -1106,28 +1126,9 @@ const Bookings = () => {
             <div className="modal-footer bk-modal-footer">
               <div className="footer-left">
                 {selected.due_amount > 0 && (
-                  <div className="quick-pay-box">
-                    <div className="inst-amount-field">
-                      <span className="inst-prefix">₹</span>
-                      <input
-                        type="number"
-                        placeholder="Enter amount"
-                        value={installmentAmount}
-                        onChange={(e) => setInstallmentAmount(e.target.value)}
-                        className="inst-field-input"
-                      />
-                    </div>
-                    <button className="btn btn-primary btn-sm"
-                      onClick={() => handlePayment(selected.id, installmentAmount)}
-                      disabled={!installmentAmount || loading}>
-                      Record
-                    </button>
-                    <button className="btn btn-outline btn-sm"
-                      onClick={() => handlePayment(selected.id)}
-                      disabled={loading}>
-                      Pay All
-                    </button>
-                  </div>
+                  <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 600, background: '#eff6ff', padding: '6px 12px', borderRadius: '6px', border: '1px solid #bfdbfe', display: 'inline-block', maxWidth: '450px' }}>
+                    ℹ️ Online Payment Only: Rent collection is restricted to Driver App online gateways (UPI/Card). Manual recording and cash receipts are disabled.
+                  </span>
                 )}
               </div>
               

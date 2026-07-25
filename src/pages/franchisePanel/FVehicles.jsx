@@ -225,7 +225,9 @@ const FVehicles = () => {
                 <tr>
                   <th>Vehicle</th>
                   <th>Reg. Number</th>
-                  <th>Vehicle ID</th>
+                  <th>Driver</th>
+                  <th>Submission Date</th>
+                  <th>Submission Time</th>
                   <th>Ownership Source</th>
                   <th>Category</th>
                   <th>Battery</th>
@@ -235,7 +237,7 @@ const FVehicles = () => {
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                  <tr><td colSpan={10} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                     <Bike size={28} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
                     No vehicles found in your fleet.
                   </td></tr>
@@ -258,10 +260,12 @@ const FVehicles = () => {
                       </div>
                     </td>
                     <td style={{ fontFamily: 'monospace', fontWeight: 500 }}>{v.registration_number || 'N/A'}</td>
-                    <td>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.82rem', background: '#eff6ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
-                        {v.vehicle_id || '—'}
-                      </span>
+                    <td style={{ fontWeight: 600, color: '#334155' }}>{v.driver_name || '—'}</td>
+                    <td style={{ fontWeight: 600, color: '#0369a1' }}>
+                      {v.submission_date ? new Date(v.submission_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                    </td>
+                    <td style={{ fontWeight: 600, color: '#15803d' }}>
+                      {v.submission_date ? new Date(v.submission_date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
                     </td>
                     <td>
                       {v.added_by_franchise ? (
@@ -281,7 +285,11 @@ const FVehicles = () => {
                         {(v.current_battery != null) ? `${v.current_battery}%` : (v.battery_level != null ? `${v.battery_level}%` : '100%')}
                       </div>
                     </td>
-                    <td><span className={`badge ${v.is_busy ? 'badge-warning' : getStatusBadge(v.status)}`}>{v.is_busy ? 'On Ride' : v.status}</span></td>
+                    <td>
+                      <span className={`badge ${v.submission_status === 'Submitted' ? 'badge-info' : (v.is_busy ? 'badge-warning' : getStatusBadge(v.status))}`}>
+                        {v.submission_status || (v.is_busy ? 'On Ride' : v.status)}
+                      </span>
+                    </td>
                     <td>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button className="btn-icon" title="View Details" onClick={() => setSelected(v)}>
@@ -528,13 +536,15 @@ const FVehicles = () => {
                 {[
                   ['Brand', selected.brand], ['Model', selected.vehicle_name],
                   ['Reg. Number', selected.registration_number], ['Category', selected.category?.name || selected.vehicle_type],
+                  ['Driver', selected.driver_name || '—'], ['Status', selected.submission_status || (selected.is_busy ? 'On Ride' : selected.status)],
+                  ['Submission Date', selected.submission_date ? new Date(selected.submission_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'],
+                  ['Submission Time', selected.submission_date ? new Date(selected.submission_date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'],
                   ['Battery', (selected.current_battery != null) ? `${selected.current_battery}%` : (selected.battery_level != null ? `${selected.battery_level}%` : '100%')],
                   ['Range', selected.range_per_charge ? `${selected.range_per_charge} km` : (selected.range_km ? `${selected.range_km} km` : 'N/A')],
-                  ['Status', selected.is_busy ? 'On Ride' : selected.status], ['Vehicle ID', selected.vehicle_id],
                 ].map(([label, value]) => (
                   <div key={label} style={{ background: 'var(--background)', padding: '0.75rem', borderRadius: '8px' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>{label}</div>
-                    <div style={{ fontWeight: 600, textTransform: 'capitalize' }}>{value || 'N/A'}</div>
+                    <div style={{ fontWeight: 600, textTransform: label === 'Submission Date' || label === 'Submission Time' || label === 'Driver' || label === 'Reg. Number' ? 'none' : 'capitalize' }}>{value || 'N/A'}</div>
                   </div>
                 ))}
               </div>

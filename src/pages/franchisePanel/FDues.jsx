@@ -40,6 +40,10 @@ const FDues = () => {
         </div>
       </div>
 
+      <div style={{ padding: '0.85rem 1.2rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', marginBottom: '1.25rem', color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', fontWeight: 500 }}>
+        <span>🔒 <b>Online Payment Policy:</b> Drivers must pay their due rent online directly through the Driver App (UPI, Card, Net Banking). Franchisees cannot receive cash or manually mark rent payments as completed.</span>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div className="card" style={{ textAlign: 'center', borderLeft: '3px solid #ef4444' }}>
           <h2 style={{ color: '#ef4444', margin: 0 }}>₹{totalDue.toLocaleString()}</h2>
@@ -78,7 +82,7 @@ const FDues = () => {
                   <th>Grand Total</th>
                   <th>Paid</th>
                   <th>Due Amount</th>
-                  <th>Status</th>
+                  <th>Payment Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -107,7 +111,11 @@ const FDues = () => {
                     <td style={{ fontWeight: 600 }}>₹{(d.grand_total || 0).toLocaleString()}</td>
                     <td style={{ color: '#10b981', fontWeight: 600 }}>₹{(d.total_paid || 0).toLocaleString()}</td>
                     <td style={{ color: '#ef4444', fontWeight: 700, fontSize: '1rem' }}>₹{d.due_amount.toLocaleString()}</td>
-                    <td><span className={`badge ${d.isOverdue ? 'badge-danger' : 'badge-warning'}`}>{d.isOverdue ? 'Overdue' : d.booking_status}</span></td>
+                    <td>
+                      <span className={`badge ${d.isOverdue ? 'badge-danger' : 'badge-warning'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        {d.isOverdue ? '⚠ Overdue (Online Only)' : '⏳ Pending Online Pay'}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

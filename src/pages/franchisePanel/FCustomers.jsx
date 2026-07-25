@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Users, Search, Eye, Phone, Mail, X, Loader, UserCircle, Plus, Calendar, CheckCircle, Lock, EyeOff } from 'lucide-react';
-import { getFranchiseBookings, addRider, getMyFranchiseVehicles, getAllPlans, createBooking } from '../../services/apiServices';
+import { Users, Search, Eye, Phone, Mail, X, Loader, UserCircle, Plus, Calendar, CheckCircle, Lock, EyeOff, Edit3, MessageSquare } from 'lucide-react';
+import { getFranchiseBookings, addRider, updateUser, getMyFranchiseVehicles, getAllPlans, createBooking } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const FCustomers = () => {
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
+  const [editingNoteCustomer, setEditingNoteCustomer] = useState(null);
+  const [selectedNoteTag, setSelectedNoteTag] = useState('');
+  const [customNoteText, setCustomNoteText] = useState('');
   
   // Registration and Booking Modals
   const [showAddCustomer, setShowAddCustomer] = useState(false);
@@ -23,7 +26,7 @@ const FCustomers = () => {
     end_date: '',
     pickup_location: '',
     drop_location: '',
-    payment_method: 'Cash',
+    payment_method: 'Online',
     perDayRent: '500',
     securityDeposit: '2000'
   });
@@ -39,6 +42,21 @@ const FCustomers = () => {
   const [successMsg, setSuccessMsg] = useState('');
   
   const { loading, call } = useApi();
+
+  const handleSaveNotes = () => {
+    if (!editingNoteCustomer) return;
+    const finalNote = customNoteText.trim();
+    call(
+      () => updateUser(editingNoteCustomer._id || editingNoteCustomer.id, { notes: finalNote }),
+      () => {
+        setCustomers(prev => prev.map(c => (c._id === editingNoteCustomer._id) ? { ...c, notes: finalNote } : c));
+        if (selected && selected._id === editingNoteCustomer._id) {
+          setSelected(prev => ({ ...prev, notes: finalNote }));
+        }
+        setEditingNoteCustomer(null);
+      }
+    );
+  };
 
   const fetchCustomers = () => {
     call(
@@ -62,7 +80,9 @@ const FCustomers = () => {
               email: u.email || '',
               city: u.city || '',
               isKycVerified: u.isKycVerified || false,
+              isLoggedIn: u.isLoggedIn || false,
               profile_picture: u.profile_picture || '',
+              notes: u.notes || '',
               bookings: []
             };
           }
@@ -84,7 +104,9 @@ const FCustomers = () => {
             email: u.email,
             city: u.city,
             isKycVerified: u.isKycVerified,
+            isLoggedIn: u.isLoggedIn || false,
             profile_picture: u.profile_picture,
+            notes: u.notes || '',
             totalRides: myBookings.length,
             totalSpent,
             lastRide,
@@ -199,7 +221,7 @@ const FCustomers = () => {
       return;
     }
 
-    const apiPaymentMethod = payment_method === 'Cash' ? 'cash' : 'online';
+    const apiPaymentMethod = 'online'; // Strictly online payments
 
     call(() => createBooking({
       user: selectedCustomerForBooking._id,
@@ -281,12 +303,13 @@ const FCustomers = () => {
                   <th>Total Rides</th>
                   <th>Spent</th>
                   <th>Last Ride</th>
+                  <th>Notes / Remarks</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                  <tr><td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                     No customers found.
                   </td></tr>
                 ) : filtered.map(c => (
@@ -306,6 +329,36 @@ const FCustomers = () => {
                     <td style={{ fontWeight: 600 }}>₹{c.totalSpent.toLocaleString()}</td>
                     <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                       {c.lastRide ? new Date(c.lastRide).toLocaleDateString('en-IN') : 'N/A'}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {c.notes ? (
+                          <span style={{ 
+                            background: '#eff6ff', 
+                            color: '#1e3a8a', 
+                            padding: '4px 8px', 
+                            borderRadius: '6px', 
+                            fontSize: '0.78rem', 
+                            fontWeight: 600,
+                            border: '1px solid #bfdbfe',
+                            display: 'inline-block',
+                            maxWidth: '150px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            cursor: 'pointer'
+                          }} title={c.notes} onClick={() => { setEditingNoteCustomer(c); setSelectedNoteTag(c.notes); setCustomNoteText(c.notes); }}>
+                            💬 {c.notes}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontSize: '0.78rem', fontStyle: 'italic', cursor: 'pointer' }} onClick={() => { setEditingNoteCustomer(c); setSelectedNoteTag(''); setCustomNoteText(''); }}>
+                            + Add Remark
+                          </span>
+                        )}
+                        <button className="btn-icon" title="Edit Remark/Note" style={{ padding: '4px', height: 'auto', color: '#2563eb' }} onClick={() => { setEditingNoteCustomer(c); setSelectedNoteTag(c.notes || ''); setCustomNoteText(c.notes || ''); }}>
+                          <Edit3 size={14} />
+                        </button>
+                      </div>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
@@ -468,13 +521,12 @@ const FCustomers = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Payment Mode</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Payment Mode (Online Only)</label>
                   <select value={bookingForm.payment_method} onChange={e => setBookingForm(p => ({ ...p, payment_method: e.target.value }))}
                     style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }}>
-                    <option value="Cash">Cash</option>
+                    <option value="Online">Online Payment (Gateway/Link)</option>
                     <option value="UPI">UPI / QR Code</option>
-                    <option value="Card">Credit/Debit Card</option>
-                    <option value="Online">Online Link</option>
+                    <option value="Card">Credit/Debit Card / NetBanking</option>
                   </select>
                 </div>
 
@@ -539,6 +591,23 @@ const FCustomers = () => {
                     <div><strong>Phone:</strong> {selected.mobile}</div>
                     <div><strong>City:</strong> {selected.city || 'N/A'}</div>
                     <div><strong>KYC Status:</strong> <span className={`badge ${selected.isKycVerified ? 'badge-success' : 'badge-warning'}`}>{selected.isKycVerified ? 'Verified' : 'Pending'}</span></div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <strong>Device Session:</strong>
+                      <span className={`badge ${selected.isLoggedIn ? 'badge-success' : 'badge-secondary'}`} style={{ fontSize: '0.75rem' }}>
+                        {selected.isLoggedIn ? '🟢 Active on Device' : '⚪ Logged Out'}
+                      </span>
+                      {selected.isLoggedIn && (
+                        <button className="btn btn-outline btn-sm" style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#ef4444', borderColor: '#ef4444' }} onClick={() => {
+                          call(() => updateUser(selected._id || selected.id, { isLoggedIn: false }), () => {
+                            setSelected({ ...selected, isLoggedIn: false });
+                            setCustomers(prev => prev.map(c => (c._id === (selected._id || selected.id)) ? { ...c, isLoggedIn: false } : c));
+                          });
+                        }}>
+                          Force Logout
+                        </button>
+                      )}
+                    </div>
+                    {selected.notes && <div style={{ marginTop: '8px', background: '#eff6ff', padding: '8px', borderRadius: '6px', border: '1px solid #bfdbfe', color: '#1e3a8a', fontSize: '0.85rem' }}><strong>📝 Note / Remark:</strong> {selected.notes}</div>}
                   </div>
                 </div>
                 <div>
@@ -569,6 +638,81 @@ const FCustomers = () => {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {editingNoteCustomer && createPortal(
+        <div className="modal-overlay" onClick={() => setEditingNoteCustomer(null)}>
+          <div className="modal-content" style={{ maxWidth: '480px', padding: '1.5rem', borderRadius: '12px', background: 'white', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>📝 Driver Notes & Remarks</h3>
+              <button className="btn-icon" onClick={() => setEditingNoteCustomer(null)}><X size={20} /></button>
+            </div>
+            <div>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem', lineHeight: '1.4' }}>
+                Add or update operational remarks for <b>{editingNoteCustomer.name}</b> ({editingNoteCustomer.mobile}). Both you and Super Admin can view these notes.
+              </p>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>Quick Select Remark (Presets):</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {[
+                    'Good Driver',
+                    'Late Payment',
+                    'KYC Pending',
+                    'Vehicle Damage Reported',
+                    'Documents Verified',
+                    'Blacklisted Warning',
+                    'Follow-up Required',
+                    'Clear Note / None'
+                  ].map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        if (tag === 'Clear Note / None') {
+                          setSelectedNoteTag('');
+                          setCustomNoteText('');
+                        } else {
+                          setSelectedNoteTag(tag);
+                          setCustomNoteText(tag);
+                        }
+                      }}
+                      style={{
+                        padding: '5px 11px',
+                        borderRadius: '20px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        border: customNoteText === tag ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                        background: customNoteText === tag ? '#eff6ff' : '#f8fafc',
+                        color: customNoteText === tag ? '#1d4ed8' : '#475569',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {tag === 'Clear Note / None' ? '❌ Clear Note' : `🏷️ ${tag}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Custom Comment / Detailed Note:</label>
+                <textarea
+                  rows="3"
+                  placeholder="Type any custom comment or remark about driver performance, documents, payment history..."
+                  value={customNoteText}
+                  onChange={(e) => { setCustomNoteText(e.target.value); setSelectedNoteTag(e.target.value); }}
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none', resize: 'vertical' }}
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+              <button className="btn btn-outline" onClick={() => setEditingNoteCustomer(null)} disabled={loading}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveNotes} disabled={loading} style={{ background: '#2563eb', color: 'white', border: 'none', padding: '0.5rem 1.2rem', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                {loading ? <Loader size={16} className="spinner" /> : 'Save Remark'}
+              </button>
             </div>
           </div>
         </div>,

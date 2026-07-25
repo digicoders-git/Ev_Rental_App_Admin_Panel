@@ -164,8 +164,9 @@ const FReturnPending = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
           {filtered.map(b => {
             const isPending = b.return_status === 'submission_pending';
-            const reqDate = b.updatedAt ? new Date(b.updatedAt) : new Date();
-            const dateFormatted = reqDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const subDate = new Date(b.submission_date || b.actual_return_date || b.updatedAt || Date.now());
+            const subDateFormatted = subDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const subTimeFormatted = subDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
             
             return (
               <div key={b._id} className="card" style={{ 
@@ -197,7 +198,7 @@ const FReturnPending = () => {
                     <div>
                       {isPending ? (
                         <span style={{ background: '#fef3c7', color: '#b45309', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={12} /> Pending
+                          <Clock size={12} /> Submitted (Pending)
                         </span>
                       ) : b.return_status === 'approved' ? (
                         <span style={{ background: '#d1fae5', color: '#047857', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -222,9 +223,16 @@ const FReturnPending = () => {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Calendar size={15} color="var(--text-muted)" /> Request Date :
+                        <Calendar size={15} color="var(--text-muted)" /> Submission Date :
                       </span>
-                      <span style={{ fontWeight: 600 }}>{dateFormatted}</span>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>{subDateFormatted}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                      <span style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={15} color="var(--text-muted)" /> Submission Time :
+                      </span>
+                      <span style={{ fontWeight: 700, color: '#2563eb' }}>{subTimeFormatted}</span>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
@@ -392,10 +400,22 @@ const FReturnPending = () => {
                     <span style={{ fontWeight: 700, color: '#b45309' }}>₹{(selected.additional_charges).toLocaleString()}</span>
                   </div>
                 )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
+                  <span style={{ color: '#64748b' }}>Submission Date:</span>
+                  <span style={{ fontWeight: 700, color: '#1e293b' }}>
+                    {new Date(selected.submission_date || selected.actual_return_date || selected.updatedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem' }}>
+                  <span style={{ color: '#64748b' }}>Submission Time:</span>
+                  <span style={{ fontWeight: 700, color: '#2563eb' }}>
+                    {new Date(selected.submission_date || selected.actual_return_date || selected.updatedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: '8px', fontSize: '0.95rem' }}>
                   <span style={{ color: '#64748b', fontWeight: 600 }}>Return Status:</span>
                   <span style={{ fontWeight: 700, textTransform: 'uppercase', color: selected.return_status === 'submission_pending' ? '#b45309' : selected.return_status === 'approved' ? '#047857' : '#b91c1c' }}>
-                    {selected.return_status || 'None'}
+                    {selected.return_status === 'submission_pending' ? 'Submitted (Pending Admin)' : selected.return_status || 'None'}
                   </span>
                 </div>
               </div>

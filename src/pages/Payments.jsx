@@ -12,8 +12,8 @@ import useApi from '../services/useApi';
 import './Payments.css';
 
 const STATUS_CFG = {
-  'paid':           { cls: 'badge-success', icon: <CircleCheck size={11} />, label: 'Paid' },
-  'partially_paid': { cls: 'badge-info',    icon: <Activity size={11} />,    label: 'Partial' },
+  'paid':           { cls: 'badge-success', icon: <CircleCheck size={11} />, label: 'Paid Online' },
+  'partially_paid': { cls: 'badge-info',    icon: <Activity size={11} />,    label: 'Partial Online' },
   'pending':        { cls: 'badge-warning', icon: <Clock size={11} />,       label: 'Pending' },
   'failed':         { cls: 'badge-danger',  icon: <XCircle size={11} />,      label: 'Failed' },
 };
@@ -449,7 +449,7 @@ const Payments = () => {
                               {inst.status === 'paid' ? <CheckCircle2 size={11} /> : <Clock size={11} />} {inst.status}
                             </span>
                             {inst.status !== 'paid' && (
-                              <button className="btn btn-primary btn-sm" onClick={() => handlePayInstallment(inst._id)}>Mark Paid</button>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#b45309', background: '#fffbeb', padding: '4px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>⏳ Pending Online Pay</span>
                             )}
                             {inst.status === 'paid' && inst.paid_date && (
                               <span className="inst-paid-date">Paid {new Date(inst.paid_date).toLocaleDateString('en-IN')}</span>
@@ -499,27 +499,9 @@ const Payments = () => {
             <div className="modal-footer pay-modal-footer">
               <div className="footer-left">
                 {selected.due_amount > 0 && (
-                  <div className="quick-pay-box">
-                    <div className="inst-amount-field">
-                      <span className="inst-prefix">₹</span>
-                      <input
-                        type="number"
-                        placeholder="Enter amount"
-                        value={installmentAmount}
-                        onChange={(e) => setInstallmentAmount(e.target.value)}
-                        className="inst-field-input"
-                      />
-                    </div>
-                    <button className="btn btn-primary btn-sm"
-                      onClick={() => handlePayment(selected._id, installmentAmount)}
-                      disabled={!installmentAmount}>
-                      Record
-                    </button>
-                    <button className="btn btn-outline btn-sm"
-                      onClick={() => handlePayment(selected._id)}>
-                      Pay All
-                    </button>
-                  </div>
+                  <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 600, background: '#eff6ff', padding: '6px 12px', borderRadius: '6px', border: '1px solid #bfdbfe', display: 'inline-block' }}>
+                    ℹ️ Rent Collection Policy: Drivers pay strictly online (UPI/Card/Net Banking). Manual rent entries and cash receipts are restricted.
+                  </span>
                 )}
               </div>
               <button className="btn btn-outline" onClick={() => { setSelected(null); setShowInstallSetup(false); }}>Close</button>

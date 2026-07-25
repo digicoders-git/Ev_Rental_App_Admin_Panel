@@ -79,8 +79,10 @@ const Vehicles = () => {
           regNo: v.registration_number,
           vehicleId: v.vehicle_id || '',
           category: v.category?.name || v.vehicle_type || 'N/A',
-          catId: v.category?._id || '',
           status: v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : (v.status === 'out_of_order' ? 'Out of Order' : 'Maintenance')),
+          driverName: v.driver_name || '—',
+          submissionDate: v.submission_date || null,
+          submissionStatus: v.submission_status || (v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : v.status)),
           battery: v.battery_level || 100,
           location: v.location || '',
           franchise: v.franchise?.store_name || 'Unassigned',
@@ -396,7 +398,9 @@ const Vehicles = () => {
                 <th>#</th>
                 <th>Vehicle</th>
                 <th>Reg. Number</th>
-                <th>Vehicle ID</th>
+                <th>Driver</th>
+                <th>Submission Date</th>
+                <th>Submission Time</th>
                 <th>Category</th>
                 <th>Battery</th>
                 <th>Range</th>
@@ -408,7 +412,7 @@ const Vehicles = () => {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={10} className="veh-empty-row"><Car size={28} /><p>No vehicles found.</p></td></tr>
+                <tr><td colSpan={13} className="veh-empty-row"><Car size={28} /><p>No vehicles found.</p></td></tr>
               ) : (
                 filtered.map((v, i) => (
                   <tr key={v.id}>
@@ -423,7 +427,13 @@ const Vehicles = () => {
                       </div>
                     </td>
                     <td><span className="reg-badge">{v.regNo}</span></td>
-                    <td><span className="reg-badge" style={{ background: '#eff6ff', color: '#1d4ed8' }}>{v.vehicleId || '—'}</span></td>
+                    <td style={{ fontWeight: 600, color: '#334155' }}>{v.driverName || '—'}</td>
+                    <td style={{ fontWeight: 600, color: '#0369a1' }}>
+                      {v.submissionDate ? new Date(v.submissionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                    </td>
+                    <td style={{ fontWeight: 600, color: '#15803d' }}>
+                      {v.submissionDate ? new Date(v.submissionDate).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </td>
                     <td className="td-muted">{v.category}</td>
                     <td>
                       <div className="battery-cell">
@@ -442,8 +452,8 @@ const Vehicles = () => {
                     </td>
                     <td><span className="rate-text">₹{v.ratePerDay}/day</span></td>
                     <td>
-                      <span className={`badge badge-icon ${statusConfig[v.status].cls}`}>
-                        {statusConfig[v.status].icon} {v.status}
+                      <span className={`badge badge-icon ${v.submissionStatus === 'Submitted' ? 'badge-warning' : (statusConfig[v.status]?.cls || 'badge-info')}`}>
+                        {statusConfig[v.status]?.icon} {v.submissionStatus || v.status}
                       </span>
                     </td>
                     <td>
@@ -864,6 +874,12 @@ const Vehicles = () => {
                   <div className="veh-detail-rows">
                     <div className="veh-detail-row"><span>Franchise</span><span>{viewVehicle.franchise}</span></div>
                     <div className="veh-detail-row"><span>Location</span><span>{viewVehicle.location}</span></div>
+                  </div>
+                  <div className="veh-detail-section-title" style={{ marginTop: '1rem' }}><Car size={13} /> Submission Status</div>
+                  <div className="veh-detail-rows">
+                    <div className="veh-detail-row"><span>Driver</span><span>{viewVehicle.driverName}</span></div>
+                    <div className="veh-detail-row"><span>Sub. Date</span><span>{viewVehicle.submissionDate ? new Date(viewVehicle.submissionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</span></div>
+                    <div className="veh-detail-row"><span>Sub. Time</span><span>{viewVehicle.submissionDate ? new Date(viewVehicle.submissionDate).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}</span></div>
                   </div>
                 </div>
                 <div className="veh-detail-section">
