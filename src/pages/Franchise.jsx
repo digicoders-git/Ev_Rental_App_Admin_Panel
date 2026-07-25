@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FileSignature, IndianRupee, FileText, UploadCloud, Clock, 
-  Building2, Check, X, MapPin, Plus, Search, MoreVertical, TrendingUp,
-  Users, Car, XCircle, CheckCircle, Eye, DollarSign, ArrowUpRight,
-  ArrowDownRight, KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle,
+import { FileSignature, FileText, Clock, 
+  Building2, X, MapPin, Plus, Search, TrendingUp,
+  Users, Car, XCircle, CheckCircle, Eye, DollarSign, 
+  KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle,
   History, Pencil
 } from 'lucide-react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
-} from 'recharts';
-import { 
   getFranchiseEnquiries, getAllStores, createStore, deleteStore, getStoreById,
   updateEnquiryStatus, getFranchisePerformance, getDashboardStats, getFranchiseHistory,
-  uploadStoreAgreement, getAllWithdrawalsAdmin, approveWithdrawalAdmin, rejectWithdrawalAdmin
+  uploadStoreAgreement, getAllWithdrawalsAdmin, 
+  releaseFranchiseFundsAdmin, updateFranchiseWithdrawalStatusAdmin
 } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Franchise.css';
@@ -138,6 +136,15 @@ const Franchise = () => {
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [paymentProof, setPaymentProof] = useState(null);
   const [adminNote, setAdminNote] = useState('');
+  const [newWithdrawalStatus, setNewWithdrawalStatus] = useState('processing');
+
+  const handleReleaseFunds = (franchiseId) => {
+    if (!window.confirm("Are you sure you want to release the full wallet balance for this franchise?")) return;
+    call(() => releaseFranchiseFundsAdmin({ franchiseId }), () => {
+      fetchData();
+      alert("Funds released successfully! Settlement initiated.");
+    }, (err) => alert(err.message || "Failed to release funds"));
+  };
 
   const [historyPartner, setHistoryPartner] = useState(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -339,57 +346,105 @@ const Franchise = () => {
       )}
 
       {activeTab === 'withdrawals' && (
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.125rem' }}>Withdrawal Requests</h3>
-          </div>
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Request ID</th>
-                  <th>Franchise</th>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {withdrawals.length === 0 ? (
-                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No withdrawal requests found</td></tr>
-                ) : withdrawals.map(w => (
-                  <tr key={w._id}>
-                    <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{w.withdrawal_id}</td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{w.franchise?.store_name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{w.franchise?.owner_name} | {w.franchise?.mobile}</div>
-                    </td>
-                    <td>{new Date(w.createdAt).toLocaleString()}</td>
-                    <td style={{ fontWeight: 600, color: '#10b981' }}>₹{w.amount.toLocaleString()}</td>
-                    <td>
-                      <span style={{ 
-                        color: w.status === 'approved' ? '#10b981' : w.status === 'rejected' ? '#ef4444' : '#f59e0b', 
-                        display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.05)', 
-                        padding: '4px 8px', borderRadius: '4px', fontWeight: 600, fontSize: '0.85rem' 
-                      }}>
-                        {w.status === 'approved' ? <CheckCircle size={14}/> : w.status === 'rejected' ? <XCircle size={14}/> : <Clock size={14}/>}
-                        {w.status.charAt(0).toUpperCase() + w.status.slice(1)}
-                      </span>
-                    </td>
-                    <td>
-                      {w.status === 'pending' ? (
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button className="btn btn-sm btn-primary" onClick={() => { setSelectedWithdrawal(w); setShowWithdrawalModal(true); }}>Process</button>
-                        </div>
-                      ) : w.payment_proof ? (
-                        <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${w.payment_proof}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', textDecoration: 'none', fontSize: '0.9rem' }}><FileText size={14} /> View Proof</a>
-                      ) : '-'}
-                    </td>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.125rem' }}>Active Franchise Wallets</h3>
+            </div>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Franchise ID</th>
+                    <th>Store Name</th>
+                    <th>Owner</th>
+                    <th>Wallet Balance</th>
+                    <th>Next Settlement</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {stores.filter(s => s.status === 'active').length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No active franchises found</td></tr>
+                  ) : stores.filter(s => s.status === 'active').map(s => (
+                    <tr key={s._id}>
+                      <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{s.store_id}</td>
+                      <td style={{ fontWeight: 600 }}>{s.store_name}</td>
+                      <td>{s.owner_name}<br/><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.mobile}</span></td>
+                      <td style={{ fontWeight: 700, color: '#10b981', fontSize: '1.1rem' }}>₹{(s.wallet_balance || 0).toLocaleString()}</td>
+                      <td>Tuesday</td>
+                      <td>
+                        <button 
+                          className="btn btn-sm btn-primary" 
+                          onClick={() => handleReleaseFunds(s._id)}
+                          disabled={!s.wallet_balance || s.wallet_balance <= 0}
+                        >
+                          Release Funds
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.125rem' }}>Settlements & Withdrawal Requests</h3>
+            </div>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Request ID</th>
+                    <th>Franchise</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {withdrawals.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>No withdrawal requests found</td></tr>
+                  ) : withdrawals.map(w => (
+                    <tr key={w._id}>
+                      <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{w.withdrawal_id}</td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{w.franchise?.store_name}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{w.franchise?.owner_name} | {w.franchise?.mobile}</div>
+                      </td>
+                      <td>{new Date(w.createdAt).toLocaleString()}</td>
+                      <td style={{ fontWeight: 600, color: '#10b981' }}>₹{w.amount.toLocaleString()}</td>
+                      <td>
+                        <span style={{ 
+                          color: (w.status === 'approved' || w.status === 'released') ? '#10b981' : (w.status === 'rejected' || w.status === 'failed') ? '#ef4444' : w.status === 'processing' ? '#3b82f6' : '#f59e0b', 
+                          display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(0,0,0,0.05)', 
+                          padding: '4px 8px', borderRadius: '4px', fontWeight: 600, fontSize: '0.85rem' 
+                        }}>
+                          {(w.status === 'approved' || w.status === 'released') ? <CheckCircle size={14}/> : (w.status === 'rejected' || w.status === 'failed') ? <XCircle size={14}/> : w.status === 'processing' ? <Loader2 size={14} className="spin-anim"/> : <Clock size={14}/>}
+                          {w.status.charAt(0).toUpperCase() + w.status.slice(1)}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button className="btn btn-sm btn-outline" onClick={() => { 
+                            setSelectedWithdrawal(w); 
+                            setNewWithdrawalStatus(w.status === 'pending' ? 'processing' : w.status);
+                            setShowWithdrawalModal(true); 
+                          }}>Update Status</button>
+                          
+                          {w.payment_proof && (
+                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${w.payment_proof}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', textDecoration: 'none', fontSize: '0.9rem' }}><FileText size={14} /> Proof</a>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -1295,22 +1350,26 @@ const Franchise = () => {
         <div className="modal-overlay" onClick={() => setShowWithdrawalModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="modal-header">
-              <h3>Process Withdrawal</h3>
+              <h3>Update Settlement Status</h3>
               <button className="btn-icon" onClick={() => setShowWithdrawalModal(false)}><X size={20} /></button>
             </div>
             <form className="modal-body" onSubmit={(e) => {
               e.preventDefault();
-              if (!paymentProof) return alert('Please upload payment screenshot to approve.');
+              if (newWithdrawalStatus === 'released' && !paymentProof && selectedWithdrawal.status !== 'released' && selectedWithdrawal.status !== 'approved') {
+                 return alert('Please upload payment screenshot to mark as released.');
+              }
               const fd = new FormData();
-              fd.append('payment_proof', paymentProof);
-              fd.append('admin_note', adminNote);
-              call(() => approveWithdrawalAdmin(selectedWithdrawal._id, fd), () => {
-                alert('Withdrawal approved successfully!');
+              fd.append('status', newWithdrawalStatus);
+              if (adminNote) fd.append('admin_note', adminNote);
+              if (paymentProof && newWithdrawalStatus === 'released') fd.append('payment_proof', paymentProof);
+
+              call(() => updateFranchiseWithdrawalStatusAdmin(selectedWithdrawal._id, fd), () => {
+                alert(`Settlement marked as ${newWithdrawalStatus}`);
                 setShowWithdrawalModal(false);
                 setPaymentProof(null);
                 setAdminNote('');
                 fetchData();
-              }, (err) => alert(err.message));
+              }, (err) => alert(err.message || "Failed to update status"));
             }}>
               <div className="form-group" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -1318,36 +1377,37 @@ const Franchise = () => {
                   <span style={{ fontWeight: 600 }}>{selectedWithdrawal?.franchise?.store_name}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Amount Requested:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Amount:</span>
                   <span style={{ fontWeight: 700, color: '#10b981', fontSize: '1.2rem' }}>₹{(selectedWithdrawal?.amount || 0).toLocaleString()}</span>
                 </div>
               </div>
-              
+
               <div className="form-group">
-                <label>Payment Proof (Screenshot)</label>
-                <input type="file" accept="image/*" className="form-input" onChange={e => setPaymentProof(e.target.files[0])} required />
+                <label>Status</label>
+                <select className="form-input" value={newWithdrawalStatus} onChange={e => setNewWithdrawalStatus(e.target.value)}>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="released">Released</option>
+                  <option value="failed">Failed</option>
+                </select>
               </div>
+              
+              {newWithdrawalStatus === 'released' && (
+                <div className="form-group">
+                  <label>Payment Proof (Screenshot)</label>
+                  <input type="file" accept="image/*" className="form-input" onChange={e => setPaymentProof(e.target.files[0])} required={!selectedWithdrawal?.payment_proof} />
+                  {selectedWithdrawal?.payment_proof && <small style={{color:'var(--text-muted)'}}>Upload to replace existing proof.</small>}
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Admin Note (Optional)</label>
                 <input type="text" className="form-input" placeholder="e.g. UTR Number, Remarks" value={adminNote} onChange={e => setAdminNote(e.target.value)} />
               </div>
 
-              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <button type="button" className="btn btn-outline" style={{ color: '#ef4444', borderColor: '#ef4444' }} 
-                  onClick={() => {
-                    const note = prompt("Reason for rejection:");
-                    if (note === null) return;
-                    call(() => rejectWithdrawalAdmin(selectedWithdrawal._id, { admin_note: note }), () => {
-                      alert('Withdrawal rejected');
-                      setShowWithdrawalModal(false);
-                      fetchData();
-                    }, (err) => alert(err.message));
-                  }}>Reject</button>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button type="button" className="btn btn-outline" onClick={() => setShowWithdrawalModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" style={{ background: '#10b981' }} disabled={loading}>{loading ? 'Processing...' : 'Approve & Pay'}</button>
-                </div>
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button type="button" className="btn btn-outline" onClick={() => setShowWithdrawalModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Updating...' : 'Update Status'}</button>
               </div>
             </form>
           </div>

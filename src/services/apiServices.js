@@ -58,6 +58,8 @@ export const uploadStoreAgreement = (id, data) => api.put(`/franchise-enquiry/ad
 export const getAllWithdrawalsAdmin = () => api.get('/franchise-enquiry/admin/withdrawals');
 export const approveWithdrawalAdmin = (id, data) => api.put(`/franchise-enquiry/admin/withdrawals/${id}/approve`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const rejectWithdrawalAdmin = (id, data) => api.put(`/franchise-enquiry/admin/withdrawals/${id}/reject`, data);
+export const releaseFranchiseFundsAdmin = (data) => api.post('/franchise-enquiry/admin/withdrawals/release', data);
+export const updateFranchiseWithdrawalStatusAdmin = (id, data) => api.put(`/franchise-enquiry/admin/withdrawals/${id}/status`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const uploadFranchiseAgreementSelf = (data) => api.put('/franchise-enquiry/store/agreement', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getFranchiseRevenue      = (params) => api.get('/franchise-enquiry/revenue', { params });
 export const getAdminFranchiseRevenue = (id, params) => api.get(`/franchise-enquiry/admin/revenue/${id}`, { params });

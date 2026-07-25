@@ -26,7 +26,7 @@ const METHOD_ICON = {
   'cash':   <IndianRupee size={13} />,
 };
 
-const TABS     = ['All', 'Paid', 'Pending'];
+const TABS     = ['All', 'Paid', 'Partial Payment', 'Pending', 'Failed'];
 const PAGE_SIZE = 10;
 
 const Payments = () => {
@@ -140,7 +140,9 @@ const Payments = () => {
   const filtered = bookings.filter(b => {
     const matchTab = activeTab === 'All' || 
                     (activeTab === 'Paid' && b.payment_status === 'paid') ||
-                    (activeTab === 'Pending' && b.payment_status === 'pending');
+                    (activeTab === 'Partial Payment' && b.payment_status === 'partially_paid') ||
+                    (activeTab === 'Pending' && b.payment_status === 'pending') ||
+                    (activeTab === 'Failed' && b.payment_status === 'failed');
     
     const q = search.toLowerCase();
     const matchSearch = b.booking_id.toLowerCase().includes(q) || 
