@@ -217,6 +217,7 @@ function App() {
                 <Route path="/f/notifications" element={<FNotifications />} />
                 <Route path="/f/complaints" element={<FComplaints />} />
                 <Route path="/f/profile" element={<FranchiseProfile setIsAuthenticated={setIsAuthenticated} />} />
+                <Route path="/f/referrals" element={<Referrals />} />
                 <Route path="*" element={<Navigate to="/f" />} />
               </>
             )}
