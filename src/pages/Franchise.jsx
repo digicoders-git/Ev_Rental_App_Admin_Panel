@@ -246,7 +246,6 @@ const Franchise = () => {
                     <h4>{req.full_name}</h4>
                     <div className="app-meta">
                       <span><MapPin size={12} /> {req.city}, {req.state}</span>
-                      <span>Budget: {req.investment_budget || 'N/A'}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginTop: '0.35rem' }}>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
@@ -256,34 +255,6 @@ const Franchise = () => {
                         <Mail size={11} /> {req.email}
                       </span>
                     </div>
-                    {/* KYC & Fee Badges */}
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                      <span style={{
-                        fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px',
-                        background: req.registration_fee_paid ? '#dcfce7' : '#fef9c3',
-                        color: req.registration_fee_paid ? '#15803d' : '#92400e',
-                        border: `1px solid ${req.registration_fee_paid ? '#86efac' : '#fde68a'}`
-                      }}>
-                        {req.registration_fee_paid ? '✓ ₹50 Fee Paid' : '⚠ Fee Pending'}
-                      </span>
-                      {req.aadharFront && <a href={req.aadharFront} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', textDecoration: 'none' }}>📄 Aadhar (F)</a>}
-                      {req.aadharBack && <a href={req.aadharBack} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', textDecoration: 'none' }}>📄 Aadhar (B)</a>}
-                      {req.panCard && <a href={req.panCard} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', textDecoration: 'none' }}>📄 PAN</a>}
-                      {req.selfie && <a href={req.selfie} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', textDecoration: 'none' }}>👤 Selfie</a>}
-                      {(!req.aadharFront && !req.aadharBack && !req.panCard && !req.selfie) && (
-                        <span style={{
-                          fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px',
-                          background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca'
-                        }}>
-                          ✗ No KYC Docs
-                        </span>
-                      )}
-                    </div>
-                    {req.message && (
-                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.5rem', fontStyle: 'italic', background: '#f8fafc', padding: '0.5rem', borderRadius: '6px', borderLeft: '3px solid var(--primary-light)' }}>
-                        "{req.message.length > 80 ? req.message.substring(0, 80) + '...' : req.message}"
-                      </p>
-                    )}
                   </div>
                 </div>
                 <div className="app-actions">
@@ -1205,7 +1176,6 @@ const Franchise = () => {
                       <th>Date</th>
                       <th>Applicant Name</th>
                       <th>Location</th>
-                      <th>Budget</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
@@ -1224,9 +1194,6 @@ const Franchise = () => {
                         </td>
                         <td>
                           <span style={{ fontSize: '0.875rem' }}>{req.city}, {req.state}</span>
-                        </td>
-                        <td>
-                          <span style={{ fontWeight: '600', fontSize: '0.875rem' }}>{req.investment_budget}</span>
                         </td>
                         <td>
                           <span className={`status-badge ${req.status}`} style={{ 

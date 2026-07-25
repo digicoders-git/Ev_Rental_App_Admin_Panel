@@ -12,6 +12,7 @@ const FWallet = () => {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
 
   const fetchData = async () => {
     try {
@@ -189,7 +190,7 @@ const FWallet = () => {
                     <td>{w.admin_note || '-'}</td>
                     <td>
                       {w.payment_proof ? (
-                        <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${w.payment_proof}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>
+                        <a href={`${BASE_URL}/${w.payment_proof.replace(/\\/g, '/').replace(/^\/+/, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>
                           <FileText size={16} /> View Proof
                         </a>
                       ) : '-'}

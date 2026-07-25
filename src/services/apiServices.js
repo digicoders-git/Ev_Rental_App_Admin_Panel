@@ -15,6 +15,7 @@ export const getCreditScore = ()     => api.get('/user/credit-score');
 
 /* ── USERS (Admin) ── */
 export const getAllUsers    = ()     => api.get('/user/admin/all');
+export const getAllReferrals = ()    => api.get('/user/admin/referrals');
 export const getUserById    = (id)   => api.get(`/user/admin/${id}`);
 export const addRider       = (data) => api.post('/user/admin/add-rider', data);
 export const updateUser     = (id, data) => api.put(`/user/admin/${id}`, data);

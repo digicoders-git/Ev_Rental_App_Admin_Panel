@@ -170,6 +170,7 @@ const Bookings = () => {
         user: b.user?.name || 'Unknown',
         email: b.user?.email || '',
         phone: b.user?.mobile || '',
+        referrerId: b.user?.referred_by?.driver_id || 'N/A',
         vehicle: b.vehicle?.vehicle_name || 'N/A',
         regNo: b.vehicle?.registration_number || '',
         franchise: b.franchise?.store_name || b.vehicle?.franchise?.store_name || 'Main Hub',
@@ -700,6 +701,7 @@ const Bookings = () => {
               <tr>
                 <th>Booking ID</th>
                 <th>Customer</th>
+                <th>Referral ID</th>
                 <th>Vehicle</th>
                 <th>Franchise Store</th>
                 <th>Plan/Duration</th>
@@ -733,6 +735,11 @@ const Bookings = () => {
                       </div>
                     </td>
                     <td>
+                      <span style={{ fontWeight: '500', color: b.referrerId !== 'N/A' ? 'var(--primary)' : 'var(--text-muted)' }}>
+                        {b.referrerId}
+                      </span>
+                    </td>
+                    <td>
                       <span className="cell-main">{b.vehicle}</span>
                       <span className="cell-sub">{b.regNo}</span>
                     </td>
@@ -741,7 +748,7 @@ const Bookings = () => {
                     </td>
                     <td>
                       <span className="cell-main">{b.plan}</span>
-                      <span className="cell-sub">{b.duration}</span>
+                  <span className="cell-sub">{b.duration}</span>
                     </td>
                     <td><span className="bk-amount">₹{b.amount.toLocaleString()}</span></td>
                     <td><span className="text-success" style={{ fontWeight: 600 }}>₹{b.total_paid.toLocaleString()}</span></td>

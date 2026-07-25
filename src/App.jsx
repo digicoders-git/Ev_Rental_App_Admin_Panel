@@ -18,6 +18,7 @@ import Settings from './pages/Settings';
 import AssignEV from './pages/AssignEV';
 import Documents from './pages/Documents';
 import Revenue from './pages/Revenue';
+import Referrals from './pages/Referrals';
 import Coupons from './pages/Coupons';
 import Complaints from './pages/Complaints';
 import WeeklyPayments from './pages/WeeklyPayments';
@@ -126,6 +127,7 @@ function App() {
           <Route path="complaints" element={<FComplaints />} />
           <Route path="wallet" element={<FWallet />} />
           <Route path="profile" element={<FranchiseProfile setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path="referrals" element={<Referrals />} />
         </Route>
         <Route path="/f/*" element={<Navigate to="/f" />} />
         <Route path="*" element={<Navigate to="/f" />} />
@@ -159,6 +161,7 @@ function App() {
           <Route path="payments" element={<Payments />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="referrals" element={<Referrals />} />
         </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
@@ -198,6 +201,7 @@ function App() {
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/referrals" element={<Referrals />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </>
             ) : (

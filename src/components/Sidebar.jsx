@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard,
-  Users, 
+  Users, UserPlus, FileText, IndianRupee,
+  Activity, Ticket, Users as GroupIcon,
   Car, 
   CalendarCheck, 
   ShieldCheck, 
@@ -39,6 +40,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
   const adminMenuItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Users', path: '/users', icon: Users },
+    { name: 'Referrals', path: '/referrals', icon: GroupIcon },
     { name: 'Vehicles', path: '/vehicles', icon: Car },
     { name: 'Rental Plans', path: '/plans', icon: Zap },
     { name: 'Bookings', path: '/bookings', icon: CalendarCheck },
@@ -65,6 +67,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Rides',         path: '/f/rides',        icon: CalendarCheck },
     { name: 'Wallet & Agreement', path: '/f/wallet',     icon: Wallet },
     { name: 'Customers',     path: '/f/customers',    icon: Users },
+    { name: 'Referrals',     path: '/f/referrals',    icon: GroupIcon },
     { name: 'KYC Status',    path: '/f/kyc',          icon: UserCheck },
     { name: 'Due Payments',  path: '/f/dues',         icon: AlertCircle },
     { name: 'Reports',       path: '/f/reports',      icon: BarChart },

@@ -366,6 +366,7 @@ const FRides = () => {
                 <tr>
                   <th>Booking ID</th>
                   <th>Customer</th>
+                  <th>Referral ID</th>
                   <th>Vehicle</th>
                   <th>Duration</th>
                   <th>Total</th>
@@ -393,6 +394,11 @@ const FRides = () => {
                       <td>
                         <div style={{ fontWeight: 500 }}>{b.user?.name || 'N/A'}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.user?.mobile}</div>
+                      </td>
+                      <td>
+                        <span style={{ fontWeight: '500', color: b.user?.referred_by?.driver_id ? 'var(--primary)' : 'var(--text-muted)' }}>
+                          {b.user?.referred_by?.driver_id || 'N/A'}
+                        </span>
                       </td>
                       <td>
                         <div style={{ fontWeight: 500 }}>{b.vehicle?.vehicle_name || 'N/A'}</div>
