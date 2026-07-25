@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShieldCheck, ShieldX, Clock, Eye, Loader, X, Upload, Plus, FileText, CheckCircle } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { updateKycStatus, getAllUsers, getAllKyc, submitKyc } from '../../services/apiServices';
+import { updateFranchiseKycStatus, getFranchiseKyc, submitKyc } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const FKYC = () => {
@@ -23,8 +23,10 @@ const FKYC = () => {
     selfie: null
   });
 
-  const [formError, setFormError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  // Rejection modal state
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectKycId, setRejectKycId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   useEffect(() => {
     if (selectedCustomerForUpload) {
@@ -45,35 +47,20 @@ const FKYC = () => {
 
   const fetchData = () => {
     call(
-      async () => {
-        const [usersRes, kycRes] = await Promise.all([
-          getAllUsers(),
-          getAllKyc()
-        ]);
-        return { 
-          data: {
-            users: usersRes.data?.data || usersRes.data || [], 
-            kycList: kycRes.data?.data || kycRes.data || [] 
-          }
-        };
-      },
-      ({ users, kycList }) => {
-        const allRiders = Array.isArray(users) ? users : [];
-        const allKycDocs = Array.isArray(kycList) ? kycList : [];
+      () => getFranchiseKyc(),
+      (res) => {
+        // res is the API response body: { success, count, data: [...KYC docs] }
+        const kycList = Array.isArray(res?.data) ? res.data
+          : Array.isArray(res) ? res : [];
 
-        // Map KYC documents by user ID
-        const kycUserMap = {};
-        allKycDocs.forEach(k => {
-          if (k.user) {
-            const uid = typeof k.user === 'object' ? k.user._id : k.user;
-            kycUserMap[uid] = k;
-          }
-        });
-
-        // Combine all riders with their KYC document data
-        const customerList = allRiders.map(u => ({
-          ...u,
-          kyc: kycUserMap[u._id] || null
+        // Build customer list from KYC records (each record has .user populated)
+        const customerList = kycList.map(k => ({
+          _id: k.user?._id || k.user,
+          name: k.user?.name || k.name || 'N/A',
+          mobile: k.user?.mobile || k.mobileNumber || '',
+          email: k.user?.email || '',
+          isKycVerified: k.user?.isKycVerified || k.status === 'approved',
+          kyc: k
         }));
 
         setCustomers(customerList);
@@ -86,12 +73,23 @@ const FKYC = () => {
   }, []);
 
   const handleUpdateKyc = (kycId, status, rejectionReason = '') => {
-    call(() => updateKycStatus(kycId, { status, rejectionReason }), () => {
-      alert(`KYC status updated successfully to ${status}! 🎉`);
+    call(() => updateFranchiseKycStatus(kycId, { status, rejectionReason }), () => {
       setSelected(null);
+      setShowRejectModal(false);
+      setRejectKycId(null);
+      setRejectReason('');
       fetchData();
     }, (err) => alert(`Error updating KYC status: ${err}`));
   };
+
+  const openRejectModal = (kycId) => {
+    setRejectKycId(kycId);
+    setRejectReason('');
+    setShowRejectModal(true);
+  };
+
+  const [formError, setFormError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleUploadKycSubmit = (e) => {
     e.preventDefault();
@@ -443,20 +441,59 @@ const FKYC = () => {
                 {selected.kyc?.status !== 'approved' && (
                   <button className="btn" style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
                     onClick={() => handleUpdateKyc(selected.kyc._id, 'approved')}>
-                    Approve KYC
+                    ✅ Approve KYC
                   </button>
                 )}
                 {selected.kyc?.status !== 'rejected' && (
                   <button className="btn" style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
-                    onClick={() => {
-                      const reason = prompt("Enter rejection reason:");
-                      if (reason !== null) handleUpdateKyc(selected.kyc._id, 'rejected', reason);
-                    }}>
-                    Reject KYC
+                    onClick={() => openRejectModal(selected.kyc._id)}>
+                    ❌ Reject KYC
                   </button>
                 )}
               </div>
               <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* ── REJECT REASON MODAL ── */}
+      {showRejectModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
+          <div className="modal-content" style={{ maxWidth: '450px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Reject KYC Request</h3>
+              <button className="btn-icon" onClick={() => setShowRejectModal(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '60px', height: '60px', borderRadius: '50%', background: '#fee2e2', color: '#ef4444', marginBottom: '12px' }}>
+                  <ShieldX size={28} />
+                </div>
+                <p style={{ fontWeight: 600, margin: 0 }}>Please provide a reason for rejection.</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>This will be shown to the rider so they can fix their documents.</p>
+              </div>
+              <div className="form-group">
+                <label style={{ fontWeight: 500, marginBottom: '0.5rem', display: 'block' }}>Rejection Reason</label>
+                <textarea
+                  rows={4}
+                  value={rejectReason}
+                  onChange={e => setRejectReason(e.target.value)}
+                  placeholder="e.g. Aadhar card image is not clear. Please upload a clearer photo."
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.875rem', resize: 'vertical' }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setShowRejectModal(false)}>Cancel</button>
+              <button
+                className="btn"
+                style={{ background: '#ef4444', color: 'white', border: 'none', fontWeight: 600 }}
+                onClick={() => handleUpdateKyc(rejectKycId, 'rejected', rejectReason)}
+                disabled={loading || !rejectReason.trim()}
+              >
+                {loading ? <Loader size={16} className="spinner" /> : 'Reject KYC'}
+              </button>
             </div>
           </div>
         </div>,

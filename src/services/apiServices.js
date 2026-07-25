@@ -117,6 +117,10 @@ export const getAllKyc       = ()     => api.get('/kyc/admin/all');
 export const trackKycByMobile = (mobile) => api.get(`/kyc/admin/track/${mobile}`);
 export const updateKycStatus  = (id, data) => api.put(`/kyc/admin/status/${id}`, data);
 
+// Franchise-scoped KYC (only franchise riders)
+export const getFranchiseKyc           = ()           => api.get('/kyc/franchise/my-riders');
+export const updateFranchiseKycStatus  = (id, data)   => api.put(`/kyc/franchise/status/${id}`, data);
+
 /* ── TRACKING ── */
 export const updateLocation      = (data) => api.post('/tracking/update', data);
 export const getLiveLocation     = (id)   => api.get(`/tracking/live/${id}`);

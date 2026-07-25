@@ -469,19 +469,11 @@ const KYC = () => {
             </div>
 
             {selected.status === 'pending' && (
-              <div className="modal-footer">
-                <button
-                  className="btn btn-outline reject-btn"
-                  onClick={() => setRejectId(selected._id)}
-                >
-                  <XCircle size={16} /> Reject
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setConfirmId(selected._id)}
-                >
-                  <CheckCircle size={16} /> Approve
-                </button>
+              <div className="modal-footer" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '0.75rem' }}>
+                <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ℹ️ KYC approval/rejection is handled by the assigned Franchisee. Super Admin has view-only access.
+                </div>
+                <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
               </div>
             )}
           </div>
