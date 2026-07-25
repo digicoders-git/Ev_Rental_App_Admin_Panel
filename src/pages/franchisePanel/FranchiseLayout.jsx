@@ -38,6 +38,7 @@ const FranchiseLayout = ({ setIsAuthenticated }) => {
       case '/f': return 'Dashboard';
       case '/f/vehicles': return 'My Vehicles';
       case '/f/rides': return 'Ride Management';
+      case '/f/return-pending': return 'Return Pending';
       case '/f/earnings': return 'Earnings';
       case '/f/customers': return 'Customers';
       case '/f/kyc': return 'KYC Status';

@@ -46,6 +46,7 @@ import FReports from './pages/franchisePanel/FReports';
 import FNotifications from './pages/franchisePanel/FNotifications';
 import FComplaints from './pages/franchisePanel/FComplaints';
 import FWallet from './pages/franchisePanel/FWallet';
+import FReturnPending from './pages/franchisePanel/FReturnPending';
 
 import './App.css';
 
@@ -209,6 +210,7 @@ function App() {
                 <Route path="/f" element={<FranchiseDashboard />} />
                 <Route path="/f/vehicles" element={<FranchiseVehicles />} />
                 <Route path="/f/rides" element={<FranchiseRides />} />
+                <Route path="/f/return-pending" element={<FReturnPending />} />
                 <Route path="/f/wallet" element={<FWallet />} />
                 <Route path="/f/customers" element={<FCustomers />} />
                 <Route path="/f/kyc" element={<FKYC />} />

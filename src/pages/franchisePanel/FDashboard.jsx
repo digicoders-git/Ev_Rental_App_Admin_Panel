@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bike, Users, IndianRupee, TrendingUp, Clock, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { Bike, Users, IndianRupee, TrendingUp, Clock, CheckCircle, AlertCircle, Loader, RotateCcw } from 'lucide-react';
 import { getFranchiseBookings, getMyFranchiseVehicles, getFranchiseRevenue, getSettlements } from '../../services/apiServices';
 
 const FDashboard = () => {
@@ -35,6 +35,7 @@ const FDashboard = () => {
   const activeCount = bookings.filter(b => ['confirmed', 'ongoing'].includes(b.booking_status)).length;
   const pendingCount = bookings.filter(b => b.booking_status === 'pending').length;
   const completedCount = bookings.filter(b => b.booking_status === 'completed').length;
+  const returnPendingCount = bookings.filter(b => b.return_status === 'submission_pending').length;
 
   // Calculate unique Active and Off-boarded Riders
   const riderStatuses = {};
@@ -177,8 +178,23 @@ const FDashboard = () => {
         >
           <div style={{ background: '#fef3c7', color: '#92400e', padding: '12px', borderRadius: '12px' }}><Clock size={22} /></div>
           <div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Pending</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Pending Rides</p>
             <h2 style={{ margin: 0, fontWeight: 700 }}>{pendingCount}</h2>
+          </div>
+        </div>
+
+        {/* Return Pending */}
+        <div 
+          className="card" 
+          style={cardStyle}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={() => navigate('/f/return-pending')}
+        >
+          <div style={{ background: '#ffedd5', color: '#c2410c', padding: '12px', borderRadius: '12px' }}><RotateCcw size={22} /></div>
+          <div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, fontWeight: 500 }}>Return Pending</p>
+            <h2 style={{ margin: 0, fontWeight: 700, color: returnPendingCount > 0 ? '#ea580c' : 'inherit' }}>{returnPendingCount}</h2>
           </div>
         </div>
 

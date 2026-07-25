@@ -29,8 +29,9 @@ import {
   UserCheck,
   AlertCircle,
   BarChart,
+  Receipt,
   Headphones,
-  Receipt
+  RotateCcw
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -65,6 +66,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Dashboard',     path: '/f',              icon: LayoutDashboard },
     { name: 'My Vehicles',   path: '/f/vehicles',     icon: Car },
     { name: 'Rides',         path: '/f/rides',        icon: CalendarCheck },
+    { name: 'Return Pending', path: '/f/return-pending', icon: RotateCcw },
     { name: 'Wallet & Agreement', path: '/f/wallet',     icon: Wallet },
     { name: 'Customers',     path: '/f/customers',    icon: Users },
     { name: 'Referrals',     path: '/f/referrals',    icon: GroupIcon },
