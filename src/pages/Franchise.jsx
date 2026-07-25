@@ -874,7 +874,7 @@ const Franchise = () => {
                       </p>
                     </div>
 
-                    {/* Total Earnings Card */}
+                    {/* Total Revenue Card */}
                     <div style={{ 
                       padding: '1.25rem', 
                       borderRadius: '16px', 
@@ -883,14 +883,54 @@ const Franchise = () => {
                       boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Earnings</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Total Revenue</span>
                         <DollarSign size={20} />
                       </div>
                       <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
                         ₹{historyPartner.revenue?.totalEarnings?.toLocaleString('en-IN') || 0}
                       </h3>
                       <p style={{ margin: '8px 0 0', fontSize: '0.75rem', opacity: 0.8 }}>
-                        Total revenue generated
+                        Gross collection
+                      </p>
+                    </div>
+
+                    {/* Service Fee Card */}
+                    <div style={{ 
+                      padding: '1.25rem', 
+                      borderRadius: '16px', 
+                      background: 'linear-gradient(135deg, #ef4444, #dc2626)', 
+                      color: 'white',
+                      boxShadow: '0 4px 6px -1px rgba(239, 68, 68, 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Service Fee (8%)</span>
+                        <DollarSign size={20} />
+                      </div>
+                      <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
+                        ₹{historyPartner.revenue?.serviceFee?.toLocaleString('en-IN') || 0}
+                      </h3>
+                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', opacity: 0.8 }}>
+                        Platform deduction
+                      </p>
+                    </div>
+
+                    {/* Net Revenue Card */}
+                    <div style={{ 
+                      padding: '1.25rem', 
+                      borderRadius: '16px', 
+                      background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', 
+                      color: 'white',
+                      boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.2)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', opacity: 0.9 }}>Net Revenue</span>
+                        <DollarSign size={20} />
+                      </div>
+                      <h3 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>
+                        ₹{historyPartner.revenue?.netEarnings?.toLocaleString('en-IN') || 0}
+                      </h3>
+                      <p style={{ margin: '8px 0 0', fontSize: '0.75rem', opacity: 0.8 }}>
+                        Actual franchise earning
                       </p>
                     </div>
 

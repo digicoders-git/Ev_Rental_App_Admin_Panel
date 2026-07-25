@@ -99,11 +99,27 @@ const FWallet = () => {
           </button>
         </div>
 
-        {/* Total Earnings */}
+        {/* Total Revenue (Gross) */}
         <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Total Earnings</p>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#0f172a' }}>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Total Revenue</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#3b82f6' }}>
             ₹{(wallet.totalRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+          </h2>
+        </div>
+
+        {/* Service Fee */}
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Service Fee (8%)</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#ef4444' }}>
+            ₹{(wallet.serviceFee || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+          </h2>
+        </div>
+
+        {/* Net Revenue */}
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Net Revenue</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#8b5cf6' }}>
+            ₹{(wallet.netRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </h2>
         </div>
 
