@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Users, Search, Eye, Phone, Mail, X, Loader, UserCircle, Plus, Calendar, CheckCircle, Lock, EyeOff } from 'lucide-react';
-import { getFranchiseBookings, addRider, getMyFranchiseVehicles, getAllPlans, createBooking, getAllUsers } from '../../services/apiServices';
+import { getFranchiseBookings, addRider, getMyFranchiseVehicles, getAllPlans, createBooking } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const FCustomers = () => {
@@ -42,47 +42,49 @@ const FCustomers = () => {
 
   const fetchCustomers = () => {
     call(
-      async () => {
-        const [usersRes, bookingsRes] = await Promise.all([
-          getAllUsers(),
-          getFranchiseBookings()
-        ]);
-        return { 
-          data: {
-            users: usersRes.data?.data || usersRes.data || [], 
-            bookings: bookingsRes.data?.data || bookingsRes.data || [] 
-          }
-        };
-      },
-      ({ users, bookings }) => {
-        const allRiders = Array.isArray(users) ? users : [];
-        const fBookings = Array.isArray(bookings) ? bookings : [];
+      () => getFranchiseBookings(),
+      (bookingsData) => {
+        // useApi passes res.data — so actual array is in bookingsData.data
+        const fBookings = Array.isArray(bookingsData?.data) ? bookingsData.data
+          : Array.isArray(bookingsData) ? bookingsData : [];
 
-        const userBookingsMap = {};
+        // Derive unique users directly from franchise bookings (single source of truth)
+        const userMap = {};
         fBookings.forEach(b => {
           if (!b.user) return;
           const uid = typeof b.user === 'object' ? b.user._id : b.user;
-          if (!userBookingsMap[uid]) userBookingsMap[uid] = [];
-          userBookingsMap[uid].push(b);
+          if (!userMap[uid]) {
+            const u = typeof b.user === 'object' ? b.user : {};
+            userMap[uid] = {
+              _id: uid,
+              name: u.name || 'N/A',
+              mobile: u.mobile || '',
+              email: u.email || '',
+              city: u.city || '',
+              isKycVerified: u.isKycVerified || false,
+              profile_picture: u.profile_picture || '',
+              bookings: []
+            };
+          }
+          userMap[uid].bookings.push(b);
         });
 
-        const customerList = allRiders.map(u => {
-          const myBookings = userBookingsMap[u._id] || [];
+        const customerList = Object.values(userMap).map(u => {
+          const myBookings = u.bookings;
           const totalSpent = myBookings.reduce((sum, b) => sum + (b.grand_total || 0), 0);
-          
           let lastRide = null;
           if (myBookings.length > 0) {
             const sorted = [...myBookings].sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
             lastRide = sorted[0].start_date;
           }
-
           return {
             _id: u._id,
-            name: u.name || 'N/A',
-            mobile: u.mobile || '',
-            email: u.email || '',
-            city: u.city || '',
-            isKycVerified: u.isKycVerified || false,
+            name: u.name,
+            mobile: u.mobile,
+            email: u.email,
+            city: u.city,
+            isKycVerified: u.isKycVerified,
+            profile_picture: u.profile_picture,
             totalRides: myBookings.length,
             totalSpent,
             lastRide,

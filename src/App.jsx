@@ -119,6 +119,7 @@ function App() {
           <Route index element={<FranchiseDashboard />} />
           <Route path="vehicles" element={<FranchiseVehicles />} />
           <Route path="rides" element={<FranchiseRides />} />
+          <Route path="return-pending" element={<FReturnPending />} />
           <Route path="earnings" element={<FranchiseEarnings />} />
           <Route path="customers" element={<FCustomers />} />
           <Route path="kyc" element={<FKYC />} />

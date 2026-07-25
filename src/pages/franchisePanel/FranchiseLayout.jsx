@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Bike, CalendarDays, Wallet, User, LogOut, Bell, Menu, X } from 'lucide-react';
+import { Home, Bike, CalendarDays, Wallet, User, Users, LogOut, Bell, Menu, X } from 'lucide-react';
 import Sidebar from '../../components/Sidebar';
 import './FranchiseMobile.css';
 
@@ -28,8 +28,8 @@ const FranchiseLayout = ({ setIsAuthenticated }) => {
   const navItems = [
     { path: '/f', icon: <Home size={24} />, label: 'Home' },
     { path: '/f/vehicles', icon: <Bike size={24} />, label: 'Vehicles' },
-    { path: '/f/rides', icon: <CalendarDays size={24} />, label: 'Rides' },
-    { path: '/f/earnings', icon: <Wallet size={24} />, label: 'Earnings' },
+    { path: '/f/rides', icon: <CalendarDays size={24} />, label: 'Bookings' },
+    { path: '/f/customers', icon: <Users size={24} />, label: 'Users' },
     { path: '/f/profile', icon: <User size={24} />, label: 'Profile' }
   ];
 
@@ -37,15 +37,17 @@ const FranchiseLayout = ({ setIsAuthenticated }) => {
     switch (location.pathname) {
       case '/f': return 'Dashboard';
       case '/f/vehicles': return 'My Vehicles';
-      case '/f/rides': return 'Ride Management';
+      case '/f/rides': return 'Bookings';
       case '/f/return-pending': return 'Return Pending';
       case '/f/earnings': return 'Earnings';
-      case '/f/customers': return 'Customers';
+      case '/f/customers': return 'Users & Customers';
       case '/f/kyc': return 'KYC Status';
       case '/f/dues': return 'Due Payments';
       case '/f/reports': return 'Reports';
       case '/f/notifications': return 'Notifications';
       case '/f/complaints': return 'Complaints';
+      case '/f/wallet': return 'Wallet & Agreement';
+      case '/f/referrals': return 'Referrals';
       case '/f/profile': return 'Profile Settings';
       default: return 'Franchise Panel';
     }

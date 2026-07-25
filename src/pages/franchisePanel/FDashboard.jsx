@@ -46,6 +46,8 @@ const FDashboard = () => {
     riderStatuses[userId].add(b.booking_status);
   });
 
+  const totalUniqueRiders = Object.keys(riderStatuses).length;
+
   let activeRidersCount = 0;
   let offboardedRidersCount = 0;
   Object.values(riderStatuses).forEach(statuses => {
@@ -243,6 +245,92 @@ const FDashboard = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* ── Quick Access Section ── */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.75rem', letterSpacing: '-0.01em' }}>
+          🚀 Quick Access
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          {/* Bookings */}
+          <div
+            onClick={() => navigate('/f/rides')}
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+              borderRadius: '16px',
+              padding: '18px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              color: '#fff',
+              boxShadow: '0 4px 15px rgba(59,130,246,0.3)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(59,130,246,0.4)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(59,130,246,0.3)'; }}
+          >
+            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '12px', padding: '10px' }}>
+              <CheckCircle size={22} />
+            </div>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, textAlign: 'center' }}>Bookings</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{bookings.length}</span>
+          </div>
+
+          {/* Users / Customers */}
+          <div
+            onClick={() => navigate('/f/customers')}
+            style={{
+              background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+              borderRadius: '16px',
+              padding: '18px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              color: '#fff',
+              boxShadow: '0 4px 15px rgba(139,92,246,0.3)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(139,92,246,0.4)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(139,92,246,0.3)'; }}
+          >
+            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '12px', padding: '10px' }}>
+              <Users size={22} />
+            </div>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, textAlign: 'center' }}>Users</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{totalUniqueRiders}</span>
+          </div>
+
+          {/* Vehicles */}
+          <div
+            onClick={() => navigate('/f/vehicles')}
+            style={{
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              borderRadius: '16px',
+              padding: '18px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              color: '#fff',
+              boxShadow: '0 4px 15px rgba(16,185,129,0.3)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(16,185,129,0.4)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(16,185,129,0.3)'; }}
+          >
+            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: '12px', padding: '10px' }}>
+              <Bike size={22} />
+            </div>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, textAlign: 'center' }}>Vehicles</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 800 }}>{vehicles.length}</span>
+          </div>
+        </div>
       </div>
 
       {/* Dashboards Grids for Tables */}
