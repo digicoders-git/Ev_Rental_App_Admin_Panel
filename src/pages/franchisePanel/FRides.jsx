@@ -39,7 +39,7 @@ const FRides = () => {
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [selectedSwapVehicle, setSelectedSwapVehicle] = useState('');
   const [showExtendModal, setShowExtendModal] = useState(false);
-  const [extendForm, setExtendForm] = useState({ extra_days: 7, auto_renew: false });
+  const [extendForm, setExtendForm] = useState({ extra_weeks: 1, auto_renew: false });
   const [extendBookingId, setExtendBookingId] = useState(null);
   const { loading, call } = useApi();
 
@@ -154,12 +154,12 @@ const FRides = () => {
 
   const handleExtendPlan = async (e) => {
     e.preventDefault();
-    if (!extendForm.extra_days || extendForm.extra_days <= 0) return alert('Please enter valid days');
+    if (!extendForm.extra_weeks || extendForm.extra_weeks <= 0) return alert('Please enter valid weeks');
     try {
-      await extendBooking(extendBookingId, extendForm.extra_days, extendForm.auto_renew);
+      await extendBooking(extendBookingId, extendForm.extra_weeks, extendForm.auto_renew);
       alert('Plan extended successfully!');
       setShowExtendModal(false);
-      setExtendForm({ extra_days: 7, auto_renew: false });
+      setExtendForm({ extra_weeks: 1, auto_renew: false });
       setSelected(null);
       fetchBookings();
     } catch (err) {
@@ -487,7 +487,7 @@ const FRides = () => {
                               <button className="btn-icon" title="Mark Complete" style={{ color: '#8b5cf6' }}
                                 onClick={() => setConfirmAction({ id: b._id, action: 'complete', label: 'Complete' })}><CircleCheck size={15} /></button>
                               <button className="btn-icon" title="Extend Plan" style={{ color: '#3b82f6' }}
-                                onClick={() => { setExtendBookingId(b._id); setExtendForm({ extra_days: 7, auto_renew: b.auto_renew || false }); setShowExtendModal(true); }}>
+                                onClick={() => { setExtendBookingId(b._id); setExtendForm({ extra_weeks: 1, auto_renew: b.auto_renew || false }); setShowExtendModal(true); }}>
                                 <Clock size={15} />
                               </button>
                             </>
@@ -736,7 +736,7 @@ const FRides = () => {
               )}
               {(selected.booking_status === 'confirmed' || selected.booking_status === 'ongoing') && (
                 <button className="btn btn-outline" style={{ color: '#3b82f6', borderColor: '#3b82f6' }}
-                  onClick={() => { setExtendBookingId(selected._id); setExtendForm({ extra_days: 7, auto_renew: selected.auto_renew || false }); setSelected(null); setShowExtendModal(true); }}>
+                  onClick={() => { setExtendBookingId(selected._id); setExtendForm({ extra_weeks: 1, auto_renew: selected.auto_renew || false }); setSelected(null); setShowExtendModal(true); }}>
                   <Clock size={15} /> Extend Plan
                 </button>
               )}
@@ -1118,17 +1118,17 @@ const FRides = () => {
             <form onSubmit={handleExtendPlan}>
               <div className="modal-body" style={{ padding: '20px' }}>
                 <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Extend By (Days)</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Extend By (Weeks)</label>
                   <input
                     type="number"
                     min="1"
                     required
                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
-                    value={extendForm.extra_days}
-                    onChange={(e) => setExtendForm({ ...extendForm, extra_days: e.target.value })}
+                    value={extendForm.extra_weeks}
+                    onChange={(e) => setExtendForm({ ...extendForm, extra_weeks: e.target.value })}
                   />
                   <small style={{ color: '#64748b', display: 'block', marginTop: '5px' }}>
-                    Extra cost aur installment automatically add ho jaayega plan type ke basis par.
+                    Har week ka ek alag installment automatically create hoga.
                   </small>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
