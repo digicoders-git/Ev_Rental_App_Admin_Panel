@@ -42,7 +42,7 @@ const RentalPlans = () => {
   }, []);
 
   const fetchPlans = () => {
-    call(() => getAllPlans(), (res) => {
+    call(() => getAllPlans(true), (res) => {
       const data = res.data || [];
       const list = data.map(p => ({
         id: p._id,
