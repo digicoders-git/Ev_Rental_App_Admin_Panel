@@ -198,7 +198,7 @@ const FReturnPending = () => {
                     <div>
                       {isPending ? (
                         <span style={{ background: '#fef3c7', color: '#b45309', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={12} /> Submitted (Pending)
+                          <Clock size={12} /> Pending Franchisee Approval
                         </span>
                       ) : b.return_status === 'approved' ? (
                         <span style={{ background: '#d1fae5', color: '#047857', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -415,7 +415,7 @@ const FReturnPending = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: '8px', fontSize: '0.95rem' }}>
                   <span style={{ color: '#64748b', fontWeight: 600 }}>Return Status:</span>
                   <span style={{ fontWeight: 700, textTransform: 'uppercase', color: selected.return_status === 'submission_pending' ? '#b45309' : selected.return_status === 'approved' ? '#047857' : '#b91c1c' }}>
-                    {selected.return_status === 'submission_pending' ? 'Submitted (Pending Admin)' : selected.return_status || 'None'}
+                    {selected.return_status === 'submission_pending' ? 'Pending Franchisee Approval' : selected.return_status === 'approved' ? 'Approved (Submitted)' : selected.return_status || 'None'}
                   </span>
                 </div>
               </div>

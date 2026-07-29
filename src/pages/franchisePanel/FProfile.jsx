@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User, Shield, CreditCard, LogOut, Save, Eye, EyeOff, X, Loader, CheckCircle } from 'lucide-react';
+import { User, Shield, CreditCard, LogOut, Save, Eye, EyeOff, X, Loader, CheckCircle, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { updateFranchiseProfile, changeFranchisePassword, getFranchiseProfile } from '../../services/apiServices';
 import useApi from '../../services/useApi';
@@ -28,6 +28,8 @@ const FProfile = ({ setIsAuthenticated }) => {
       address: data.address || '',
       city: data.city || '',
       state: data.state || '',
+      latitude: data.latitude || '',
+      longitude: data.longitude || '',
     });
 
     // Fetch fresh data
@@ -43,6 +45,8 @@ const FProfile = ({ setIsAuthenticated }) => {
         address: freshData.address || '',
         city: freshData.city || '',
         state: freshData.state || '',
+        latitude: freshData.latitude || '',
+        longitude: freshData.longitude || '',
       });
     });
   }, []);
@@ -204,7 +208,7 @@ const FProfile = ({ setIsAuthenticated }) => {
       {tab === 'store' && (
         <div className="card">
           <h3 style={{ marginBottom: '1.5rem' }}>Store Information</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
             {[
               { label: 'Store Name', value: userData?.store_name },
               { label: 'Store ID', value: userData?.store_id },
@@ -218,16 +222,37 @@ const FProfile = ({ setIsAuthenticated }) => {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Store Name</label>
-              <input type="text" value={form.store_name || ''} onChange={e => setForm(p => ({ ...p, store_name: e.target.value }))}
-                style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem' }} />
+
+          {/* Store Name editable */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Store Name</label>
+            <input type="text" value={form.store_name || ''} onChange={e => setForm(p => ({ ...p, store_name: e.target.value }))}
+              style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem' }} />
+          </div>
+
+          {/* Hub Location redirect */}
+          <div style={{ background: 'var(--background)', border: '1.5px solid var(--border)', borderRadius: '10px', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: 36, height: 36, borderRadius: '9px', background: userData?.latitude && userData?.longitude ? '#d1fae5' : 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <MapPin size={16} color={userData?.latitude && userData?.longitude ? '#10b981' : 'var(--primary)'} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Hub GPS Location</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  {userData?.latitude && userData?.longitude
+                    ? `📍 ${Number(userData.latitude).toFixed(5)}, ${Number(userData.longitude).toFixed(5)}`
+                    : 'Not set — drivers cannot navigate to your hub'}
+                </div>
+              </div>
             </div>
-            <button className="btn btn-primary" style={{ marginTop: '1rem' }} disabled={loading} onClick={handleProfileSave}>
-              {loading ? <Loader size={16} className="spinner" /> : <><Save size={16} /> Save Store Info</>}
+            <button className="btn btn-primary" onClick={() => navigate('/f/hubs')} style={{ fontSize: '0.82rem', padding: '7px 14px' }}>
+              <MapPin size={14} /> {userData?.latitude ? 'Edit Location' : 'Set Location'}
             </button>
           </div>
+
+          <button className="btn btn-primary" disabled={loading} onClick={handleProfileSave}>
+            {loading ? <Loader size={16} className="spinner" /> : <><Save size={16} /> Save Store Info</>}
+          </button>
         </div>
       )}
 

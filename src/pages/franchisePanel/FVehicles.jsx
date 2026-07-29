@@ -286,7 +286,12 @@ const FVehicles = () => {
                       </div>
                     </td>
                     <td>
-                      <span className={`badge ${v.submission_status === 'Submitted' ? 'badge-info' : (v.is_busy ? 'badge-warning' : getStatusBadge(v.status))}`}>
+                      <span className={`badge ${
+                        v.submission_status === 'Pending Approval' ? 'badge-warning' :
+                        v.submission_status === 'Submitted' ? 'badge-info' :
+                        v.submission_status === 'Submission Rejected' ? 'badge-danger' :
+                        v.is_busy ? 'badge-warning' : getStatusBadge(v.status)
+                      }`}>
                         {v.submission_status || (v.is_busy ? 'On Ride' : v.status)}
                       </span>
                     </td>

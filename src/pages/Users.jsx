@@ -40,6 +40,7 @@ const Users = () => {
   const [walletHistory, setWalletHistory] = useState([]);
   const [loadingWallet, setLoadingWallet] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [fullDetail, setFullDetail]       = useState(null);
   const [editingNoteUser, setEditingNoteUser] = useState(null);
   const [selectedNoteTag, setSelectedNoteTag] = useState('');
   const [customNoteText, setCustomNoteText] = useState('');

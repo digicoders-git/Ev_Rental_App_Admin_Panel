@@ -31,7 +31,8 @@ import {
   BarChart,
   Receipt,
   Headphones,
-  RotateCcw
+  RotateCcw,
+  MapPin
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -75,6 +76,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Reports',       path: '/f/reports',      icon: BarChart },
     { name: 'Notifications', path: '/f/notifications', icon: Bell },
     { name: 'Complaints',    path: '/f/complaints',   icon: Headphones },
+    { name: 'EV Hubs',       path: '/f/hubs',         icon: MapPin },
     { name: 'Profile & Settings', path: '/f/profile', icon: Settings },
   ];
 

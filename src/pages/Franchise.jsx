@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FileSignature, FileText, Clock, 
   Building2, X, MapPin, Plus, Search, TrendingUp,
   Users, Car, XCircle, CheckCircle, Eye, DollarSign, 
   KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle,
-  History, Pencil
+  History, Pencil, Navigation, Crosshair, ExternalLink
 } from 'lucide-react';
 import { 
   getFranchiseEnquiries, getAllStores, createStore, deleteStore, getStoreById,
@@ -26,7 +26,8 @@ const Franchise = () => {
   const [performance, setPerformance] = useState([]);
   const [dashStats, setDashStats] = useState(null);
   const [withdrawals, setWithdrawals] = useState([]);
-  const [activeTab, setActiveTab] = useState('partners'); // Add this for tabs
+  const [activeTab, setActiveTab] = useState('partners');
+  const [subTab, setSubTab] = useState('pending');
   const initialFormState = {
     store_name: '', owner_name: '', mobile: '', email: '', 
     address: '', city: '', state: '', password: '', confirmPassword: '',
@@ -40,6 +41,65 @@ const Franchise = () => {
   const [deleteId, setDeleteId] = useState(null);
 
   const { loading, call } = useApi();
+
+  // ── Map Picker State ──
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [mapSearch, setMapSearch] = useState('');
+  const [mapSearching, setMapSearching] = useState(false);
+  const [mapPreviewUrl, setMapPreviewUrl] = useState('');
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [pickedCoords, setPickedCoords] = useState({ lat: '', lng: '' });
+
+  const openMapPicker = () => {
+    setPickedCoords({ lat: form.latitude || '', lng: form.longitude || '' });
+    setMapSearch('');
+    if (form.latitude && form.longitude) {
+      setMapPreviewUrl(`https://maps.google.com/maps?q=${form.latitude},${form.longitude}&z=16&output=embed`);
+    } else {
+      setMapPreviewUrl('');
+    }
+    setShowMapPicker(true);
+  };
+
+  const searchMapLocation = async () => {
+    if (!mapSearch.trim()) return;
+    setMapSearching(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(mapSearch)}&limit=1`);
+      const data = await res.json();
+      if (data.length > 0) {
+        const { lat, lon, display_name } = data[0];
+        setPickedCoords({ lat: parseFloat(lat).toFixed(6), lng: parseFloat(lon).toFixed(6) });
+        setMapPreviewUrl(`https://maps.google.com/maps?q=${lat},${lon}&z=16&output=embed`);
+      } else {
+        alert('Location not found. Try a more specific address.');
+      }
+    } catch {
+      alert('Search failed. Please try again.');
+    }
+    setMapSearching(false);
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return alert('Geolocation not supported by your browser.');
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        setPickedCoords({ lat, lng });
+        setMapPreviewUrl(`https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`);
+        setGpsLoading(false);
+      },
+      () => { alert('Could not get your location. Please allow location access.'); setGpsLoading(false); }
+    );
+  };
+
+  const confirmMapLocation = () => {
+    if (!pickedCoords.lat || !pickedCoords.lng) return alert('Please set a location first.');
+    setForm(f => ({ ...f, latitude: pickedCoords.lat, longitude: pickedCoords.lng }));
+    setShowMapPicker(false);
+  };
 
   useEffect(() => {
     fetchData();
@@ -90,7 +150,9 @@ const Franchise = () => {
       franchise_share_percentage: f.franchise_share_percentage || 80,
       razorpay_linked_account_id: f.razorpay_linked_account_id || '',
       razorpay_key_id: f.razorpay_key_id || '',
-      razorpay_key_secret: f.razorpay_key_secret || ''
+      razorpay_key_secret: f.razorpay_key_secret || '',
+      latitude: f.latitude || '',
+      longitude: f.longitude || '',
     });
     setShowEditModal(true);
   };
@@ -232,6 +294,42 @@ const Franchise = () => {
         ))}
       </div>
 
+      {/* Sub Tabs */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', background: '#f1f5f9', padding: '4px', borderRadius: '10px', width: 'fit-content' }}>
+        <button
+          onClick={() => setSubTab('pending')}
+          style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s',
+            background: subTab === 'pending' ? '#fff' : 'transparent',
+            color: subTab === 'pending' ? '#f59e0b' : '#64748b',
+            boxShadow: subTab === 'pending' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            display: 'flex', alignItems: 'center', gap: '6px'
+          }}
+        >
+          ⏳ Pending Applications
+          {enquiries.filter(e => e.status === 'new').length > 0 && (
+            <span style={{ background: '#f59e0b', color: '#fff', borderRadius: '50%', padding: '1px 6px', fontSize: '11px', fontWeight: 700 }}>
+              {enquiries.filter(e => e.status === 'new').length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setSubTab('active')}
+          style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', transition: 'all 0.2s',
+            background: subTab === 'active' ? '#fff' : 'transparent',
+            color: subTab === 'active' ? '#10b981' : '#64748b',
+            boxShadow: subTab === 'active' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            display: 'flex', alignItems: 'center', gap: '6px'
+          }}
+        >
+          ✅ Active Partners
+          <span style={{ background: '#10b981', color: '#fff', borderRadius: '50%', padding: '1px 6px', fontSize: '11px', fontWeight: 700 }}>
+            {stores.length}
+          </span>
+        </button>
+      </div>
+
+      {/* Pending Applications Tab */}
+      {subTab === 'pending' && (
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem' }}>Pending Applications</h3>
@@ -273,7 +371,10 @@ const Franchise = () => {
           )}
         </div>
       </div>
+      )}
 
+      {/* Active Partners Tab */}
+      {subTab === 'active' && (
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: '1.125rem' }}>Active Partners</h3>
@@ -307,10 +408,16 @@ const Franchise = () => {
                 s.owner_name?.toLowerCase().includes(searchPartners.toLowerCase())
               ).map((f) => (
                 <tr key={f._id}>
-                  <td><span style={{ fontWeight: '600' }}>{f.store_name}</span></td>
                   <td>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{f.owner_name}</span>
+                    <span
+                      style={{ fontWeight: '600', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted' }}
+                      onClick={() => openHistoryModal(f)}
+                      title="Click to view history"
+                    >{f.store_name}</span>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => openHistoryModal(f)} title="Click to view history">
+                      <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--primary)' }}>{f.owner_name}</span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{f.mobile}</span>
                     </div>
                   </td>
@@ -333,6 +440,12 @@ const Franchise = () => {
                       <button className="btn-icon" title="Edit Franchise" onClick={() => handleEditClick(f)} style={{ color: '#3b82f6' }}><Pencil size={16} /></button>
                       <button className="btn-icon history" title="View History" onClick={() => openHistoryModal(f)} style={{ color: '#8b5cf6' }}><History size={16} /></button>
                       <button className="btn-icon" title="Upload Agreement" onClick={() => { setSelectedPartner(f); setShowAgreementModal(true); }} style={{ color: '#10b981' }}><FileSignature size={16} /></button>
+                      {(f.latitude && f.longitude) && (
+                        <button className="btn-icon" title="View on Map" style={{ color: '#ef4444' }}
+                          onClick={() => window.open(`https://www.google.com/maps?q=${f.latitude},${f.longitude}`, '_blank')}>
+                          <MapPin size={16} />
+                        </button>
+                      )}
                       <button className="btn-icon delete" title="Delete Franchise" onClick={() => setDeleteId(f._id)} style={{ color: '#ef4444' }}><Trash2 size={16} /></button>
                     </div>
                   </td>
@@ -342,6 +455,7 @@ const Franchise = () => {
           </table>
         </div>
       </div>
+      )}
       </>
       )}
 
@@ -579,6 +693,55 @@ const Franchise = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Section 5: Hub Location */}
+                <div className="form-section-title" style={{ marginTop: '1.25rem' }}>
+                  <MapPin size={15} />
+                  Hub Location (for Driver Navigation)
+                </div>
+
+                {/* Location Preview Card */}
+                <div style={{ background: '#f8fafc', border: '1.5px solid var(--border)', borderRadius: '10px', padding: '1rem', marginBottom: '0.75rem' }}>
+                  {form.latitude && form.longitude ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ width: 28, height: 28, borderRadius: '7px', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <MapPin size={14} color="#10b981" />
+                          </div>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#10b981' }}>Location Set ✓</span>
+                        </div>
+                        <button type="button" onClick={() => window.open(`https://www.google.com/maps?q=${form.latitude},${form.longitude}`, '_blank')}
+                          style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                          <ExternalLink size={12} /> Preview
+                        </button>
+                      </div>
+                      <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-secondary)', background: '#fff', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                        📍 {Number(form.latitude).toFixed(5)}, {Number(form.longitude).toFixed(5)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      <MapPin size={16} />
+                      <span>No location set yet. Click below to pick hub location.</span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <button type="button" onClick={openMapPicker}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
+                    <MapPin size={15} />
+                    {form.latitude && form.longitude ? 'Change Location' : 'Pick Location on Map'}
+                  </button>
+                  {form.latitude && form.longitude && (
+                    <button type="button" onClick={() => setForm(f => ({ ...f, latitude: '', longitude: '' }))}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <X size={14} /> Clear
+                    </button>
+                  )}
+                </div>
+                <small style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '0.4rem', display: 'block' }}>📍 Set coordinates so drivers can navigate directly to this hub via Google Maps.</small>
               </form>
             </div>
             <div className="modal-footer">
@@ -1381,6 +1544,118 @@ const Franchise = () => {
                 <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Uploading...' : 'Upload'}</button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── MAP PICKER MODAL ── */}
+      {showMapPicker && createPortal(
+        <div className="modal-overlay" onClick={() => setShowMapPicker(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '560px', width: '95vw' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: 36, height: 36, borderRadius: '9px', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MapPin size={18} color="var(--primary)" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0 }}>Pick Hub Location</h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Search address or use GPS to set hub coordinates</p>
+                </div>
+              </div>
+              <button className="btn-icon" onClick={() => setShowMapPicker(false)}><X size={20} /></button>
+            </div>
+
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+              {/* Search bar */}
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                  <input
+                    type="text"
+                    placeholder="Search address, landmark, city..."
+                    value={mapSearch}
+                    onChange={e => setMapSearch(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && searchMapLocation()}
+                    style={{ width: '100%', padding: '0.6rem 0.875rem 0.6rem 2.25rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem' }}
+                  />
+                </div>
+                <button type="button" onClick={searchMapLocation} disabled={mapSearching}
+                  style={{ padding: '0.6rem 1rem', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+                  {mapSearching ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={15} />}
+                  Search
+                </button>
+              </div>
+
+              {/* GPS Button */}
+              <button type="button" onClick={useMyLocation} disabled={gpsLoading}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0.65rem', background: gpsLoading ? '#f1f5f9' : '#eff6ff', color: gpsLoading ? 'var(--text-muted)' : 'var(--primary)', border: '1.5px dashed var(--primary)', borderRadius: '8px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}>
+                {gpsLoading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Crosshair size={16} />}
+                {gpsLoading ? 'Getting your location...' : 'Use My Current Location (GPS)'}
+              </button>
+
+              {/* Manual input */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.35rem', textTransform: 'uppercase' }}>Latitude</label>
+                  <input type="number" step="any" placeholder="e.g. 26.8467"
+                    value={pickedCoords.lat}
+                    onChange={e => {
+                      const lat = e.target.value;
+                      setPickedCoords(p => ({ ...p, lat }));
+                      if (lat && pickedCoords.lng) setMapPreviewUrl(`https://maps.google.com/maps?q=${lat},${pickedCoords.lng}&z=16&output=embed`);
+                    }}
+                    style={{ width: '100%', padding: '0.6rem 0.875rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.35rem', textTransform: 'uppercase' }}>Longitude</label>
+                  <input type="number" step="any" placeholder="e.g. 80.9462"
+                    value={pickedCoords.lng}
+                    onChange={e => {
+                      const lng = e.target.value;
+                      setPickedCoords(p => ({ ...p, lng }));
+                      if (pickedCoords.lat && lng) setMapPreviewUrl(`https://maps.google.com/maps?q=${pickedCoords.lat},${lng}&z=16&output=embed`);
+                    }}
+                    style={{ width: '100%', padding: '0.6rem 0.875rem', border: '1.5px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem' }}
+                  />
+                </div>
+              </div>
+
+              {/* Map Preview */}
+              <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1.5px solid var(--border)', background: '#f1f5f9', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {mapPreviewUrl ? (
+                  <iframe
+                    src={mapPreviewUrl}
+                    width="100%" height="220"
+                    style={{ border: 'none', display: 'block' }}
+                    loading="lazy"
+                    title="Map Preview"
+                  />
+                ) : (
+                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                    <MapPin size={36} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
+                    <p style={{ fontSize: '0.85rem' }}>Search an address or enter coordinates<br/>to preview location on map</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Open in Google Maps link */}
+              {pickedCoords.lat && pickedCoords.lng && (
+                <a href={`https://www.google.com/maps?q=${pickedCoords.lat},${pickedCoords.lng}`} target="_blank" rel="noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
+                  <ExternalLink size={13} /> Open in Google Maps to verify
+                </a>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setShowMapPicker(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={confirmMapLocation} disabled={!pickedCoords.lat || !pickedCoords.lng}>
+                <MapPin size={15} /> Confirm Location
+              </button>
+            </div>
           </div>
         </div>,
         document.body

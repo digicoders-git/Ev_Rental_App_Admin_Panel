@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { io } from 'socket.io-client';
+import * as XLSX from 'xlsx';
 import { getFranchiseWallet, requestWithdrawal, getFranchiseWithdrawals, getFranchiseProfile } from '../../services/apiServices';
-import { Wallet, ArrowUpRight, ArrowDownRight, IndianRupee, FileText, CheckCircle, Clock, XCircle, Download, X } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, FileText, CheckCircle, Clock, XCircle, Download, X } from 'lucide-react';
 
 const FWallet = () => {
   const [wallet, setWallet] = useState({ balance: 0, totalGrossRevenue: 0, serviceFee: 0, serviceFeePercent: 8, totalNetRevenue: 0, totalWithdrawn: 0, pendingWithdrawn: 0, transactions: [] });
@@ -74,6 +75,76 @@ const FWallet = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const downloadExcel = () => {
+    const storeName = profile?.store_name || 'Franchise';
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN').replace(/\//g, '-');
+    const wb = XLSX.utils.book_new();
+
+    // ── Sheet 1: Summary ──
+    const summaryData = [
+      ['Franchise Wallet Report'],
+      ['Generated On', now.toLocaleString('en-IN')],
+      ['Franchise', storeName],
+      ['Owner', profile?.owner_name || ''],
+      ['Email', profile?.email || ''],
+      ['Mobile', profile?.mobile || ''],
+      [],
+      ['EARNINGS SUMMARY'],
+      ['Metric', 'Amount (₹)'],
+      ['Available Balance', wallet.balance || 0],
+      ['Total Revenue (Gross)', wallet.totalGrossRevenue || 0],
+      [`Service Fee (${wallet.serviceFeePercent || 8}%)`, wallet.serviceFee || 0],
+      ['Net Revenue', wallet.totalNetRevenue || 0],
+      ['Total Withdrawn', wallet.totalWithdrawn || 0],
+      ['Pending Withdrawals', wallet.pendingWithdrawn || 0],
+    ];
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    wsSummary['!cols'] = [{ wch: 30 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+    // ── Sheet 2: Earnings History (Transactions) ──
+    const txnRows = [
+      ['Transaction ID', 'Date', 'Time', 'Type', 'Description', 'Amount (₹)']
+    ];
+    (wallet.transactions || []).forEach(t => {
+      const d = new Date(t.createdAt);
+      txnRows.push([
+        t.transaction_id || '',
+        d.toLocaleDateString('en-IN'),
+        d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        t.type === 'credit' ? 'Credit' : 'Debit',
+        t.description || '',
+        t.type === 'credit' ? t.amount : -t.amount
+      ]);
+    });
+    const wsTxn = XLSX.utils.aoa_to_sheet(txnRows);
+    wsTxn['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 40 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, wsTxn, 'Earnings History');
+
+    // ── Sheet 3: Weekly Settlements ──
+    const settlRows = [
+      ['Withdrawal ID', 'Date', 'Time', 'Amount (₹)', 'Status', 'Admin Note']
+    ];
+    (withdrawals || []).forEach(w => {
+      const d = new Date(w.createdAt);
+      const cfg = getStatusConfig(w.status);
+      settlRows.push([
+        w.withdrawal_id || '',
+        d.toLocaleDateString('en-IN'),
+        d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        w.amount || 0,
+        cfg.label,
+        w.admin_note || w.note || ''
+      ]);
+    });
+    const wsSettl = XLSX.utils.aoa_to_sheet(settlRows);
+    wsSettl['!cols'] = [{ wch: 20 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsSettl, 'Weekly Settlements');
+
+    XLSX.writeFile(wb, `${storeName}_Wallet_Report_${dateStr}.xlsx`);
   };
 
   const getStatusConfig = (status) => {
@@ -173,7 +244,12 @@ const FWallet = () => {
           <button onClick={() => setActiveTab('transactions')} style={{ background: activeTab === 'transactions' ? 'var(--primary)' : 'transparent', color: activeTab === 'transactions' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Earnings History</button>
           <button onClick={() => setActiveTab('withdrawals')} style={{ background: activeTab === 'withdrawals' ? 'var(--primary)' : 'transparent', color: activeTab === 'withdrawals' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Weekly Settlements</button>
         </div>
-        <button onClick={fetchData} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', fontSize: '0.85rem' }}>🔄 Refresh</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={fetchData} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', fontSize: '0.85rem' }}>🔄 Refresh</button>
+          <button onClick={downloadExcel} style={{ background: '#10b981', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Download size={15} /> Download Report
+          </button>
+        </div>
       </div>
 
       {activeTab === 'transactions' && (

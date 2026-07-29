@@ -43,6 +43,8 @@ export const deleteOffer    = (id)   => api.delete(`/offers/${id}`);
 export const toggleOffer    = (id)   => api.patch(`/offers/${id}/toggle`);
 export const validateCoupon = (data) => api.post('/offers/validate', data);
 
+export const getPublicFranchiseStores = () => api.get('/franchise-enquiry/public/stores');
+
 /* ── FRANCHISE ENQUIRY ── */
 export const getFranchiseEnquiries  = (params) => api.get('/franchise-enquiry', { params });
 export const submitFranchiseEnquiry = (data)   => api.post('/franchise-enquiry', data);

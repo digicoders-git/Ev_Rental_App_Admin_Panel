@@ -452,7 +452,12 @@ const Vehicles = () => {
                     </td>
                     <td><span className="rate-text">₹{v.ratePerDay}/day</span></td>
                     <td>
-                      <span className={`badge badge-icon ${v.submissionStatus === 'Submitted' ? 'badge-warning' : (statusConfig[v.status]?.cls || 'badge-info')}`}>
+                      <span className={`badge badge-icon ${
+                        v.submissionStatus === 'Pending Approval' ? 'badge-warning' :
+                        v.submissionStatus === 'Submitted' ? 'badge-info' :
+                        v.submissionStatus === 'Submission Rejected' ? 'badge-danger' :
+                        statusConfig[v.status]?.cls || 'badge-info'
+                      }`}>
                         {statusConfig[v.status]?.icon} {v.submissionStatus || v.status}
                       </span>
                     </td>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Users, Search, Eye, Phone, Mail, X, Loader, UserCircle, Plus, Calendar, CheckCircle, Lock, EyeOff, Edit3, MessageSquare } from 'lucide-react';
-import { getFranchiseBookings, addRider, updateUser, getMyFranchiseVehicles, getAllPlans, createBooking } from '../../services/apiServices';
+import { Users, Search, Eye, Phone, Mail, X, Loader, UserCircle, Plus, CheckCircle, Lock, EyeOff, Edit3, MessageSquare } from 'lucide-react';
+import { getFranchiseBookings, addRider, updateUser } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const FCustomers = () => {
@@ -12,31 +12,14 @@ const FCustomers = () => {
   const [selectedNoteTag, setSelectedNoteTag] = useState('');
   const [customNoteText, setCustomNoteText] = useState('');
   
-  // Registration and Booking Modals
+  // Registration Modal
   const [showAddCustomer, setShowAddCustomer] = useState(false);
-  const [showBookVehicle, setShowBookVehicle] = useState(false);
-  const [selectedCustomerForBooking, setSelectedCustomerForBooking] = useState(null);
 
   // Form States
   const [customerForm, setCustomerForm] = useState({ name: '', mobile: '', email: '', city: '', password: '', confirmPassword: '' });
-  const [bookingForm, setBookingForm] = useState({
-    vehicle: '',
-    plan: '',
-    start_date: '',
-    end_date: '',
-    pickup_location: '',
-    drop_location: '',
-    payment_method: 'Online',
-    perDayRent: '500',
-    securityDeposit: '2000'
-  });
 
   const [showPwd, setShowPwd] = useState(false);
   const [showCPwd, setShowCPwd] = useState(false);
-
-  // Masters Data
-  const [vehicles, setVehicles] = useState([]);
-  const [plans, setPlans] = useState([]);
 
   const [formError, setFormError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -121,25 +104,6 @@ const FCustomers = () => {
 
   useEffect(() => {
     fetchCustomers();
-    
-    // Prefill Master data for direct booking
-    call(() => getMyFranchiseVehicles(), (res) => {
-      setVehicles((res.data || []).filter(v => v.status === 'active'));
-    });
-    call(() => getAllPlans(), (res) => {
-      const activePlans = (res.data || []).filter(p => p.status === 'active');
-      setPlans(activePlans);
-      if (activePlans.length > 0) {
-        setBookingForm(prev => ({ ...prev, plan: activePlans[0]._id }));
-      }
-    });
-    
-    const store = JSON.parse(localStorage.getItem('userData') || '{}');
-    setBookingForm(prev => ({
-      ...prev,
-      pickup_location: store.store_name || store.city || '',
-      drop_location: store.store_name || store.city || ''
-    }));
   }, []);
 
   const filtered = customers.filter(c =>
@@ -185,73 +149,6 @@ const FCustomers = () => {
       }, 1500);
     }, (err) => {
       setFormError(err?.response?.data?.message || 'Failed to add customer. Please check if email or phone already exists.');
-    });
-  };
-
-  const getDurationDays = () => {
-    if (!bookingForm.start_date || !bookingForm.end_date) return 0;
-    const s = new Date(bookingForm.start_date);
-    const e = new Date(bookingForm.end_date);
-    if (isNaN(s.getTime()) || isNaN(e.getTime())) return 0;
-    const diffTime = e - s;
-    if (diffTime <= 0) return 0;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const durationDays = getDurationDays();
-  const perDayRent = parseFloat(bookingForm.perDayRent) || 0;
-  const securityDeposit = parseFloat(bookingForm.securityDeposit) || 0;
-  const totalAmount = durationDays * perDayRent;
-  const grandTotal = totalAmount + securityDeposit;
-
-  const handleBookVehicleSubmit = (e) => {
-    e.preventDefault();
-    setFormError('');
-
-    const { vehicle, plan, start_date, end_date, payment_method } = bookingForm;
-
-    if (!vehicle || !plan || !start_date || !end_date) {
-      setFormError('Please select a vehicle, start date, and end date.');
-      return;
-    }
-
-    if (new Date(start_date) >= new Date(end_date)) {
-      setFormError('End date must be after the start date.');
-      return;
-    }
-
-    const apiPaymentMethod = 'online'; // Strictly online payments
-
-    call(() => createBooking({
-      user: selectedCustomerForBooking._id,
-      vehicle,
-      plan,
-      start_date,
-      end_date,
-      pickup_location: 'Franchise Store',
-      drop_location: 'Franchise Store',
-      payment_method: apiPaymentMethod,
-      total_amount: totalAmount,
-      security_deposit: securityDeposit
-    }), () => {
-      setSuccessMsg('Vehicle booked successfully! Ride is now pending approval in Ride Management. 🚀');
-      fetchCustomers();
-      setBookingForm(prev => ({
-        ...prev,
-        vehicle: '',
-        start_date: '',
-        end_date: '',
-        perDayRent: '500',
-        securityDeposit: '2000'
-      }));
-      setTimeout(() => {
-        setShowBookVehicle(false);
-        setSelectedCustomerForBooking(null);
-        setSuccessMsg('');
-      }, 2000);
-    }, (err) => {
-      setFormError(err || 'Booking creation failed. Please verify dates and vehicle availability.');
     });
   };
 
@@ -361,30 +258,7 @@ const FCustomers = () => {
                       </div>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button 
-                          className="btn btn-outline" 
-                          disabled={!c.isKycVerified}
-                          title={c.isKycVerified ? "Book EV for this customer" : "KYC verification is required to book an EV"}
-                          style={{ 
-                            padding: '0.35rem 0.6rem', 
-                            fontSize: '0.75rem', 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '4px',
-                            opacity: c.isKycVerified ? 1 : 0.5,
-                            cursor: c.isKycVerified ? 'pointer' : 'not-allowed',
-                            backgroundColor: c.isKycVerified ? 'transparent' : 'var(--border)'
-                          }}
-                          onClick={() => { 
-                            setSelectedCustomerForBooking(c); 
-                            setShowBookVehicle(true); 
-                          }}
-                        >
-                          <Calendar size={13} /> Book EV
-                        </button>
-                        <button className="btn-icon" title="View Ride History" onClick={() => setSelected(c)}><Eye size={16} /></button>
-                      </div>
+                      <button className="btn-icon" title="View Ride History" onClick={() => setSelected(c)}><Eye size={16} /></button>
                     </td>
                   </tr>
                 ))}
@@ -459,105 +333,6 @@ const FCustomers = () => {
                 <button type="button" className="btn btn-outline" onClick={() => setShowAddCustomer(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={loading}>
                   {loading ? <Loader size={16} className="spinner" /> : 'Register Rider'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Book EV Modal */}
-      {showBookVehicle && selectedCustomerForBooking && createPortal(
-        <div className="modal-overlay" onClick={() => { setShowBookVehicle(false); setSelectedCustomerForBooking(null); }}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <h3 style={{ margin: 0 }}>Book EV — Offline Customer</h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Customer: {selectedCustomerForBooking.name} ({selectedCustomerForBooking.mobile})</p>
-              </div>
-              <button className="btn-icon" onClick={() => { setShowBookVehicle(false); setSelectedCustomerForBooking(null); }}><X size={20} /></button>
-            </div>
-            <form onSubmit={handleBookVehicleSubmit}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {formError && <div style={{ color: '#ef4444', background: '#fee2e2', padding: '0.625rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500 }}>{formError}</div>}
-                {successMsg && <div style={{ color: '#047857', background: '#d1fae5', padding: '0.625rem', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 500 }}>{successMsg}</div>}
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Select EV Vehicle *</label>
-                  <select required value={bookingForm.vehicle} onChange={e => setBookingForm(p => ({ ...p, vehicle: e.target.value }))}
-                    style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }}>
-                    <option value="">-- Choose Available EV --</option>
-                    {vehicles.map(v => (
-                      <option key={v._id} value={v._id}>{v.brand} {v.vehicle_name} ({v.registration_number})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Rent Per Day (₹) *</label>
-                    <input type="number" required min="0" value={bookingForm.perDayRent} onChange={e => setBookingForm(p => ({ ...p, perDayRent: e.target.value }))}
-                      style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Security Deposit (₹) *</label>
-                    <input type="number" required min="0" value={bookingForm.securityDeposit} onChange={e => setBookingForm(p => ({ ...p, securityDeposit: e.target.value }))}
-                      style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Start Date & Time *</label>
-                    <input type="datetime-local" required value={bookingForm.start_date} onChange={e => setBookingForm(p => ({ ...p, start_date: e.target.value }))}
-                      style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>End Date & Time *</label>
-                    <input type="datetime-local" required value={bookingForm.end_date} onChange={e => setBookingForm(p => ({ ...p, end_date: e.target.value }))}
-                      style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.35rem', color: 'var(--text-secondary)' }}>Payment Mode (Online Only)</label>
-                  <select value={bookingForm.payment_method} onChange={e => setBookingForm(p => ({ ...p, payment_method: e.target.value }))}
-                    style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }}>
-                    <option value="Online">Online Payment (Gateway/Link)</option>
-                    <option value="UPI">UPI / QR Code</option>
-                    <option value="Card">Credit/Debit Card / NetBanking</option>
-                  </select>
-                </div>
-
-                <div style={{ background: 'var(--background)', padding: '0.875rem', borderRadius: '8px', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '6px', border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, borderBottom: '1px solid var(--border)', paddingBottom: '4px', color: 'var(--text-primary)' }}>Price Summary</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                    <span>Rent Rate:</span>
-                    <span style={{ fontWeight: 600 }}>₹{perDayRent} / day</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                    <span>Total Duration:</span>
-                    <span style={{ fontWeight: 600 }}>{durationDays} {durationDays === 1 ? 'day' : 'days'}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                    <span>Total Rent Amount:</span>
-                    <span style={{ fontWeight: 600 }}>₹{totalAmount.toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                    <span>Security Deposit (Refundable):</span>
-                    <span style={{ fontWeight: 600 }}>₹{securityDeposit.toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', borderTop: '1px dotted var(--border)', paddingTop: '6px', marginTop: '4px' }}>
-                    <span>Grand Total:</span>
-                    <span>₹{grandTotal.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-outline" onClick={() => { setShowBookVehicle(false); setSelectedCustomerForBooking(null); }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? <Loader size={16} className="spinner" /> : 'Confirm Booking'}
                 </button>
               </div>
             </form>
