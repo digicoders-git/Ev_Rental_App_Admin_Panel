@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Calendar, Search, Eye, CheckCircle, XCircle, Clock,
-  Car, User, CreditCard, X, IndianRupee, Ban, CircleCheck,
-  Activity, Loader, AlertTriangle, CalendarDays, CheckCircle2, Plus, Trash2, AlertOctagon
-, Receipt, Download, RefreshCw} from 'lucide-react';
-import { getFranchiseBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, returnVehicle, setupInstallments, payInstallment, addDamageCharge , getInvoiceByBooking, changeBookingVehicle, getMyFranchiseVehicles } from '../../services/apiServices';
+  Car, User, CreditCard, X, Ban, CircleCheck,
+  Activity, Loader, AlertTriangle, CalendarDays, CheckCircle2, AlertOctagon,
+  Receipt, Download, RefreshCw, Info
+} from 'lucide-react';
+import { getFranchiseBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, returnVehicle, payInstallment, addDamageCharge , getInvoiceByBooking, changeBookingVehicle, getMyFranchiseVehicles } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const STATUS_CONFIG = {
@@ -27,8 +28,6 @@ const FRides = () => {
   const [page, setPage] = useState(1);
   const [confirmAction, setConfirmAction] = useState(null);
   const [installmentAmount, setInstallmentAmount] = useState('');
-  const [showInstallSetup, setShowInstallSetup] = useState(false);
-  const [installRows, setInstallRows] = useState([{ amount: '', due_date: '' }]);
   const [showDamageModal, setShowDamageModal] = useState(false);
   const [damageForm, setDamageForm] = useState({ description: '', amount: '' });
   const [damageBookingId, setDamageBookingId] = useState(null);
@@ -89,22 +88,6 @@ const FRides = () => {
     }, (err) => alert(`Error: ${err}`));
   };
 
-  const handleSetupInstallments = () => {
-    const valid = installRows.every(r => r.amount && r.due_date);
-    if (!valid) return alert('Sabhi installments ka amount aur due date bharo');
-    call(
-      () => setupInstallments(selected._id, installRows.map(r => ({ amount: parseFloat(r.amount), due_date: r.due_date }))),
-      (res) => {
-        fetchBookings();
-        setShowInstallSetup(false);
-        setInstallRows([{ amount: '', due_date: '' }]);
-        setSelected(prev => ({ ...prev, payment_installments: res.data.data }));
-        alert('Installment schedule saved!');
-      },
-      (err) => alert(`Error: ${err}`)
-    );
-  };
-
   const handlePayInstallment = (instId) => {
     call(
       () => payInstallment(selected._id, instId, {}),
@@ -112,10 +95,6 @@ const FRides = () => {
       (err) => alert(`Error: ${err}`)
     );
   };
-
-  const addRow = () => setInstallRows(r => [...r, { amount: '', due_date: '' }]);
-  const removeRow = (i) => setInstallRows(r => r.filter((_, idx) => idx !== i));
-  const updateRow = (i, f, v) => setInstallRows(r => r.map((row, idx) => idx === i ? { ...row, [f]: v } : row));
 
   const handleAddDamageCharge = () => {
     if (!damageForm.description.trim() || !damageForm.amount || Number(damageForm.amount) <= 0)
@@ -529,7 +508,7 @@ const FRides = () => {
                 <span style={{ fontWeight: 700, color: 'var(--primary)', fontFamily: 'monospace' }}>{selected.booking_id}</span>
                 <span className={`badge ${STATUS_CONFIG[selected.booking_status]?.cls}`}>{STATUS_CONFIG[selected.booking_status]?.label}</span>
               </div>
-              <button className="btn-icon" onClick={() => { setSelected(null); setShowInstallSetup(false); setInstallRows([{ amount: '', due_date: '' }]); setShowSwapModal(false); }}><X size={20} /></button>
+              <button className="btn-icon" onClick={() => { setSelected(null); setShowSwapModal(false); }}><X size={20} /></button>
             </div>
             <div className="modal-body">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -633,90 +612,51 @@ const FRides = () => {
                 </div>
               </div>
 
-              {/* Installment Schedule */}
-              {((selected.grand_total||0) - (selected.total_paid||0)) > 0 && (
+              {/* Installment Schedule - Auto Generated, Read Only */}
+              {selected.payment_installments?.length > 0 && (
                 <div style={{ marginTop: '1rem', border: '1px solid var(--border-light)', borderRadius: '8px', overflow: 'hidden' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'var(--surface)', borderBottom: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.04em' }}>
-                      <CalendarDays size={13} /> Installment Schedule
+                      <CalendarDays size={13} /> Auto-Scheduled Installments
                     </div>
-                    <button className="btn btn-outline btn-sm" onClick={() => { setShowInstallSetup(s => !s); setInstallRows([{ amount: '', due_date: '' }]); }}>
-                      <Plus size={13} /> {showInstallSetup ? 'Cancel' : 'Setup'}
-                    </button>
+                    <span style={{ fontSize: '0.72rem', background: '#dbeafe', color: '#1e40af', padding: '3px 10px', borderRadius: '20px', fontWeight: 600 }}>
+                      {selected.payment_installments.filter(i => i.status === 'paid').length}/{selected.payment_installments.length} Paid
+                    </span>
                   </div>
 
-                  {/* Setup form */}
-                  {showInstallSetup && (
-                    <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                      <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                        Due: ₹{((selected.grand_total||0)-(selected.total_paid||0)).toLocaleString()} — split into installments
-                      </p>
-                      {installRows.map((row, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', minWidth: '24px' }}>#{i+1}</span>
-                          <div className="inst-amount-field" style={{ flex: 1 }}>
-                            <span className="inst-prefix">₹</span>
-                            <input type="number" placeholder="Amount" value={row.amount}
-                              onChange={e => updateRow(i, 'amount', e.target.value)}
-                              className="inst-field-input" style={{ width: '100%' }} />
-                          </div>
-                          <input type="date" value={row.due_date}
-                            onChange={e => updateRow(i, 'due_date', e.target.value)}
-                            className="inst-date-input" style={{ flex: 1.2 }} />
-                          {installRows.length > 1 && (
-                            <button className="btn-icon" onClick={() => removeRow(i)}><Trash2 size={13} /></button>
-                          )}
+                  {selected.payment_installments.map((inst) => (
+                    <div key={inst._id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-light)',
+                      background: inst.status === 'paid' ? '#f0fdf4' : inst.status === 'overdue' ? '#fef2f2' : 'inherit'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: inst.status === 'paid' ? '#dcfce7' : inst.status === 'overdue' ? '#fee2e2' : '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 700, color: inst.status === 'paid' ? '#15803d' : inst.status === 'overdue' ? '#b91c1c' : '#1e40af', flexShrink: 0 }}>
+                          {inst.installment_no}
                         </div>
-                      ))}
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                        <button className="btn btn-outline btn-sm" onClick={addRow}><Plus size={13} /> Add Row</button>
-                        <button className="btn btn-primary btn-sm" onClick={handleSetupInstallments} disabled={loading}>Save Schedule</button>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>₹{inst.amount.toLocaleString()}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Due: {fmtDate(inst.due_date)}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span className={`badge badge-icon ${inst.status === 'paid' ? 'badge-success' : inst.status === 'overdue' ? 'badge-danger' : 'badge-warning'}`}>
+                          {inst.status === 'paid' ? <CheckCircle2 size={11} /> : <Clock size={11} />} {inst.status}
+                        </span>
+                        {inst.status === 'paid' && inst.paid_date && (
+                          <span style={{ fontSize: '0.72rem', color: '#10b981' }}>Paid {fmtDate(inst.paid_date)}</span>
+                        )}
+                        {inst.status !== 'paid' && (
+                          <span style={{ fontSize: '0.72rem', color: '#b45309', background: '#fef3c7', padding: '3px 8px', borderRadius: '4px', border: '1px solid #fde68a', fontWeight: 600 }}>⏳ Driver pays online</span>
+                        )}
                       </div>
                     </div>
-                  )}
+                  ))}
 
-                  {/* Installment list */}
-                  {!showInstallSetup && selected.payment_installments?.length > 0 && (
-                    <div>
-                      {selected.payment_installments.map((inst) => (
-                        <div key={inst._id} style={{
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-light)',
-                          background: inst.status === 'paid' ? '#f0fdf4' : inst.status === 'overdue' ? '#fef2f2' : 'inherit'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)' }}>#{inst.installment_no}</span>
-                            <div>
-                              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>₹{inst.amount.toLocaleString()}</div>
-                              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Due: {fmtDate(inst.due_date)}</div>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span className={`badge badge-icon ${ inst.status === 'paid' ? 'badge-success' : inst.status === 'overdue' ? 'badge-danger' : 'badge-warning' }`}>
-                              {inst.status === 'paid' ? <CheckCircle2 size={11} /> : <Clock size={11} />} {inst.status}
-                            </span>
-                            {inst.status === 'paid' && inst.paid_date && (
-                              <span style={{ fontSize: '0.72rem', color: '#10b981' }}>Paid {fmtDate(inst.paid_date)}</span>
-                            )}
-                            {inst.status !== 'paid' && (
-                              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#b45309', background: '#fef3c7', padding: '3px 8px', borderRadius: '4px', border: '1px solid #fde68a' }}>⏳ Pending Online Payment</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {!showInstallSetup && (!selected.payment_installments || selected.payment_installments.length === 0) && (
-                    <p style={{ padding: '1rem', margin: 0, fontSize: '0.82rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                      No installment schedule set. Click Setup to create one.
-                    </p>
-                  )}
-
-                  {/* Online payment policy notice */}
-                  <div style={{ padding: '0.75rem 1rem', background: '#eff6ff', borderTop: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 600 }}>
-                      ℹ️ Online Payment Requirement: Drivers must pay weekly rent strictly online via Driver App (UPI, Card, Net Banking). Franchisees cannot manually add rent or receive cash payments.
+                  <div style={{ padding: '0.75rem 1rem', background: '#eff6ff', borderTop: '1px solid #bfdbfe', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <Info size={14} color="#1e40af" style={{ flexShrink: 0, marginTop: '1px' }} />
+                    <span style={{ fontSize: '0.78rem', color: '#1e40af', lineHeight: 1.5 }}>
+                      Installments are <strong>auto-generated</strong> by the system at booking time. Drivers pay weekly rent via Driver App (UPI / Card / Net Banking). Franchisees cannot modify installments.
                     </span>
                   </div>
                 </div>
@@ -770,7 +710,7 @@ const FRides = () => {
                   <CircleCheck size={15} /> Mark Completed
                 </button>
               )}
-              <button className="btn btn-outline" onClick={() => { setSelected(null); setShowInstallSetup(false); setInstallRows([{ amount: '', due_date: '' }]); }}>Close</button>
+              <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
             </div>
           </div>
         </div>,
