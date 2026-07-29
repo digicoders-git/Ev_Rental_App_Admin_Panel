@@ -6,7 +6,7 @@ import {
   Activity, Loader, AlertTriangle, CalendarDays, CheckCircle2, AlertOctagon,
   Receipt, Download, RefreshCw, Info
 } from 'lucide-react';
-import { getFranchiseBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, returnVehicle, payInstallment, addDamageCharge , getInvoiceByBooking, changeBookingVehicle, getMyFranchiseVehicles } from '../../services/apiServices';
+import { getFranchiseBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, returnVehicle, payInstallment, addDamageCharge , getInvoiceByBooking, changeBookingVehicle, getMyFranchiseVehicles, extendBooking } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const STATUS_CONFIG = {
@@ -38,6 +38,9 @@ const FRides = () => {
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [selectedSwapVehicle, setSelectedSwapVehicle] = useState('');
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [extendForm, setExtendForm] = useState({ extra_days: 7, auto_renew: false });
+  const [extendBookingId, setExtendBookingId] = useState(null);
   const { loading, call } = useApi();
 
   useEffect(() => { fetchBookings(); }, []);
@@ -147,6 +150,21 @@ const FRides = () => {
       setSelected(null);
       fetchBookings();
     }, (err) => alert(err || 'Failed to swap vehicle'));
+  };
+
+  const handleExtendPlan = async (e) => {
+    e.preventDefault();
+    if (!extendForm.extra_days || extendForm.extra_days <= 0) return alert('Please enter valid days');
+    try {
+      await extendBooking(extendBookingId, extendForm.extra_days, extendForm.auto_renew);
+      alert('Plan extended successfully!');
+      setShowExtendModal(false);
+      setExtendForm({ extra_days: 7, auto_renew: false });
+      setSelected(null);
+      fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to extend plan');
+    }
   };
 
   const printInvoice = (inv) => {
@@ -465,8 +483,14 @@ const FRides = () => {
                             </>
                           )}
                           {(b.booking_status === 'confirmed' || b.booking_status === 'ongoing') && (
-                            <button className="btn-icon" title="Mark Complete" style={{ color: '#8b5cf6' }}
-                              onClick={() => setConfirmAction({ id: b._id, action: 'complete', label: 'Complete' })}><CircleCheck size={15} /></button>
+                            <>
+                              <button className="btn-icon" title="Mark Complete" style={{ color: '#8b5cf6' }}
+                                onClick={() => setConfirmAction({ id: b._id, action: 'complete', label: 'Complete' })}><CircleCheck size={15} /></button>
+                              <button className="btn-icon" title="Extend Plan" style={{ color: '#3b82f6' }}
+                                onClick={() => { setExtendBookingId(b._id); setExtendForm({ extra_days: 7, auto_renew: b.auto_renew || false }); setShowExtendModal(true); }}>
+                                <Clock size={15} />
+                              </button>
+                            </>
                           )}
                           <button className="btn-icon" title="Add Extra Charge" style={{ color: '#f59e0b' }}
                             onClick={() => { setDamageBookingId(b._id); setDamageForm({ description: '', amount: '' }); setShowDamageModal(true); }}>
@@ -708,6 +732,12 @@ const FRides = () => {
                 <button className="btn btn-primary"
                   onClick={() => { setConfirmAction({ id: selected._id, action: 'complete', label: 'Complete' }); setSelected(null); }}>
                   <CircleCheck size={15} /> Mark Completed
+                </button>
+              )}
+              {(selected.booking_status === 'confirmed' || selected.booking_status === 'ongoing') && (
+                <button className="btn btn-outline" style={{ color: '#3b82f6', borderColor: '#3b82f6' }}
+                  onClick={() => { setExtendBookingId(selected._id); setExtendForm({ extra_days: 7, auto_renew: selected.auto_renew || false }); setSelected(null); setShowExtendModal(true); }}>
+                  <Clock size={15} /> Extend Plan
                 </button>
               )}
               <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>
@@ -1077,6 +1107,57 @@ const FRides = () => {
       document.body
     )}
 
+      {/* Extend Plan Modal */}
+      {showExtendModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowExtendModal(false)}>
+          <div className="modal-content bk-modal" style={{ maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Extend Plan</h3>
+              <button className="btn-icon" onClick={() => setShowExtendModal(false)}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleExtendPlan}>
+              <div className="modal-body" style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Extend By (Days)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                    value={extendForm.extra_days}
+                    onChange={(e) => setExtendForm({ ...extendForm, extra_days: e.target.value })}
+                  />
+                  <small style={{ color: '#64748b', display: 'block', marginTop: '5px' }}>
+                    Extra cost aur installment automatically add ho jaayega plan type ke basis par.
+                  </small>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', padding: '15px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <input
+                    type="checkbox"
+                    id="fAutoRenewCb"
+                    checked={extendForm.auto_renew}
+                    onChange={(e) => setExtendForm({ ...extendForm, auto_renew: e.target.checked })}
+                    style={{ width: '18px', height: '18px' }}
+                  />
+                  <label htmlFor="fAutoRenewCb" style={{ fontWeight: 600, cursor: 'pointer', margin: 0 }}>
+                    Enable Auto-Renew
+                  </label>
+                </div>
+                <small style={{ color: '#64748b', display: 'block', marginTop: '5px', marginLeft: '5px' }}>
+                  Enable hone par plan automatically renew hoga expire hone se pehle. Driver ko kuch nahi karna padega.
+                </small>
+              </div>
+              <div className="modal-footer" style={{ padding: '15px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn btn-outline" onClick={() => setShowExtendModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Clock size={16} /> Confirm Extend
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
