@@ -185,9 +185,15 @@ const Bookings = () => {
         duration: calculateDuration(b.start_date, b.end_date),
         amount: b.grand_total || 0,
         total_paid: b.total_paid || 0,
-        due_amount: b.due_amount !== undefined ? b.due_amount : (b.grand_total - (b.total_paid || 0)),
-        payment_status: b.payment_status || 'pending',
-        paid: b.payment_status === 'paid',
+        due_amount: Math.max(0, Math.round((b.grand_total || 0) - (b.total_paid || 0))),
+        payment_status: (() => {
+          const gt = Math.round(b.grand_total || 0);
+          const tp = Math.round(b.total_paid || 0);
+          if (gt > 0 && tp >= gt) return 'paid';
+          if (tp > 0 && tp < gt) return 'partially_paid';
+          return 'pending';
+        })(),
+        paid: Math.round(b.total_paid || 0) >= Math.round(b.grand_total || 0) && (b.grand_total || 0) > 0,
         pickup: b.pickup_location || 'Hub Pickup',
         next_installment: b.next_installment || null,
         raw: b
@@ -793,8 +799,12 @@ const Bookings = () => {
                         <span className={`badge badge-icon ${STATUS_CONFIG[b.status].cls}`}>
                           {STATUS_CONFIG[b.status].icon} {b.status}
                         </span>
-                        <span className={`badge badge-icon ${PAYMENT_STATUS_CONFIG[b.payment_status].cls}`} style={{ marginTop: '4px', fontSize: '10px' }}>
-                          {PAYMENT_STATUS_CONFIG[b.payment_status].label}
+                        <span className={`badge badge-icon ${
+                          b.payment_status === 'paid' ? 'badge-success' :
+                          b.payment_status === 'partially_paid' ? 'badge-info' : 'badge-warning'
+                        }`} style={{ marginTop: '4px', fontSize: '10px' }}>
+                          {b.payment_status === 'paid' ? <CheckCircle size={12} /> : b.payment_status === 'partially_paid' ? <Activity size={12} /> : <Clock size={12} />}
+                          {b.payment_status === 'paid' ? 'Paid' : b.payment_status === 'partially_paid' ? 'Partial' : 'Pending'}
                         </span>
                         {b.raw?.return_status === 'submission_pending' && (
                           <span className="badge badge-warning" style={{ marginTop: '4px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>

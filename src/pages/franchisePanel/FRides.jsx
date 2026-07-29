@@ -388,7 +388,14 @@ const FRides = () => {
                   </td></tr>
                 ) : paginated.map(b => {
                   const cfg = STATUS_CONFIG[b.booking_status] || STATUS_CONFIG.pending;
-                  const dueAmt = (b.grand_total || 0) - (b.total_paid || 0);
+                  const dueAmt = Math.max(0, Math.round((b.grand_total || 0) - (b.total_paid || 0)));
+                  const payStatus = (() => {
+                    const gt = Math.round(b.grand_total || 0);
+                    const tp = Math.round(b.total_paid || 0);
+                    if (gt > 0 && tp >= gt) return 'paid';
+                    if (tp > 0) return 'partially_paid';
+                    return 'pending';
+                  })();
                   const diffHrs = Math.abs(new Date(b.end_date) - new Date(b.start_date)) / 36e5;
                   const duration = diffHrs < 24 ? `${Math.ceil(diffHrs)} hrs` : `${Math.ceil(diffHrs / 24)} days`;
                   return (
@@ -416,13 +423,17 @@ const FRides = () => {
                           <span className="badge badge-danger" style={{ fontSize: '0.75rem', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                             ❌ Failed
                           </span>
-                        ) : dueAmt <= 0 && (b.total_paid || 0) > 0 ? (
+                        ) : payStatus === 'paid' ? (
                           <span className="badge badge-success" style={{ fontSize: '0.75rem', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' }}>
-                            ✅ Paid Online
+                            ✅ Paid
+                          </span>
+                        ) : payStatus === 'partially_paid' ? (
+                          <span className="badge badge-info" style={{ fontSize: '0.75rem', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dbeafe', color: '#1e40af', border: '1px solid #bfdbfe' }}>
+                            ⏳ Partial
                           </span>
                         ) : (
                           <span className="badge badge-warning" style={{ fontSize: '0.75rem', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
-                            ⏳ Pending
+                            ⏳ Payment Pending
                           </span>
                         )}
                       </td>

@@ -33,11 +33,14 @@ const FEarnings = () => {
     </div>
   );
 
+  const SERVICE_FEE_PERCENT = 8;
   const stats = revenue?.stats || {};
   const totalRevenue = stats.totalRevenue || 0;
   const totalBookings = stats.totalBookings || 0;
   const totalLateFees = stats.totalLateFees || 0;
   const avgBookingValue = Math.round(stats.averageBookingValue || 0);
+  const serviceFeeAmount = Number((totalRevenue * SERVICE_FEE_PERCENT / 100).toFixed(2));
+  const netRevenue = Number((totalRevenue - serviceFeeAmount).toFixed(2));
 
   return (
     <div className="fade-in">
@@ -48,22 +51,22 @@ const FEarnings = () => {
         </div>
       </div>
 
-      {/* Main Revenue Card */}
-      <div className="card" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', marginBottom: '1.5rem', border: 'none' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <p style={{ opacity: 0.9, color: 'white', marginBottom: '0.5rem' }}>Total Revenue (All Time)</p>
-            <h1 style={{ color: 'white', fontSize: '2.5rem', margin: 0 }}>₹{totalRevenue.toLocaleString()}</h1>
-            <p style={{ color: 'rgba(255,255,255,0.8)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-              From {totalBookings} completed & paid rides
-            </p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '1rem', borderRadius: '12px', textAlign: 'center' }}>
-              <TrendingUp size={32} color="white" />
-              <p style={{ color: 'white', margin: '4px 0 0', fontSize: '0.85rem' }}>Active Franchise</p>
-            </div>
-          </div>
+      {/* Revenue Breakdown Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div className="card" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', color: '#fff', border: 'none' }}>
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px 0' }}>Total Revenue (Gross)</p>
+          <h2 style={{ color: '#fff', fontSize: '1.8rem', margin: '0 0 4px 0' }}>₹{totalRevenue.toLocaleString()}</h2>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem', margin: 0 }}>From {totalBookings} rides</p>
+        </div>
+        <div className="card" style={{ background: '#fff', border: '1px solid #fecaca' }}>
+          <p style={{ color: '#64748b', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px 0' }}>Service Fee ({SERVICE_FEE_PERCENT}%)</p>
+          <h2 style={{ color: '#ef4444', fontSize: '1.8rem', margin: '0 0 4px 0' }}>₹{serviceFeeAmount.toLocaleString()}</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: 0 }}>Platform deduction</p>
+        </div>
+        <div className="card" style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', border: '2px solid #86efac' }}>
+          <p style={{ color: '#15803d', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 6px 0', fontWeight: 700 }}>Net Revenue ✔</p>
+          <h2 style={{ color: '#15803d', fontSize: '1.8rem', margin: '0 0 4px 0' }}>₹{netRevenue.toLocaleString()}</h2>
+          <p style={{ color: '#166534', fontSize: '0.78rem', margin: 0 }}>Your actual earnings after deduction</p>
         </div>
       </div>
 

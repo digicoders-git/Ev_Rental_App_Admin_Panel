@@ -83,7 +83,9 @@ const Settlements = () => {
               <tr style={{ borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>
                 <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Franchisee</th>
                 <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Date &amp; Time</th>
-                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Amount</th>
+                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Gross Amount</th>
+                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Service Fee (8%)</th>
+                <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Net Payout</th>
                 <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Status</th>
                 <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Note</th>
                 <th style={{ padding: '12px 16px', color: '#475569', fontWeight: 600 }}>Payment Proof</th>
@@ -114,8 +116,16 @@ const Settlements = () => {
                       <div>{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                       <div style={{ color: '#94a3b8' }}>{date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
                     </td>
-                    <td style={{ padding: '12px 16px', fontWeight: 700, color: '#10b981', fontSize: '1rem' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 700, color: '#3b82f6', fontSize: '0.95rem' }}>
                       ₹{(amount || 0).toLocaleString('en-IN')}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#ef4444', fontSize: '0.95rem' }}>
+                      ₹{Number((amount * 0.08).toFixed(2)).toLocaleString('en-IN')}
+                      <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 400 }}>8% deduction</div>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontWeight: 700, color: '#10b981', fontSize: '1rem' }}>
+                      ₹{Number((amount * 0.92).toFixed(2)).toLocaleString('en-IN')}
+                      <div style={{ fontSize: '11px', color: '#166534', fontWeight: 400 }}>actual payout</div>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <span style={{ background: `${statusColor}15`, color: statusColor, padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600 }}>

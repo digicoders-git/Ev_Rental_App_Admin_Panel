@@ -5,7 +5,7 @@ import { getFranchiseWallet, requestWithdrawal, getFranchiseWithdrawals, getFran
 import { Wallet, ArrowUpRight, ArrowDownRight, IndianRupee, FileText, CheckCircle, Clock, XCircle, Download, X } from 'lucide-react';
 
 const FWallet = () => {
-  const [wallet, setWallet] = useState({ balance: 0, totalRevenue: 0, totalWithdrawn: 0, pendingWithdrawn: 0, transactions: [] });
+  const [wallet, setWallet] = useState({ balance: 0, totalGrossRevenue: 0, serviceFee: 0, serviceFeePercent: 8, totalNetRevenue: 0, totalWithdrawn: 0, pendingWithdrawn: 0, transactions: [] });
   const [withdrawals, setWithdrawals] = useState([]);
   const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
@@ -102,45 +102,48 @@ const FWallet = () => {
 
       {/* Metrics Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        {/* Available Balance (Main) */}
+        {/* Available Balance */}
         <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '16px', padding: '1.5rem', color: '#fff', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <p style={{ color: '#94a3b8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Available Balance</p>
-            <h2 style={{ fontSize: '2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '4px', color: '#fff' }}>
-              ₹{wallet.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+            <h2 style={{ fontSize: '2rem', fontWeight: 700, margin: 0, color: '#fff' }}>
+              ₹{(wallet.balance || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
             </h2>
           </div>
-          <button onClick={() => setShowWithdrawModal(true)} style={{ background: '#6366f1', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.9rem', transition: 'all 0.2s', marginTop: '1rem', width: '100%' }}>
+          <button onClick={() => setShowWithdrawModal(true)} style={{ background: '#6366f1', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '0.9rem', marginTop: '1rem', width: '100%' }}>
             <ArrowUpRight size={18} /> Weekly Settlements
           </button>
         </div>
 
         {/* Total Revenue (Gross) */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Total Revenue</p>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#3b82f6' }}>
-            ₹{(wallet.totalRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Total Revenue (Gross)</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0 0 4px 0', color: '#3b82f6' }}>
+            ₹{(wallet.totalGrossRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </h2>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Total collected from riders</p>
         </div>
 
         {/* Service Fee */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Service Fee (8%)</p>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#ef4444' }}>
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #fecaca', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Service Fee ({wallet.serviceFeePercent || 8}%)</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0 0 4px 0', color: '#ef4444' }}>
             ₹{(wallet.serviceFee || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </h2>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Platform deduction @ {wallet.serviceFeePercent || 8}%</p>
         </div>
 
         {/* Net Revenue */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Net Revenue</p>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#8b5cf6' }}>
-            ₹{(wallet.netRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+        <div style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', borderRadius: '16px', padding: '1.5rem', border: '2px solid #86efac', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+          <p style={{ color: '#15803d', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0', fontWeight: 700 }}>Net Revenue ✔</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: '0 0 4px 0', color: '#15803d' }}>
+            ₹{(wallet.totalNetRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </h2>
+          <p style={{ margin: 0, fontSize: '0.75rem', color: '#166534' }}>After {wallet.serviceFeePercent || 8}% deduction — your actual earnings</p>
         </div>
 
         {/* Total Withdrawn */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
           <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Total Withdrawn</p>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#10b981' }}>
             ₹{(wallet.totalWithdrawn || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
@@ -148,7 +151,7 @@ const FWallet = () => {
         </div>
 
         {/* Pending Withdrawals */}
-        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ background: '#fff', borderRadius: '16px', padding: '1.5rem', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
           <p style={{ color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Pending Withdrawals</p>
           <h2 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0, color: '#f59e0b' }}>
             ₹{(wallet.pendingWithdrawn || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
