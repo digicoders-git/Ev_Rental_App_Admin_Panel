@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { io } from 'socket.io-client';
 import { getFranchiseWallet, requestWithdrawal, getFranchiseWithdrawals, getFranchiseProfile } from '../../services/apiServices';
 import { Wallet, ArrowUpRight, ArrowDownRight, IndianRupee, FileText, CheckCircle, Clock, XCircle, Download, X } from 'lucide-react';
 
@@ -13,6 +14,7 @@ const FWallet = () => {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
+  const socketRef = useRef(null);
 
   const fetchData = async () => {
     try {
@@ -35,6 +37,23 @@ const FWallet = () => {
 
   useEffect(() => {
     fetchData();
+
+    // Connect socket and join franchise room
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const franchiseId = userData._id;
+
+    const socket = io(BASE_URL, { transports: ['websocket'] });
+    socketRef.current = socket;
+
+    if (franchiseId) socket.emit('join', franchiseId);
+
+    socket.on('withdrawal_status_updated', () => {
+      fetchData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const handleWithdraw = async (e) => {
@@ -59,9 +78,14 @@ const FWallet = () => {
 
   const getStatusConfig = (status) => {
     switch (status) {
-      case 'approved': return { color: '#10b981', icon: <CheckCircle size={14} />, label: 'Approved' };
-      case 'rejected': return { color: '#ef4444', icon: <XCircle size={14} />, label: 'Rejected' };
-      default: return { color: '#f59e0b', icon: <Clock size={14} />, label: 'Pending' };
+      case 'approved':
+      case 'released':
+      case 'completed':
+      case 'paid':    return { color: '#10b981', icon: <CheckCircle size={14} />, label: 'Released' };
+      case 'processing': return { color: '#3b82f6', icon: <Clock size={14} />, label: 'Processing' };
+      case 'rejected':
+      case 'failed':  return { color: '#ef4444', icon: <XCircle size={14} />, label: 'Rejected' };
+      default:        return { color: '#f59e0b', icon: <Clock size={14} />, label: 'Pending' };
     }
   };
 
@@ -141,9 +165,12 @@ const FWallet = () => {
         </div>
       </div>
 
-      <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
-        <button onClick={() => setActiveTab('transactions')} style={{ background: activeTab === 'transactions' ? 'var(--primary)' : 'transparent', color: activeTab === 'transactions' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Earnings History</button>
-        <button onClick={() => setActiveTab('withdrawals')} style={{ background: activeTab === 'withdrawals' ? 'var(--primary)' : 'transparent', color: activeTab === 'withdrawals' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Weekly Settlements</button>
+      <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={() => setActiveTab('transactions')} style={{ background: activeTab === 'transactions' ? 'var(--primary)' : 'transparent', color: activeTab === 'transactions' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Earnings History</button>
+          <button onClick={() => setActiveTab('withdrawals')} style={{ background: activeTab === 'withdrawals' ? 'var(--primary)' : 'transparent', color: activeTab === 'withdrawals' ? '#fff' : 'var(--text)', border: 'none', padding: '8px 16px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>Weekly Settlements</button>
+        </div>
+        <button onClick={fetchData} style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)', padding: '6px 14px', borderRadius: '6px', fontWeight: 500, cursor: 'pointer', fontSize: '0.85rem' }}>🔄 Refresh</button>
       </div>
 
       {activeTab === 'transactions' && (
