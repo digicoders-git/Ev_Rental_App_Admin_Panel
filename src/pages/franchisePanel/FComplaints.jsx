@@ -4,10 +4,8 @@ import {
   Headphones, Search, Loader, AlertTriangle, X, CheckCircle, Clock,
   MessageSquare, Eye, Car, User, Calendar, XCircle
 } from 'lucide-react';
-import { getFranchiseTickets } from '../../services/apiServices';
-import api from '../../services/api';
+import { getFranchiseTickets, updateFranchiseTicket } from '../../services/apiServices';
 import '../Complaints.css';
-
 const STATUS_CFG = {
   'Open':        { cls: 'badge-danger',  icon: <AlertTriangle size={11} /> },
   'In Progress': { cls: 'badge-warning', icon: <Clock size={11} /> },
@@ -31,6 +29,8 @@ const FComplaints = () => {
   const [activeTab, setActiveTab]   = useState('All');
   const [search, setSearch]         = useState('');
   const [selected, setSelected]     = useState(null);
+  const [updating, setUpdating]     = useState(false);
+  const [updateForm, setUpdateForm] = useState({ status: '', admin_reply: '' });
 
   // Ticket submission state (for raising complaints to Super Admin)
   const [form, setForm] = useState({ subject: '', message: '', category: 'booking' });
@@ -57,7 +57,7 @@ const FComplaints = () => {
         category: t.category || 'General',
         subject: t.subject || '',
         description: t.description || '',
-        bookingId: t.booking || 'N/A',
+        bookingId: t.booking?.booking_id || t.booking?._id || t.booking || 'N/A',
         vehicle: t.vehicle_number || t.vehicle?.registration_number || 'N/A',
         priority: t.priority || 'medium',
         status: t.status === 'open' ? 'Open' : t.status === 'in-progress' ? 'In Progress' : t.status === 'resolved' ? 'Resolved' : 'Closed',
@@ -95,6 +95,22 @@ const FComplaints = () => {
       c.vehicle.toLowerCase().includes(q)
     );
   });
+
+  const handleUpdateTicket = async () => {
+    if (!selected) return;
+    setUpdating(true);
+    try {
+      await updateFranchiseTicket(selected.id, {
+        status: updateForm.status || selected.rawStatus,
+        admin_reply: updateForm.admin_reply
+      });
+      await fetchDriverComplaints();
+      setSelected(null);
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to update ticket');
+    }
+    setUpdating(false);
+  };
 
   const handleSubmit = async () => {
     if (!form.subject.trim() || !form.message.trim()) {
@@ -390,7 +406,7 @@ const FComplaints = () => {
 
       {/* Detail Modal */}
       {selected && createPortal(
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
+        <div className="modal-overlay" onClick={() => { setSelected(null); setUpdateForm({ status: '', admin_reply: '' }); }}>
           <div className="modal-content cmp-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div className="cmp-modal-head">
@@ -404,7 +420,7 @@ const FComplaints = () => {
                 <span className={`badge badge-icon ${STATUS_CFG[selected.status]?.cls || 'badge-info'}`}>
                   {STATUS_CFG[selected.status]?.icon} {selected.status}
                 </span>
-                <button className="btn-icon" onClick={() => setSelected(null)}><X size={20} /></button>
+                <button className="btn-icon" onClick={() => { setSelected(null); setUpdateForm({ status: '', admin_reply: '' }); }}><X size={20} /></button>
               </div>
             </div>
 
@@ -426,7 +442,7 @@ const FComplaints = () => {
               <div className="cmp-thread">
                 <h4>Replies & Updates ({selected.replies.length})</h4>
                 {selected.replies.length === 0 ? (
-                  <div className="cmp-no-replies">No reply from Super Admin yet.</div>
+                  <div className="cmp-no-replies">No reply yet.</div>
                 ) : (
                   selected.replies.map((r, idx) => (
                     <div key={idx} className="cmp-reply-bubble admin">
@@ -438,6 +454,39 @@ const FComplaints = () => {
                     </div>
                   ))
                 )}
+              </div>
+
+              {/* Franchise Update Section */}
+              <div style={{ marginTop: '1.25rem', padding: '1rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.95rem' }}>Update Ticket</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '4px', color: 'var(--text-secondary)' }}>Change Status</label>
+                    <select
+                      value={updateForm.status || selected.rawStatus}
+                      onChange={e => setUpdateForm(p => ({ ...p, status: e.target.value }))}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: '#fff' }}
+                    >
+                      <option value="open">Open</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '4px', color: 'var(--text-secondary)' }}>Reply / Note (Optional)</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Add a note or reply for the customer..."
+                      value={updateForm.admin_reply}
+                      onChange={e => setUpdateForm(p => ({ ...p, admin_reply: e.target.value }))}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', resize: 'vertical', fontFamily: 'inherit' }}
+                    />
+                  </div>
+                  <button className="btn btn-primary" onClick={handleUpdateTicket} disabled={updating}>
+                    {updating ? <><Loader size={15} className="spinner" style={{ display: 'inline-block', marginRight: '6px' }} />Updating...</> : 'Update Ticket'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

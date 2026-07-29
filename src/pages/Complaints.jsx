@@ -50,7 +50,7 @@ const Complaints = () => {
         category: t.category || 'General',
         subject: t.subject || '',
         description: t.description || '',
-        bookingId: t.booking || 'N/A',
+        bookingId: t.booking?.booking_id || t.booking?._id || t.booking || 'N/A',
         vehicle: t.vehicle_number || t.vehicle?.registration_number || 'N/A',
         franchise: t.franchise_name || t.franchise?.store_name || 'Direct / Super Admin',
         priority: t.priority || 'medium',

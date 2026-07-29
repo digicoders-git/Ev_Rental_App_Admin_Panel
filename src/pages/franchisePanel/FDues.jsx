@@ -112,9 +112,22 @@ const FDues = () => {
                     <td style={{ color: '#10b981', fontWeight: 600 }}>₹{(d.total_paid || 0).toLocaleString()}</td>
                     <td style={{ color: '#ef4444', fontWeight: 700, fontSize: '1rem' }}>₹{d.due_amount.toLocaleString()}</td>
                     <td>
-                      <span className={`badge ${d.isOverdue ? 'badge-danger' : 'badge-warning'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        {d.isOverdue ? '⚠ Overdue (Online Only)' : '⏳ Pending Online Pay'}
-                      </span>
+                      {(() => {
+                        const isInstallment = d.payment_method === 'installments';
+                        const allInst = d.payment_installments || [];
+                        const allPaid = isInstallment
+                          ? allInst.length > 0 && allInst.every(i => i.status === 'paid')
+                          : d.due_amount <= 0;
+                        return allPaid ? (
+                          <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' }}>
+                            ✅ Paid
+                          </span>
+                        ) : (
+                          <span className={`badge ${d.isOverdue ? 'badge-danger' : 'badge-warning'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {d.isOverdue ? '⚠ Overdue' : '⏳ Payment Pending'}
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}

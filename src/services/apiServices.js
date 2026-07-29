@@ -132,6 +132,7 @@ export const getFleetTracking    = ()     => api.get('/tracking/franchise/fleet'
 export const createTicket        = (data) => api.post('/support/ticket', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getMyTickets        = ()     => api.get('/support/my-tickets');
 export const getFranchiseTickets = ()     => api.get('/support/franchise/tickets');
+export const updateFranchiseTicket = (id, data) => api.put(`/support/franchise/ticket/${id}`, data);
 export const getAllTickets       = ()     => api.get('/support/admin/all');
 export const updateTicket        = (id, data) => api.put(`/support/admin/ticket/${id}`, data);
 
