@@ -15,9 +15,10 @@ const STATUS_CONFIG = {
   completed: { cls: 'badge-secondary', label: 'Completed', icon: <CheckCircle size={12} /> },
   pending:   { cls: 'badge-warning', label: 'Pending',   icon: <Clock size={12} /> },
   cancelled: { cls: 'badge-danger',  label: 'Cancelled', icon: <Ban size={12} /> },
+  partial:   { cls: 'badge-warning', label: 'Partial',   icon: <Clock size={12} /> },
 };
 
-const TABS = ['All', 'pending', 'confirmed', 'ongoing', 'completed', 'cancelled'];
+const TABS = ['All', 'pending', 'confirmed', 'ongoing', 'completed', 'cancelled', 'partial'];
 const PAGE_SIZE = 10;
 
 const FRides = () => {
@@ -52,7 +53,10 @@ const FRides = () => {
   };
 
   const filtered = bookings.filter(b => {
-    const matchTab = activeTab === 'All' || b.booking_status === activeTab;
+    const isPartial = Math.round(b.total_paid || 0) > 0 && Math.round(b.total_paid || 0) < Math.round(b.grand_total || 0);
+    const matchTab = activeTab === 'All' ? true 
+                     : activeTab === 'partial' ? isPartial
+                     : b.booking_status === activeTab;
     const q = search.toLowerCase();
     const matchSearch =
       (b.booking_id || '').toLowerCase().includes(q) ||
@@ -65,7 +69,9 @@ const FRides = () => {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const counts = TABS.reduce((acc, t) => {
-    acc[t] = t === 'All' ? bookings.length : bookings.filter(b => b.booking_status === t).length;
+    acc[t] = t === 'All' ? bookings.length 
+             : t === 'partial' ? bookings.filter(b => Math.round(b.total_paid || 0) > 0 && Math.round(b.total_paid || 0) < Math.round(b.grand_total || 0)).length
+             : bookings.filter(b => b.booking_status === t).length;
     return acc;
   }, {});
 
