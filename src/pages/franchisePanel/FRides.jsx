@@ -492,10 +492,6 @@ const FRides = () => {
                             <>
                               <button className="btn-icon" title="Mark Complete" style={{ color: '#8b5cf6' }}
                                 onClick={() => setConfirmAction({ id: b._id, action: 'complete', label: 'Complete' })}><CircleCheck size={15} /></button>
-                              <button className="btn-icon" title="Extend Plan" style={{ color: '#3b82f6' }}
-                                onClick={() => { setExtendBookingId(b._id); setExtendForm({ extra_weeks: 1, auto_renew: b.auto_renew || false }); setShowExtendModal(true); }}>
-                                <Clock size={15} />
-                              </button>
                             </>
                           )}
                           <button className="btn-icon" title="Add Extra Charge" style={{ color: '#f59e0b' }}
@@ -738,12 +734,6 @@ const FRides = () => {
                 <button className="btn btn-primary"
                   onClick={() => { setConfirmAction({ id: selected._id, action: 'complete', label: 'Complete' }); setSelected(null); }}>
                   <CircleCheck size={15} /> Mark Completed
-                </button>
-              )}
-              {(selected.booking_status === 'confirmed' || selected.booking_status === 'ongoing') && (
-                <button className="btn btn-outline" style={{ color: '#3b82f6', borderColor: '#3b82f6' }}
-                  onClick={() => { setExtendBookingId(selected._id); setExtendForm({ extra_weeks: 1, auto_renew: selected.auto_renew || false }); setSelected(null); setShowExtendModal(true); }}>
-                  <Clock size={15} /> Extend Plan
                 </button>
               )}
               <button className="btn btn-outline" onClick={() => setSelected(null)}>Close</button>

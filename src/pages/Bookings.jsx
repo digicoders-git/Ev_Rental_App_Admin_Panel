@@ -27,7 +27,7 @@ const PAYMENT_STATUS_CONFIG = {
   failed:         { cls: 'badge-danger',  label: 'Failed',  icon: <XCircle size={12} /> },
 };
 
-const TABS = ['All', 'Active', 'Pending', 'Ongoing', 'Completed', 'Cancelled', 'Partial'];
+const TABS = ['All', 'Active', 'Pending', 'Ongoing', 'Completed', 'Cancelled', 'Partial', 'Return Pending'];
 const PAGE_SIZE = 8;
 
 // Timeline steps per status
@@ -212,6 +212,7 @@ const Bookings = () => {
   const counts = TABS.reduce((acc, t) => {
     acc[t] = t === 'All' ? bookings.length 
              : t === 'Partial' ? bookings.filter((b) => b.payment_status === 'partially_paid').length
+             : t === 'Return Pending' ? bookings.filter((b) => b.raw?.return_status === 'submission_pending').length
              : bookings.filter((b) => b.status === t).length;
     return acc;
   }, {});
@@ -224,6 +225,8 @@ const Bookings = () => {
                      ? true 
                      : activeTab === 'Partial' 
                        ? b.payment_status === 'partially_paid' 
+                       : activeTab === 'Return Pending'
+                       ? b.raw?.return_status === 'submission_pending'
                        : b.status === activeTab;
     const matchFranchise = selectedFranchise === 'All' || b.franchise === selectedFranchise;
     const q = search.toLowerCase();

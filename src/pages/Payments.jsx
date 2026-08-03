@@ -235,6 +235,7 @@ const Payments = () => {
                 <th>Transaction / Booking ID</th>
                 <th>Customer</th>
                 <th>Vehicle / Method</th>
+                <th>Franchise</th>
                 <th>Total</th>
                 <th>Paid</th>
                 <th>Due</th>
@@ -268,6 +269,9 @@ const Payments = () => {
                       <span className="cell-sub" style={{ textTransform: 'uppercase' }}>
                          {tx.payment_method || 'Online'}
                       </span>
+                    </td>
+                    <td>
+                      <span className="cell-main">{tx.franchise?.store_name || 'Admin'}</span>
                     </td>
                     <td><span className="pay-amount">{fmtINR(tx.grand_total)}</span></td>
                     <td><span className="text-success" style={{ fontWeight: 600 }}>{fmtINR(tx.total_paid)}</span></td>
