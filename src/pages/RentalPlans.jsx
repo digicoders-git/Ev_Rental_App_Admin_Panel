@@ -268,7 +268,7 @@ const RentalPlans = () => {
             <div className="plan-price">
               <span className="plan-currency">₹</span>
               {plan.price}
-              <span className="plan-unit">/{plan.type.toLowerCase() === 'hourly' ? 'hr' : plan.type.toLowerCase() === 'daily' ? 'day' : plan.type.toLowerCase() === 'weekly' ? 'week' : 'month'}</span>
+              <span className="plan-unit">/{plan.type.toLowerCase() === 'minute' ? 'min' : plan.type.toLowerCase() === 'hourly' ? 'hr' : plan.type.toLowerCase() === 'daily' ? 'day' : plan.type.toLowerCase() === 'weekly' ? 'week' : 'month'}</span>
             </div>
 
             {/* Description */}
