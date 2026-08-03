@@ -332,6 +332,7 @@ const RentalPlans = () => {
                   <div className="form-group">
                     <label>Duration Type *</label>
                     <select value={form.type} onChange={f('type')}>
+                      <option>Minute</option>
                       <option>Hourly</option>
                       <option>Daily</option>
                       <option>Weekly</option>
