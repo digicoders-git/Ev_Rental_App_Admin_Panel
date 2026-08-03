@@ -962,16 +962,16 @@ const FRides = () => {
                           </div>
                           <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Booking ID: {selectedInvoice.booking?.booking_id || '—'}</div>
                         </div>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(selectedInvoice.amount || 0).toLocaleString('en-IN')}</div>
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(Number(selectedInvoice.amount || 0) - (Number(selectedInvoice.amount || 0) * 18 / 118)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                       </div>
 
-                      {(selectedInvoice.gst_amount > 0) && (
+                      {(selectedInvoice.amount > 0) && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px dashed #e2e8f0' }}>
                           <div>
-                            <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '14px' }}>GST / Taxes</div>
+                            <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '14px' }}>GST / Taxes (18%)</div>
                             <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Applied as per government norms</div>
                           </div>
-                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(selectedInvoice.gst_amount).toLocaleString('en-IN')}</div>
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(Number(selectedInvoice.amount || 0) * 18 / 118).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                       )}
 
