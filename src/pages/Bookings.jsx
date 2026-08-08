@@ -51,6 +51,7 @@ const Bookings = () => {
   const [trackError, setTrackError]   = useState(false);
   const [showActivity, setShowActivity] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null); // { id, type, label }
+  const [customAlert, setCustomAlert] = useState(null);
   const [installmentAmount, setInstallmentAmount] = useState('');
   
   const [stores, setStores] = useState([]);
@@ -420,6 +421,12 @@ const Bookings = () => {
 
   /* ── actions ── */
   const updateStatus = (id, status) => {
+    if (status === 'Completed') {
+      const b = bookings.find(x => x.id === id);
+      if (b && b.due_amount > 0) {
+        return setCustomAlert(`Cannot mark as completed! Full payment is required. A due amount of ₹${b.due_amount} is still pending.`);
+      }
+    }
     const apiStatus = status === 'Active' ? 'confirmed' : status === 'Completed' ? 'completed' : 'cancelled';
     call(
       () => status === 'Active' ? approveBooking(id) :
@@ -1176,19 +1183,7 @@ const Bookings = () => {
                     </button>
                   </>
                 )}
-                {selected.raw?.return_status === 'submission_pending' && (
-                  <>
-                    <button className="btn btn-outline reject-btn"
-                      onClick={() => handleRejectSubmission(selected.id)}>
-                      <XCircle size={15} /> Reject Return
-                    </button>
-                    <button className="btn btn-primary"
-                      onClick={() => handleApproveSubmission(selected.id)}
-                      style={{ background: '#10b981', borderColor: '#10b981' }}>
-                      <Check size={15} /> Approve Return
-                    </button>
-                  </>
-                )}
+
                 <button className="btn btn-outline" onClick={() => { setSelected(null); setShowInstallSetup(false); }}>Close</button>
               </div>
             </div>
@@ -1516,16 +1511,16 @@ const Bookings = () => {
                           </div>
                           <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Booking ID: {selectedInvoice.booking?.booking_id || '—'}</div>
                         </div>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(Number(selectedInvoice.total_amount || 0) - (Number(selectedInvoice.total_amount || 0) * 18 / 118)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(Number(selectedInvoice.total_amount || 0) - (Number(selectedInvoice.total_amount || 0) * 5 / 105)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                       </div>
 
                       {(selectedInvoice.total_amount > 0) && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px dashed #e2e8f0' }}>
                           <div>
-                            <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '14px' }}>GST / Taxes (18%)</div>
+                            <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '14px' }}>GST / Taxes (5%)</div>
                             <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Applied as per government norms</div>
                           </div>
-                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(Number(selectedInvoice.total_amount || 0) * 18 / 118).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(Number(selectedInvoice.total_amount || 0) * 5 / 105).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                       )}
 
@@ -1671,6 +1666,26 @@ const Bookings = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {customAlert && createPortal(
+        <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={() => setCustomAlert(null)}>
+          <div className="modal-content delete-modal" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ justifyContent: 'center', background: 'transparent', paddingBottom: 0 }}>
+              <AlertOctagon size={48} color="#ef4444" style={{ marginBottom: '10px' }} />
+            </div>
+            <div className="modal-body" style={{ padding: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>Action Blocked</h3>
+              <p style={{ color: '#64748b', fontSize: '14px', lineHeight: '1.6' }}>{customAlert}</p>
+            </div>
+            <div className="modal-footer" style={{ justifyContent: 'center', borderTop: 'none', paddingTop: 0 }}>
+              <button className="btn btn-primary" style={{ width: '100%', background: '#ef4444', borderColor: '#ef4444' }} onClick={() => setCustomAlert(null)}>
+                Understood
+              </button>
+            </div>
           </div>
         </div>,
         document.body

@@ -226,6 +226,7 @@ const FVehicles = () => {
                   <th>Vehicle</th>
                   <th>Reg. Number</th>
                   <th>Driver</th>
+                  <th>Booking Start</th>
                   <th>Submission Date</th>
                   <th>Submission Time</th>
                   <th>Ownership Source</th>
@@ -237,7 +238,7 @@ const FVehicles = () => {
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={10} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                  <tr><td colSpan={11} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                     <Bike size={28} style={{ display: 'block', margin: '0 auto 0.5rem' }} />
                     No vehicles found in your fleet.
                   </td></tr>
@@ -261,6 +262,9 @@ const FVehicles = () => {
                     </td>
                     <td style={{ fontFamily: 'monospace', fontWeight: 500 }}>{v.registration_number || 'N/A'}</td>
                     <td style={{ fontWeight: 600, color: '#334155' }}>{v.driver_name || '—'}</td>
+                    <td style={{ fontWeight: 600, color: '#334155' }}>
+                      {v.booking_start_date ? new Date(v.booking_start_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                    </td>
                     <td style={{ fontWeight: 600, color: '#0369a1' }}>
                       {v.submission_date ? new Date(v.submission_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                     </td>

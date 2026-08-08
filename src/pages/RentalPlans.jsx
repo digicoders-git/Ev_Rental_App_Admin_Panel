@@ -24,7 +24,7 @@ const emptyForm = {
   insurance: 'Basic', description: '', features: [],
 };
 
-const globalDefaults = { deposit: '2000', lateFee: '150', gst: '18', serviceFee: '49' };
+const globalDefaults = { deposit: '2000', lateFee: '150', gst: '5', serviceFee: '49' };
 
 const RentalPlans = () => {
   const [plans, setPlans]           = useState([]);
@@ -69,7 +69,7 @@ const RentalPlans = () => {
       setGlobal({
         deposit: s.security_deposit || '2000',
         lateFee: s.late_fee_per_day || s.late_fee_per_hour || '200',
-        gst: s.gst_percentage || '18',
+        gst: s.gst_percentage || '5',
         serviceFee: s.service_fee || '49'
       });
     });

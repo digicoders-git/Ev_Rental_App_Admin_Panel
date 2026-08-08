@@ -81,6 +81,7 @@ const Vehicles = () => {
           category: v.category?.name || v.vehicle_type || 'N/A',
           status: v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : (v.status === 'out_of_order' ? 'Out of Order' : 'Maintenance')),
           driverName: v.driver_name || '—',
+          bookingStartDate: v.booking_start_date || null,
           submissionDate: v.submission_date || null,
           submissionStatus: v.submission_status || (v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : v.status)),
           battery: v.battery_level || 100,
@@ -399,6 +400,7 @@ const Vehicles = () => {
                 <th>Vehicle</th>
                 <th>Reg. Number</th>
                 <th>Driver</th>
+                <th>Booking Start</th>
                 <th>Submission Date</th>
                 <th>Submission Time</th>
                 <th>Category</th>
@@ -412,7 +414,7 @@ const Vehicles = () => {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={13} className="veh-empty-row"><Car size={28} /><p>No vehicles found.</p></td></tr>
+                <tr><td colSpan={14} className="veh-empty-row"><Car size={28} /><p>No vehicles found.</p></td></tr>
               ) : (
                 filtered.map((v, i) => (
                   <tr key={v.id}>
@@ -428,6 +430,9 @@ const Vehicles = () => {
                     </td>
                     <td><span className="reg-badge">{v.regNo}</span></td>
                     <td style={{ fontWeight: 600, color: '#334155' }}>{v.driverName || '—'}</td>
+                    <td style={{ fontWeight: 600, color: '#334155' }}>
+                      {v.bookingStartDate ? new Date(v.bookingStartDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                    </td>
                     <td style={{ fontWeight: 600, color: '#0369a1' }}>
                       {v.submissionDate ? new Date(v.submissionDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                     </td>

@@ -235,6 +235,7 @@ const Payments = () => {
                 <th>Transaction / Booking ID</th>
                 <th>Customer</th>
                 <th>Vehicle / Method</th>
+                <th>Vehicle No.</th>
                 <th>Franchise</th>
                 <th>Total</th>
                 <th>Paid</th>
@@ -246,7 +247,7 @@ const Payments = () => {
             </thead>
             <tbody>
               {paginated.length === 0 ? (
-                <tr><td colSpan={10} className="pay-empty-row"><Receipt size={28} /><p>No transactions found.</p></td></tr>
+                <tr><td colSpan={11} className="pay-empty-row"><Receipt size={28} /><p>No transactions found.</p></td></tr>
               ) : (
                 paginated.map((tx, i) => (
                   <tr key={tx._id}>
@@ -269,6 +270,9 @@ const Payments = () => {
                       <span className="cell-sub" style={{ textTransform: 'uppercase' }}>
                          {tx.payment_method || 'Online'}
                       </span>
+                    </td>
+                    <td style={{ fontFamily: 'monospace', fontWeight: 600, color: '#475569' }}>
+                      {tx.vehicle?.registration_number || 'N/A'}
                     </td>
                     <td>
                       <span className="cell-main">{tx.franchise?.store_name || 'Admin'}</span>
