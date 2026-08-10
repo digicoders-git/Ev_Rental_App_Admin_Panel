@@ -345,16 +345,56 @@ const FKYC = () => {
             </div>
             <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               
-              {/* Render document details */}
-              <div style={{ background: 'var(--background)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', border: '1px solid var(--border)' }}>
-                <div>
-                  <div style={{ fontSize: 0.8 + 'rem', color: 'var(--text-secondary)', fontWeight: 500 }}>KYC Name</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)' }}>{selected.kyc?.name || 'N/A'}</div>
+              {/* Data Grid Section */}
+              <div style={{ marginBottom: '1.5rem', background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Personal Verification Details</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>FULL NAME</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.kyc?.user?.name || selected.name}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>MOBILE NUMBER</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.kyc?.user?.mobile || selected.mobile}</span>
+                  </div>
+                  <div className="detail-item" style={{ gridColumn: '1/-1' }}>
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>CURRENT ADDRESS</label>
+                    <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>{selected.kyc?.user?.current_address || 'Not Provided'}</span>
+                  </div>
+                  <div className="detail-item" style={{ gridColumn: '1/-1' }}>
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>PERMANENT ADDRESS</label>
+                    <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>{selected.kyc?.user?.permanent_address || 'Not Provided'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>DATE OF BIRTH</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.kyc?.user?.dob ? new Date(selected.kyc.user.dob).toLocaleDateString('en-IN') : 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>GIG COMPANY</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.kyc?.user?.gigCompanyId?.name || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>EMPLOYEE ID</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.kyc?.user?.employeeId || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>KYC FEE (₹49)</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem', color: selected.kyc?.user?.kyc_fee_paid ? 'green' : 'red' }}>
+                      {selected.kyc?.user?.kyc_fee_paid ? `✅ Paid (Txn: ${selected.kyc?.user?.kyc_fee_transaction_id || 'N/A'})` : '❌ Not Paid'}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: '700', marginBottom: '0.25rem' }}>SUBMISSION DATE</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.kyc?.createdAt ? new Date(selected.kyc.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                  </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: 0.8 + 'rem', color: 'var(--text-secondary)', fontWeight: 500 }}>KYC Mobile</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--primary)' }}>{selected.kyc?.mobileNumber || 'N/A'}</div>
-                </div>
+
+                {selected.kyc?.status === 'rejected' && selected.kyc?.rejectionReason && (
+                  <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fee2e2', borderRadius: '8px', borderLeft: '4px solid #ef4444' }}>
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: '#b91c1c', fontWeight: '800', marginBottom: '0.25rem' }}>REJECTION REASON</label>
+                    <span style={{ color: '#b91c1c', fontSize: '0.9rem', fontWeight: '600' }}>{selected.kyc.rejectionReason}</span>
+                  </div>
+                )}
               </div>
 
               {selected.kyc?.document ? (
@@ -424,6 +464,20 @@ const FKYC = () => {
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = `${FALLBACK_URL}/${selected.kyc.selfie}`;
+                        }}
+                      />
+                    </div>
+                  )}
+                  {selected.kyc?.extraId && (
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Optional / Extra ID</div>
+                      <img 
+                        src={`${BASE_URL}/${selected.kyc.extraId}`} 
+                        alt="Extra ID"
+                        style={{ width: '100%', maxHeight: '150px', objectFit: 'contain', borderRadius: '8px', border: '1px solid var(--border)' }} 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `${FALLBACK_URL}/${selected.kyc.extraId}`;
                         }}
                       />
                     </div>

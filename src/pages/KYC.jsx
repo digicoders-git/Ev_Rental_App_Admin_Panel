@@ -277,6 +277,11 @@ const KYC = () => {
                         {req.status === 'approved' ? <CheckCircle size={12} /> : req.status === 'rejected' ? <XCircle size={12} /> : <Clock size={12} />}
                         {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
                       </span>
+                      {req.franchise && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '4px', fontWeight: 600 }}>
+                          🏢 {req.franchise.store_name}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <div className="kyc-action-btns">
@@ -287,7 +292,7 @@ const KYC = () => {
                         >
                           <Eye size={16} />
                         </button>
-                        {req.status === 'pending' && (
+                        {req.status === 'pending' && !req.franchise && (
                           <>
                             <button
                               className="btn-icon approve"
@@ -417,6 +422,20 @@ const KYC = () => {
                           />
                         </div>
                       )}
+                      {selected.extraId && (
+                        <div className="kyc-doc-card" style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                          <h4 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>Optional / Extra ID</h4>
+                          <img 
+                            src={getImageUrl(selected.extraId)} 
+                            alt="Extra ID" 
+                            style={{ width: '100%', borderRadius: '8px', border: '1px solid #e2e8f0' }} 
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackImageUrl(selected.extraId);
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -445,6 +464,14 @@ const KYC = () => {
                   <div className="detail-item">
                     <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>DATE OF BIRTH</label>
                     <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.user?.dob ? new Date(selected.user.dob).toLocaleDateString('en-IN') : 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>GIG COMPANY</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.user?.gigCompanyId?.name || 'N/A'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>EMPLOYEE ID</label>
+                    <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>{selected.user?.employeeId || 'N/A'}</span>
                   </div>
                   <div className="detail-item">
                     <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '0.25rem' }}>KYC FEE (₹49)</label>
