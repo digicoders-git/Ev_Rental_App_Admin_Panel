@@ -224,7 +224,7 @@ const FVehicles = () => {
               <thead>
                 <tr>
                   <th>Vehicle</th>
-                  <th>Reg. Number</th>
+                  <th>Reg. Number / ID</th>
                   <th>Driver</th>
                   <th>Booking Start</th>
                   <th>Submission Date</th>
@@ -260,7 +260,10 @@ const FVehicles = () => {
                         </div>
                       </div>
                     </td>
-                    <td style={{ fontFamily: 'monospace', fontWeight: 500 }}>{v.registration_number || 'N/A'}</td>
+                    <td>
+                      <div style={{ fontFamily: 'monospace', fontWeight: 500 }}>{v.registration_number || 'N/A'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginTop: '4px' }}>{v.vehicle_id || 'N/A'}</div>
+                    </td>
                     <td style={{ fontWeight: 600, color: '#334155' }}>{v.driver_name || '—'}</td>
                     <td style={{ fontWeight: 600, color: '#334155' }}>
                       {v.booking_start_date ? new Date(v.booking_start_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}

@@ -398,7 +398,7 @@ const Vehicles = () => {
               <tr>
                 <th>#</th>
                 <th>Vehicle</th>
-                <th>Reg. Number</th>
+                <th>Reg. Number / ID</th>
                 <th>Driver</th>
                 <th>Booking Start</th>
                 <th>Submission Date</th>
@@ -428,7 +428,10 @@ const Vehicles = () => {
                         </div>
                       </div>
                     </td>
-                    <td><span className="reg-badge">{v.regNo}</span></td>
+                    <td>
+                      <span className="reg-badge">{v.regNo}</span>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginTop: '4px' }}>{v.vehicleId || 'N/A'}</div>
+                    </td>
                     <td style={{ fontWeight: 600, color: '#334155' }}>{v.driverName || '—'}</td>
                     <td style={{ fontWeight: 600, color: '#334155' }}>
                       {v.bookingStartDate ? new Date(v.bookingStartDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}

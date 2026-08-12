@@ -62,7 +62,8 @@ const FRides = () => {
     const matchSearch =
       (b.booking_id || '').toLowerCase().includes(q) ||
       (b.user?.name || '').toLowerCase().includes(q) ||
-      (b.vehicle?.vehicle_name || '').toLowerCase().includes(q);
+      (b.vehicle?.vehicle_name || '').toLowerCase().includes(q) ||
+      (b.vehicle?.vehicle_id || '').toLowerCase().includes(q);
     return matchTab && matchSearch;
   });
 
@@ -378,12 +379,14 @@ const FRides = () => {
                   <th>Customer</th>
                   <th>Referral ID</th>
                   <th>Vehicle</th>
+                  <th>Vehicle ID</th>
                   <th>Duration</th>
                   <th>Total</th>
                   <th>Paid</th>
                   <th>Due</th>
                   <th>Payment Status</th>
                   <th>Extra Charges</th>
+                  <th>Booking Date</th>
                   <th>Submission Date</th>
                   <th>Submission Time</th>
                   <th>Status</th>
@@ -423,6 +426,9 @@ const FRides = () => {
                       <td>
                         <div style={{ fontWeight: 500 }}>{b.vehicle?.vehicle_name || 'N/A'}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.vehicle?.registration_number}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>{b.vehicle?.vehicle_id || 'N/A'}</div>
                       </td>
                       <td style={{ fontSize: '0.85rem' }}>{duration}</td>
                       <td style={{ fontWeight: 600 }}>₹{(b.grand_total || 0).toLocaleString()}</td>
@@ -467,6 +473,9 @@ const FRides = () => {
                         ) : (
                           <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>
                         )}
+                      </td>
+                      <td style={{ whiteSpace: 'nowrap', fontWeight: 500, fontSize: '0.85rem' }}>
+                        {new Date(b.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </td>
                       <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: '#0369a1', fontSize: '0.85rem' }}>
                         {(b.return_status === 'submission_pending' || b.return_status === 'approved' || b.booking_status === 'completed') ? 
@@ -585,6 +594,10 @@ const FRides = () => {
                       <span style={{ fontWeight: 500 }}>{v || 'N/A'}</span>
                     </div>
                   ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Booking Date</span>
+                    <span style={{ fontWeight: 600 }}>{new Date(selected.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
                   {(selected.return_status === 'submission_pending' || selected.return_status === 'approved' || selected.booking_status === 'completed') && (
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.875rem', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>

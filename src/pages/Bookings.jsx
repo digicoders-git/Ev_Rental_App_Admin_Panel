@@ -174,6 +174,7 @@ const Bookings = () => {
         referrerId: b.user?.referred_by?.driver_id || 'N/A',
         vehicle: b.vehicle?.vehicle_name || 'N/A',
         regNo: b.vehicle?.registration_number || '',
+        vehicleId: b.vehicle?.vehicle_id || '',
         franchise: b.franchise?.store_name || b.vehicle?.franchise?.store_name || 'Main Hub',
         plan: b.plan?.plan_name || 'Custom',
         status: b.booking_status === 'confirmed' ? 'Active' :
@@ -235,7 +236,8 @@ const Bookings = () => {
       b.bookingId.toLowerCase().includes(q) ||
       b.user.toLowerCase().includes(q) ||
       b.vehicle.toLowerCase().includes(q) ||
-      b.regNo.toLowerCase().includes(q);
+      b.regNo.toLowerCase().includes(q) ||
+      b.vehicleId.toLowerCase().includes(q);
     return matchTab && matchFranchise && matchSearch;
   });
 
@@ -725,12 +727,14 @@ const Bookings = () => {
                 <th>Customer</th>
                 <th>Referral ID</th>
                 <th>Vehicle</th>
+                <th>Vehicle ID</th>
                 <th>Franchise Store</th>
                 <th>Plan/Duration</th>
                 <th>Total</th>
                 <th>Paid</th>
                 <th>Due</th>
                 <th>Extra Charges</th>
+                <th>Booking Date</th>
                 <th>Submission Date</th>
                 <th>Submission Time</th>
                 <th>Status</th>
@@ -768,6 +772,9 @@ const Bookings = () => {
                       <span className="cell-sub">{b.regNo}</span>
                     </td>
                     <td>
+                      <span className="cell-sub" style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>{b.vehicleId || 'N/A'}</span>
+                    </td>
+                    <td>
                       <span className="badge badge-info" style={{ fontWeight: 600, fontSize: '0.8rem' }}>{b.franchise}</span>
                     </td>
                     <td>
@@ -797,6 +804,9 @@ const Bookings = () => {
                       ) : (
                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>
                       )}
+                    </td>
+                    <td style={{ whiteSpace: 'nowrap', fontWeight: 500, fontSize: '0.85rem' }}>
+                      {new Date(b.raw?.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
                     <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: '#0369a1', fontSize: '0.85rem' }}>
                       {(b.raw?.return_status === 'submission_pending' || b.raw?.return_status === 'approved' || b.status === 'Completed') ? 
@@ -959,6 +969,7 @@ const Bookings = () => {
                     <div className="bk-detail-row"><span>Start</span><span>{selected.startTime}</span></div>
                     <div className="bk-detail-row"><span>End</span><span>{selected.endTime}</span></div>
                     <div className="bk-detail-row"><span>Pickup</span><span>{selected.pickup}</span></div>
+                    <div className="bk-detail-row"><span>Booking Date</span><span style={{ fontWeight: 600 }}>{new Date(selected.raw?.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
                     {(selected.raw?.return_status === 'submission_pending' || selected.raw?.return_status === 'approved' || selected.status === 'Completed') && (
                       <>
                         <div className="bk-detail-row"><span>Submission Date</span><span style={{ color: '#0369a1', fontWeight: 700 }}>{new Date(selected.raw?.submission_date || selected.raw?.actual_return_date || selected.raw?.updatedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
