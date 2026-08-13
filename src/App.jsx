@@ -13,6 +13,7 @@ import Franchise from './pages/Franchise';
 import RentalPlans from './pages/RentalPlans';
 import RechargePlans from './pages/RechargePlans';
 import Payments from './pages/Payments';
+import PaymentHistory from './pages/PaymentHistory';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 import AssignEV from './pages/AssignEV';
@@ -46,6 +47,7 @@ import FReports from './pages/franchisePanel/FReports';
 import FNotifications from './pages/franchisePanel/FNotifications';
 import FComplaints from './pages/franchisePanel/FComplaints';
 import FWallet from './pages/franchisePanel/FWallet';
+import FPaymentHistory from './pages/franchisePanel/FPaymentHistory';
 import FReturnPending from './pages/franchisePanel/FReturnPending';
 import FHubs from './pages/franchisePanel/FHubs';
 
@@ -129,6 +131,7 @@ function App() {
           <Route path="notifications" element={<FNotifications />} />
           <Route path="complaints" element={<FComplaints />} />
           <Route path="wallet" element={<FWallet />} />
+          <Route path="payment-history" element={<FPaymentHistory />} />
           <Route path="hubs" element={<FHubs />} />
           <Route path="profile" element={<FranchiseProfile setIsAuthenticated={setIsAuthenticated} />} />
           <Route path="referrals" element={<Referrals />} />
@@ -163,6 +166,7 @@ function App() {
           <Route path="settlements" element={<Settlements />} />
           <Route path="profile" element={<Profile />} />
           <Route path="payments" element={<Payments />} />
+          <Route path="payment-history" element={<PaymentHistory />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="settings" element={<Settings />} />
           <Route path="referrals" element={<Referrals />} />
@@ -203,6 +207,7 @@ function App() {
                 <Route path="/settlements" element={<Settlements />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/payments" element={<Payments />} />
+                <Route path="/payment-history" element={<PaymentHistory />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/referrals" element={<Referrals />} />
@@ -222,6 +227,7 @@ function App() {
                 <Route path="/f/reports" element={<FReports />} />
                 <Route path="/f/notifications" element={<FNotifications />} />
                 <Route path="/f/complaints" element={<FComplaints />} />
+                <Route path="/f/payment-history" element={<FPaymentHistory />} />
                 <Route path="/f/profile" element={<FranchiseProfile setIsAuthenticated={setIsAuthenticated} />} />
                 <Route path="/f/referrals" element={<Referrals />} />
                 <Route path="*" element={<Navigate to="/f" />} />

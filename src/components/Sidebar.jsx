@@ -60,6 +60,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Analytics',  path: '/analytics',  icon: BarChart2 },
     { name: 'Settlements', path: '/settlements', icon: Receipt },
     { name: 'Payments', path: '/payments', icon: CreditCard },
+    { name: 'Payment History', path: '/payment-history', icon: FileText },
     { name: 'Notifications', path: '/notifications', icon: Bell },
   ];
 
@@ -77,6 +78,7 @@ const Sidebar = ({ isOpen, onClose, setIsAuthenticated, userRole }) => {
     { name: 'Notifications', path: '/f/notifications', icon: Bell },
     { name: 'Complaints',    path: '/f/complaints',   icon: Headphones },
     { name: 'EV Hubs',       path: '/f/hubs',         icon: MapPin },
+    { name: 'Payment History', path: '/f/payment-history', icon: FileText },
     { name: 'Profile & Settings', path: '/f/profile', icon: Settings },
   ];
 

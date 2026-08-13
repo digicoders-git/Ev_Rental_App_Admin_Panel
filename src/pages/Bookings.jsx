@@ -7,7 +7,7 @@ import {
   Navigation, PackageCheck, TrendingUp, Loader, AlertTriangle,
   Plus, Trash2, CalendarDays, CheckCircle2, AlertOctagon, Receipt, Check
 } from 'lucide-react';
-import { getAllBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge, changeBookingVehicle, getAllVehicles, getInvoiceByBooking, approveVehicleSubmission, rejectVehicleSubmission, extendBooking } from '../services/apiServices';
+import { getAllBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, getAllStores, setupInstallments, payInstallment, addDamageCharge, changeBookingVehicle, getAllVehicles, getInvoiceByBooking, approveVehicleSubmission, rejectVehicleSubmission, extendBooking, forceCancelBooking } from '../services/apiServices';
 import useApi from '../services/useApi';
 import api from '../services/api';
 import './Bookings.css';
@@ -72,6 +72,10 @@ const Bookings = () => {
   const [swapping, setSwapping] = useState(false);
   const [swapBookingId, setSwapBookingId] = useState(null);
 
+  const [showForceCancelModal, setShowForceCancelModal] = useState(false);
+  const [forceCancelBookingId, setForceCancelBookingId] = useState(null);
+  const [forceCancelForm, setForceCancelForm] = useState({ reason_type: 'Rider Absconded', remark: '' });
+
   const handleOpenSwapModal = async (bookingId) => {
     try {
       setSwapBookingId(bookingId);
@@ -108,6 +112,25 @@ const Bookings = () => {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to unassign vehicle');
     }
+  };
+
+  const handleForceCancel = async (e) => {
+    e.preventDefault();
+    if (!forceCancelForm.remark || forceCancelForm.remark.trim().length < 5) {
+      alert("Please provide a valid remark (minimum 5 characters).");
+      return;
+    }
+    call(
+      () => forceCancelBooking(forceCancelBookingId, forceCancelForm),
+      () => {
+        fetchBookings();
+        setShowForceCancelModal(false);
+        setForceCancelForm({ reason_type: 'Rider Absconded', remark: '' });
+        setForceCancelBookingId(null);
+        if (selected && selected.id === forceCancelBookingId) setSelected(null);
+      },
+      (err) => alert(err.response?.data?.message || 'Failed to force cancel booking')
+    );
   };
 
   const handleApproveSubmission = async (bookingId) => {
@@ -859,15 +882,19 @@ const Bookings = () => {
                             </button>
                           </>
                         )}
-                        {b.status === 'Active' && (
+                        {['Active', 'Ongoing'].includes(b.status) && (
                           <>
-                            <button className="btn-icon cancel" title="Cancel Ride"
-                              onClick={() => setConfirmAction({ id: b.id, type: 'Cancelled', label: 'Cancel' })}>
-                              <Ban size={15} />
-                            </button>
                             <button className="btn-icon" title="Extend Plan" style={{ color: '#3b82f6' }}
                               onClick={() => { setExtendBookingId(b.id); setExtendForm({ extra_weeks: 1, auto_renew: b.raw?.auto_renew || false }); setShowExtendModal(true); }}>
                               <Clock size={15} />
+                            </button>
+                            <button className="btn-icon cancel" title="Force Cancel"
+                              onClick={() => {
+                                setForceCancelBookingId(b.id);
+                                setForceCancelForm({ reason_type: 'Rider Absconded', remark: '' });
+                                setShowForceCancelModal(true);
+                              }}>
+                              <Ban size={15} />
                             </button>
                           </>
                         )}
@@ -975,6 +1002,13 @@ const Bookings = () => {
                         <div className="bk-detail-row"><span>Submission Date</span><span style={{ color: '#0369a1', fontWeight: 700 }}>{new Date(selected.raw?.submission_date || selected.raw?.actual_return_date || selected.raw?.updatedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
                         <div className="bk-detail-row"><span>Submission Time</span><span style={{ color: '#15803d', fontWeight: 700 }}>{new Date(selected.raw?.submission_date || selected.raw?.actual_return_date || selected.raw?.updatedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span></div>
                       </>
+                    )}
+                    {selected.status === 'Cancelled' && selected.raw?.cancellation_remark && (
+                      <div className="bk-detail-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px', background: '#fef2f2', padding: '8px', borderRadius: '6px', border: '1px solid #fecaca', marginTop: '8px' }}>
+                        <span style={{ color: '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}><Ban size={12}/> Cancelled ({selected.raw?.cancellation_reason_type || 'Reason'})</span>
+                        <span style={{ fontSize: '0.8rem', color: '#7f1d1d' }}>{selected.raw?.cancellation_remark}</span>
+                        {selected.raw?.cancelled_by && <span style={{ fontSize: '0.7rem', color: '#b91c1c', marginTop: '2px' }}>By: <span style={{ textTransform: 'capitalize' }}>{selected.raw?.cancelled_by}</span></span>}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1697,6 +1731,59 @@ const Bookings = () => {
                 Understood
               </button>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showForceCancelModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowForceCancelModal(false)}>
+          <div className="modal-content bk-modal" style={{ maxWidth: '450px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><Ban size={18} style={{ marginRight: '8px', color: '#ef4444' }}/> Force Cancel Booking</h3>
+              <button className="btn-close" onClick={() => setShowForceCancelModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleForceCancel}>
+              <div className="modal-body" style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Reason for Cancellation</label>
+                  <select 
+                    value={forceCancelForm.reason_type}
+                    onChange={(e) => setForceCancelForm({ ...forceCancelForm, reason_type: e.target.value })}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  >
+                    <option value="Rider Absconded">Rider Absconded</option>
+                    <option value="Vehicle Abandoned">Vehicle Abandoned</option>
+                    <option value="Non-Payment">Non-Payment</option>
+                    <option value="Fraud/Dispute">Fraud/Dispute</option>
+                    <option value="Customer Request">Customer Request</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Cancellation Remark (Required)</label>
+                  <textarea
+                    required
+                    rows="3"
+                    placeholder="Provide a detailed reason for force cancelling this booking..."
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', resize: 'vertical' }}
+                    value={forceCancelForm.remark}
+                    onChange={(e) => setForceCancelForm({ ...forceCancelForm, remark: e.target.value })}
+                  />
+                  <small style={{ color: '#ef4444', display: 'block', marginTop: '5px' }}>
+                    Note: This action will immediately cancel the booking, release the vehicle, and mark all pending installments as overdue. The rider will be notified.
+                  </small>
+                </div>
+              </div>
+              <div className="modal-footer" style={{ padding: '15px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn btn-outline" onClick={() => setShowForceCancelModal(false)}>Back</button>
+                <button type="submit" className="btn btn-primary" style={{ background: '#ef4444', borderColor: '#ef4444', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Ban size={16} /> Force Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>,
         document.body

@@ -6,7 +6,7 @@ import {
   Activity, Loader, AlertTriangle, CalendarDays, CheckCircle2, AlertOctagon,
   Receipt, Download, RefreshCw, Info
 } from 'lucide-react';
-import { getFranchiseBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, returnVehicle, payInstallment, addDamageCharge , getInvoiceByBooking, changeBookingVehicle, getMyFranchiseVehicles, extendBooking } from '../../services/apiServices';
+import { getFranchiseBookings, approveBooking, rejectBooking, updateBookingStatus, payManual, returnVehicle, payInstallment, addDamageCharge , getInvoiceByBooking, changeBookingVehicle, getMyFranchiseVehicles, extendBooking, forceCancelBooking } from '../../services/apiServices';
 import useApi from '../../services/useApi';
 
 const STATUS_CONFIG = {
@@ -43,6 +43,11 @@ const FRides = () => {
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [extendForm, setExtendForm] = useState({ extra_weeks: 1, auto_renew: false });
   const [extendBookingId, setExtendBookingId] = useState(null);
+  
+  const [showForceCancelModal, setShowForceCancelModal] = useState(false);
+  const [forceCancelBookingId, setForceCancelBookingId] = useState(null);
+  const [forceCancelForm, setForceCancelForm] = useState({ reason_type: 'Rider Absconded', remark: '' });
+
   const { loading, call } = useApi();
 
   useEffect(() => { fetchBookings(); }, []);
@@ -94,6 +99,25 @@ const FRides = () => {
       setSelected(null);
       setConfirmAction(null);
     }, (err) => alert(`Error: ${err}`));
+  };
+
+  const handleForceCancel = async (e) => {
+    e.preventDefault();
+    if (!forceCancelForm.remark || forceCancelForm.remark.trim().length < 5) {
+      alert("Please provide a valid remark (minimum 5 characters).");
+      return;
+    }
+    call(
+      () => forceCancelBooking(forceCancelBookingId, forceCancelForm),
+      () => {
+        fetchBookings();
+        setShowForceCancelModal(false);
+        setForceCancelForm({ reason_type: 'Rider Absconded', remark: '' });
+        setForceCancelBookingId(null);
+        if (selected && selected._id === forceCancelBookingId) setSelected(null);
+      },
+      (err) => alert(err.response?.data?.message || 'Failed to force cancel booking')
+    );
   };
 
   const handlePayment = (id, amount) => {
@@ -508,6 +532,14 @@ const FRides = () => {
                             <>
                               <button className="btn-icon" title="Mark Complete" style={{ color: '#8b5cf6' }}
                                 onClick={() => setConfirmAction({ id: b._id, action: 'complete', label: 'Complete' })}><CircleCheck size={15} /></button>
+                              <button className="btn-icon cancel" title="Force Cancel"
+                                onClick={() => {
+                                  setForceCancelBookingId(b._id);
+                                  setForceCancelForm({ reason_type: 'Rider Absconded', remark: '' });
+                                  setShowForceCancelModal(true);
+                                }}>
+                                <Ban size={15} />
+                              </button>
                             </>
                           )}
                           <button className="btn-icon" title="Add Extra Charge" style={{ color: '#f59e0b' }}
@@ -609,6 +641,13 @@ const FRides = () => {
                         <span style={{ color: '#15803d', fontWeight: 700 }}>{new Date(selected.submission_date || selected.actual_return_date || selected.updatedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     </>
+                  )}
+                  {selected.booking_status === 'cancelled' && selected.cancellation_remark && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#fef2f2', padding: '8px', borderRadius: '6px', border: '1px solid #fecaca', marginTop: '8px' }}>
+                      <span style={{ color: '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem' }}><Ban size={12}/> Cancelled ({selected.cancellation_reason_type || 'Reason'})</span>
+                      <span style={{ fontSize: '0.8rem', color: '#7f1d1d' }}>{selected.cancellation_remark}</span>
+                      {selected.cancelled_by && <span style={{ fontSize: '0.7rem', color: '#b91c1c', marginTop: '2px' }}>By: <span style={{ textTransform: 'capitalize' }}>{selected.cancelled_by}</span></span>}
+                    </div>
                   )}
                 </div>
                 {/* Payment */}
@@ -1190,6 +1229,60 @@ const FRides = () => {
                 Understood
               </button>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Force Cancel Modal */}
+      {showForceCancelModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowForceCancelModal(false)}>
+          <div className="modal-content bk-modal" style={{ maxWidth: '450px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><Ban size={18} style={{ marginRight: '8px', color: '#ef4444' }}/> Force Cancel Booking</h3>
+              <button className="btn-close" onClick={() => setShowForceCancelModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleForceCancel}>
+              <div className="modal-body" style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Reason for Cancellation</label>
+                  <select 
+                    value={forceCancelForm.reason_type}
+                    onChange={(e) => setForceCancelForm({ ...forceCancelForm, reason_type: e.target.value })}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  >
+                    <option value="Rider Absconded">Rider Absconded</option>
+                    <option value="Vehicle Abandoned">Vehicle Abandoned</option>
+                    <option value="Non-Payment">Non-Payment</option>
+                    <option value="Fraud/Dispute">Fraud/Dispute</option>
+                    <option value="Customer Request">Customer Request</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Cancellation Remark (Required)</label>
+                  <textarea
+                    required
+                    rows="3"
+                    placeholder="Provide a detailed reason for force cancelling this booking..."
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', resize: 'vertical' }}
+                    value={forceCancelForm.remark}
+                    onChange={(e) => setForceCancelForm({ ...forceCancelForm, remark: e.target.value })}
+                  />
+                  <small style={{ color: '#ef4444', display: 'block', marginTop: '5px' }}>
+                    Note: This action will immediately cancel the booking, release the vehicle, and mark all pending installments as overdue. The rider will be notified.
+                  </small>
+                </div>
+              </div>
+              <div className="modal-footer" style={{ padding: '15px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn btn-outline" onClick={() => setShowForceCancelModal(false)}>Back</button>
+                <button type="submit" className="btn btn-primary" style={{ background: '#ef4444', borderColor: '#ef4444', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Ban size={16} /> Force Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>,
         document.body
