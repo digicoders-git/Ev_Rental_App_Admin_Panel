@@ -206,6 +206,10 @@
 
 /* Print Styles */
 @media print {
+  @page {
+    margin: 0; /* This removes browser default header/footer (date, title, URL) */
+  }
+
   /* Hide all direct children of body except the modal overlay */
   body > *:not(.modal-overlay) {
     display: none !important;
@@ -229,7 +233,7 @@
   }
   
   .bill-printable-area {
-    padding: 0 !important;
+    padding: 20mm !important; /* Add padding so content doesn't touch paper edges */
     width: 100% !important;
     position: relative !important;
     left: auto !important;
