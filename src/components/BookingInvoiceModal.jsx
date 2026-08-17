@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Download, Printer } from 'lucide-react';
 
@@ -115,7 +115,7 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
               <h2 style={{ margin: '0 0 4px 0', fontSize: '24px', fontWeight: 'bold', color: '#000' }}>TRIS ELECTRIC</h2>
               <h3 style={{ margin: '0 0 6px 0', fontSize: '15px', fontWeight: 'bold', color: '#1e3a8a' }}>JUNGLEBAN ENTERPRISES</h3>
               <p style={{ margin: 0, fontSize: '12px', lineHeight: '1.5', color: '#334155' }}>
-                Prem Nagar, Alambagh, Lucknow<br/>
+                Jungleban Enterprises, Alambagh, Lucknow<br/>
                 Uttar Pradesh - 226005<br/>
                 GSTIN : 09DTTPS1540G1Z7
               </p>
