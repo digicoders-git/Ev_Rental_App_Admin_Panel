@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { Download, Search, FileText, Calendar, Filter, X } from 'lucide-react';
+import { Download, Search, FileText, Calendar, Filter, X, Table } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import BookingInvoiceModal from '../../components/BookingInvoiceModal';
 import '../PaymentHistory.css';
 
 const FPaymentHistory = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -78,6 +81,33 @@ const FPaymentHistory = () => {
     }
   };
 
+  const downloadBulkReportExcel = () => {
+    try {
+      if (invoices.length === 0) {
+        alert('No data to download');
+        return;
+      }
+      
+      const data = invoices.map(invoice => ({
+        "Date": new Date(invoice.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        "Invoice No": invoice.invoice_number,
+        "Customer": invoice.user?.name || 'N/A',
+        "Mobile": invoice.user?.mobile || 'N/A',
+        "Vehicle": invoice.booking?.vehicle?.registration_number || 'N/A',
+        "Amount (Rs)": invoice.total_amount || invoice.amount || 0,
+        "Status": (invoice.status || 'unpaid').toUpperCase()
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "My Payment History");
+      XLSX.writeFile(workbook, "My_Payment_History_Report.xlsx");
+    } catch (error) {
+      console.error('Excel Download failed', error);
+      alert('Failed to generate Excel report.');
+    }
+  };
+
   const downloadSingleInvoice = async (id, invNo) => {
     try {
       const response = await api.get(`/invoices/${id}/receipt`, { responseType: 'blob' });
@@ -108,9 +138,14 @@ const FPaymentHistory = () => {
           <h1 className="bk-title">My Payment History & Invoices</h1>
           <p className="bk-subtitle">Track and manage your store's transactions</p>
         </div>
-        <button className="bk-btn bk-btn-primary" onClick={downloadBulkReport} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Download size={18} /> Download Filtered Report (PDF)
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="bk-btn bk-btn-primary" onClick={downloadBulkReport} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FileText size={18} /> Download Filtered Report (PDF)
+          </button>
+          <button className="bk-btn bk-btn-success" onClick={downloadBulkReportExcel} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#10b981', color: '#fff', border: 'none' }}>
+            <Table size={18} /> Download Filtered Report (Excel)
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
@@ -199,13 +234,22 @@ const FPaymentHistory = () => {
                     ₹{Number(inv.total_amount).toFixed(2)}
                   </td>
                   <td>
-                    <button 
-                      className="bk-btn bk-btn-outline" 
-                      style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                      onClick={() => downloadSingleInvoice(inv._id, inv.invoice_number)}
-                    >
-                      <Download size={14} /> PDF
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        className="bk-btn bk-btn-outline" 
+                        style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', background: '#e2e8f0', color: '#0f172a', border: 'none', fontWeight: 600 }}
+                        onClick={() => setSelectedInvoice(inv)}
+                      >
+                        <FileText size={14} /> View Bill
+                      </button>
+                      <button 
+                        className="bk-btn bk-btn-outline" 
+                        style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        onClick={() => downloadSingleInvoice(inv._id, inv.invoice_number)}
+                      >
+                        <Download size={14} /> Download
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -240,6 +284,12 @@ const FPaymentHistory = () => {
           </div>
         )}
       </div>
+
+      <BookingInvoiceModal 
+        invoice={selectedInvoice} 
+        onClose={() => setSelectedInvoice(null)} 
+        onPrint={(id, invNo) => downloadSingleInvoice(id, invNo)} 
+      />
     </div>
   );
 };
