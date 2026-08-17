@@ -58,6 +58,7 @@ const FCustomers = () => {
             const u = typeof b.user === 'object' ? b.user : {};
             userMap[uid] = {
               _id: uid,
+              driver_id: u.driver_id || '',
               name: u.name || 'N/A',
               mobile: u.mobile || '',
               email: u.email || '',
@@ -82,6 +83,7 @@ const FCustomers = () => {
           }
           return {
             _id: u._id,
+            driver_id: u.driver_id,
             name: u.name,
             mobile: u.mobile,
             email: u.email,
@@ -109,6 +111,7 @@ const FCustomers = () => {
   const filtered = customers.filter(c =>
     (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
     (c.mobile || '').includes(search) ||
+    (c.driver_id || '').toLowerCase().includes(search.toLowerCase()) ||
     (c.email || '').toLowerCase().includes(search.toLowerCase())
   );
 
@@ -182,7 +185,7 @@ const FCustomers = () => {
           <h3>Customers List</h3>
           <div className="search-wrapper">
             <Search size={15} className="search-icon" />
-            <input type="text" placeholder="Search name or mobile..." value={search} onChange={e => setSearch(e.target.value)} />
+            <input type="text" placeholder="Search name, mobile or ID..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
         </div>
 
@@ -214,6 +217,7 @@ const FCustomers = () => {
                     <td>
                       <div style={{ fontWeight: 600 }}>{c.name}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{c.email}</div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e40af', marginTop: '4px', whiteSpace: 'nowrap' }}>{c.driver_id ? `Driver ID: ${c.driver_id}` : 'No Driver ID'}</div>
                     </td>
                     <td style={{ fontFamily: 'monospace' }}>{c.mobile}</td>
                     <td>{c.city || 'N/A'}</td>

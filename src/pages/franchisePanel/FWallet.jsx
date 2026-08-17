@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import * as XLSX from 'xlsx';
 import { getFranchiseWallet, requestWithdrawal, getFranchiseWithdrawals, getFranchiseProfile } from '../../services/apiServices';
 import { ArrowUpRight, ArrowDownRight, FileText, CheckCircle, Clock, XCircle, Download, X } from 'lucide-react';
+import SettlementBillModal from '../../components/SettlementBillModal';
 
 const FWallet = () => {
   const [wallet, setWallet] = useState({ balance: 0, totalGrossRevenue: 0, serviceFee: 0, serviceFeePercent: 8, totalNetRevenue: 0, totalWithdrawn: 0, pendingWithdrawn: 0, transactions: [] });
@@ -14,6 +15,7 @@ const FWallet = () => {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [selectedBill, setSelectedBill] = useState(null);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
   const socketRef = useRef(null);
 
@@ -292,7 +294,7 @@ const FWallet = () => {
                 <th>Amount</th>
                 <th>Status</th>
                 <th>Note</th>
-                <th>Payment Proof</th>
+                <th>Documents</th>
               </tr>
             </thead>
             <tbody>
@@ -313,12 +315,17 @@ const FWallet = () => {
                     </td>
                     <td style={{ color: 'var(--text-secondary)', maxWidth: '200px' }}>{w.admin_note || w.note || '—'}</td>
                     <td>
-                      {w.payment_proof ? (
-                        <a href={`${BASE_URL}/${w.payment_proof.replace(/\\/g, '/').replace(/^\/+/, '')}`} target="_blank" rel="noopener noreferrer"
-                          style={{ color: '#3b82f6', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem', background: '#eff6ff', padding: '4px 10px', borderRadius: '6px' }}>
-                          <FileText size={14} /> View Proof
-                        </a>
-                      ) : <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Not uploaded</span>}
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button onClick={() => setSelectedBill(w)} style={{ color: '#0f172a', background: '#e2e8f0', border: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>
+                          <FileText size={14} /> View Bill
+                        </button>
+                        {w.payment_proof && (
+                          <a href={`${BASE_URL}/${w.payment_proof.replace(/\\/g, '/').replace(/^\/+/, '')}`} target="_blank" rel="noopener noreferrer"
+                            style={{ color: '#3b82f6', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '0.85rem', background: '#eff6ff', padding: '4px 10px', borderRadius: '6px' }}>
+                            <Download size={14} /> Proof
+                          </a>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -365,6 +372,14 @@ const FWallet = () => {
         </div>,
         document.body
       )}
+
+      {/* Settlement Bill Modal */}
+      <SettlementBillModal 
+        show={!!selectedBill} 
+        onClose={() => setSelectedBill(null)} 
+        billData={selectedBill} 
+        franchiseName={profile?.store_name} 
+      />
     </div>
   );
 };

@@ -14,6 +14,7 @@ import {
 } from '../services/apiServices';
 import useApi from '../services/useApi';
 import './Franchise.css';
+import SettlementBillModal from '../components/SettlementBillModal';
 
 const Franchise = () => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -26,6 +27,7 @@ const Franchise = () => {
   const [performance, setPerformance] = useState([]);
   const [dashStats, setDashStats] = useState(null);
   const [withdrawals, setWithdrawals] = useState([]);
+  const [selectedBill, setSelectedBill] = useState(null);
   const [activeTab, setActiveTab] = useState('partners');
   const [subTab, setSubTab] = useState('pending');
   const initialFormState = {
@@ -542,15 +544,19 @@ const Franchise = () => {
                         </span>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                           <button className="btn btn-sm btn-outline" onClick={() => { 
                             setSelectedWithdrawal(w); 
                             setNewWithdrawalStatus(w.status === 'pending' ? 'processing' : w.status);
                             setShowWithdrawalModal(true); 
                           }}>Update Status</button>
                           
+                          <button className="btn btn-sm" onClick={() => setSelectedBill(w)} style={{ background: '#e2e8f0', color: '#0f172a', border: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                            <FileText size={14} /> View Bill
+                          </button>
+
                           {w.payment_proof && (
-                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${w.payment_proof}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', textDecoration: 'none', fontSize: '0.9rem' }}><FileText size={14} /> Proof</a>
+                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${w.payment_proof}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', textDecoration: 'none', fontSize: '0.9rem', background: '#eff6ff', padding: '4px 8px', borderRadius: '4px' }}><Download size={14} /> Proof</a>
                           )}
                         </div>
                       </td>
@@ -1729,6 +1735,14 @@ const Franchise = () => {
         </div>,
         document.body
       )}
+
+      {/* Settlement Bill Modal */}
+      <SettlementBillModal 
+        show={!!selectedBill} 
+        onClose={() => setSelectedBill(null)} 
+        billData={selectedBill} 
+        franchiseName={selectedBill?.franchise?.store_name} 
+      />
     </div>
   );
 };

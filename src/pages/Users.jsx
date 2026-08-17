@@ -154,6 +154,7 @@ const Users = () => {
       (u.name || '').toLowerCase().includes(q)  ||
       (u.email || '').toLowerCase().includes(q) ||
       (u.phone || '').toLowerCase().includes(q) ||
+      (u.driver_id || '').toLowerCase().includes(q) ||
       (u.city || '').toLowerCase().includes(q);
     return matchTab && matchSearch;
   });
@@ -291,7 +292,7 @@ const Users = () => {
             <Search size={15} className="search-icon" />
             <input
               type="text"
-              placeholder="Search name, email, phone, city..."
+              placeholder="Search name, email, phone, ID, city..."
               value={search}
               onChange={handleSearch}
             />
@@ -344,6 +345,7 @@ const Users = () => {
                         <div>
                           <span className="cell-main">{u.name}</span>
                           <span className="cell-sub">{u.email}</span>
+                          <span className="cell-sub" style={{ fontWeight: 600, color: '#1e40af', marginTop: '4px', display: 'block', whiteSpace: 'nowrap' }}>{u.driver_id ? `Driver ID: ${u.driver_id}` : 'No Driver ID'}</span>
                         </div>
                       </div>
                     </td>
