@@ -223,7 +223,7 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
               ) : (
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
                   <span style={{ fontWeight: 'bold' }}>IGST 5%</span>
-                  <span>{totalTax.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  <span>{(gstAmount * 2).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid #000', fontSize: '16px', fontWeight: 'bold' }}>
