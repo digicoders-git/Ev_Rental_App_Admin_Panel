@@ -86,6 +86,7 @@ const Bookings = () => {
       setSwapVehiclesList(vData.filter(v => v.status === 'active'));
     } catch (err) {
       console.error(err);
+
       alert('Failed to fetch available vehicles');
     }
   };

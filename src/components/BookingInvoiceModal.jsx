@@ -59,6 +59,8 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
   const asset = invoice.booking?.vehicle?.registration_number || 'N/A';
   const amountInWords = convertNumberToWords(totalAmount);
   const isPaid = invoice.status === 'paid';
+  const franchiseState = (invoice.franchise?.state || invoice.booking?.franchise?.state || 'uttar pradesh').toLowerCase().trim();
+  const isUP = ['uttar pradesh', 'up', 'u.p.', 'u p'].includes(franchiseState);
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose} style={{
@@ -207,14 +209,23 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
                 <span>Total Taxable Amount</span>
                 <span>{taxableAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
-                <span style={{ fontWeight: 'bold' }}>CGST 2.5%</span>
-                <span>{gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
-                <span style={{ fontWeight: 'bold' }}>SGST 2.5%</span>
-                <span>{gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-              </div>
+              {isUP ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
+                    <span style={{ fontWeight: 'bold' }}>CGST 2.5%</span>
+                    <span>{gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
+                    <span style={{ fontWeight: 'bold' }}>SGST 2.5%</span>
+                    <span>{gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
+                  <span style={{ fontWeight: 'bold' }}>IGST 5%</span>
+                  <span>{totalTax.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid #000', fontSize: '16px', fontWeight: 'bold' }}>
                 <span>Total</span>
                 <span>₹{totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
