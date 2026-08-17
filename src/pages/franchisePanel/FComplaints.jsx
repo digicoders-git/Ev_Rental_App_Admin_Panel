@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Headphones, Search, Loader, AlertTriangle, X, CheckCircle, Clock,
@@ -382,7 +382,7 @@ const FComplaints = () => {
                 🕙 Vehicle Service Timing: 10:00 AM – 6:00 PM
               </div>
               <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.75rem', borderRadius: '8px', color: 'white', fontSize: '0.85rem' }}>
-                📞 Support: +91 94531 69279
+                📞 Support: +91 88402 04114
               </div>
             </div>
 
