@@ -395,6 +395,7 @@ const Franchise = () => {
           <table>
             <thead>
               <tr>
+                <th>Franchise ID</th>
                 <th>Franchise Name</th>
                 <th>Owner Details</th>
                 <th>Location</th>
@@ -410,6 +411,11 @@ const Franchise = () => {
                 s.owner_name?.toLowerCase().includes(searchPartners.toLowerCase())
               ).map((f) => (
                 <tr key={f._id}>
+                  <td>
+                    <span style={{ fontWeight: '500', color: 'var(--text-main)', fontFamily: 'monospace' }}>
+                      {f.franchise_id || f.store_id || 'N/A'}
+                    </span>
+                  </td>
                   <td>
                     <span
                       style={{ fontWeight: '600', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted' }}
@@ -785,8 +791,8 @@ const Franchise = () => {
                       <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{selectedPartner.store?.store_name}</span>
                     </div>
                     <div className="veh-info-item" style={{ marginBottom: '0.85rem' }}>
-                      <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Store ID</label>
-                      <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)', background: 'var(--primary-light)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{selectedPartner.store?.store_id}</span>
+                      <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Franchise ID</label>
+                      <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)', background: 'var(--primary-light)', padding: '0.1rem 0.4rem', borderRadius: '4px', fontFamily: 'monospace' }}>{selectedPartner.store?.franchise_id || selectedPartner.store?.store_id}</span>
                     </div>
                     <div className="veh-info-item" style={{ marginBottom: '0.85rem' }}>
                       <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Operating City</label>

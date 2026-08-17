@@ -123,9 +123,16 @@ const FProfile = ({ setIsAuthenticated }) => {
           <h2 style={{ margin: 0 }}>{userData?.owner_name || 'Franchise Owner'}</h2>
           <p style={{ margin: '4px 0 0' }}>{userData?.store_name} • {userData?.city}, {userData?.state}</p>
           <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{userData?.email}</p>
-          <span className="badge badge-success" style={{ marginTop: '6px', display: 'inline-block' }}>
-            {userData?.status || 'Active'} Partner
-          </span>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span className="badge badge-success">
+              {userData?.status || 'Active'} Partner
+            </span>
+            {(userData?.franchise_id || userData?.store_id) && (
+              <span style={{ background: 'var(--primary)', color: '#fff', padding: '3px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                {userData?.franchise_id || userData?.store_id}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -211,7 +218,7 @@ const FProfile = ({ setIsAuthenticated }) => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
             {[
               { label: 'Store Name', value: userData?.store_name },
-              { label: 'Store ID', value: userData?.store_id },
+              { label: 'Franchise ID', value: userData?.franchise_id || userData?.store_id },
               { label: 'Expiry Date', value: userData?.expiry_date ? new Date(userData.expiry_date).toLocaleDateString('en-IN') : 'N/A' },
               { label: 'Status', value: userData?.status },
               { label: 'Registered On', value: userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-IN') : 'N/A' },

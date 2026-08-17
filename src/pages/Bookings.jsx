@@ -200,7 +200,11 @@ const Bookings = () => {
         vehicle: b.vehicle?.vehicle_name || 'N/A',
         regNo: b.vehicle?.registration_number || '',
         vehicleId: b.vehicle?.vehicle_id || '',
-        franchise: b.franchise?.store_name || b.vehicle?.franchise?.store_name || 'Main Hub',
+        franchise: b.franchise?.store_name 
+            ? `${b.franchise.store_name} (${b.franchise.franchise_id || b.franchise.store_id || 'Main Hub'})` 
+            : (b.vehicle?.franchise?.store_name 
+                ? `${b.vehicle.franchise.store_name} (${b.vehicle.franchise.franchise_id || b.vehicle.franchise.store_id || 'Main Hub'})` 
+                : 'Main Hub'),
         plan: b.plan?.plan_name || 'Custom',
         status: b.booking_status === 'confirmed' ? 'Active' :
                 b.booking_status === 'ongoing'   ? 'Ongoing' :

@@ -110,7 +110,7 @@ const PaymentHistory = () => {
         "Customer": invoice.user?.name || 'N/A',
         "Mobile": invoice.user?.mobile || 'N/A',
         "Vehicle": invoice.booking?.vehicle?.registration_number || 'N/A',
-        "Franchise": invoice.franchise?.store_name || 'Platform',
+        "Franchise": invoice.franchise?.store_name ? `${invoice.franchise.store_name} (${invoice.franchise.franchise_id || invoice.franchise.store_id || ''})` : 'Platform',
         "Amount (Rs)": invoice.total_amount || invoice.amount || 0,
         "Status": (invoice.status || 'unpaid').toUpperCase()
       }));
@@ -253,7 +253,7 @@ const PaymentHistory = () => {
                     <div style={{ color: '#334155' }}>{inv.booking?.vehicle?.vehicle_name || 'N/A'}</div>
                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{inv.booking?.vehicle?.registration_number}</div>
                   </td>
-                  <td style={{ color: '#475569', fontSize: '0.9rem' }}>{inv.franchise?.store_name || 'Platform'}</td>
+                  <td style={{ color: '#475569', fontSize: '0.9rem' }}>{inv.franchise?.store_name ? `${inv.franchise.store_name} (${inv.franchise.franchise_id || inv.franchise.store_id || ''})` : 'Platform'}</td>
                   <td>
                     <span className={`bk-status-badge ${inv.status === 'paid' ? 'status-completed' : 'status-active'}`}>
                       {inv.status.toUpperCase()}

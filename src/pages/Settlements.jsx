@@ -108,7 +108,7 @@ const Settlements = () => {
           </div>
           <div class="party party-right">
             <h4>Franchisee (Receiver)</h4>
-            <p>${s.franchise?.store_name || '—'}</p>
+            <p>${s.franchise?.store_name ? `${s.franchise.store_name} (${s.franchise.franchise_id || s.franchise.store_id || ''})` : '-'}</p>
             <span>${s.franchise?.owner_name || ''}</span>
           </div>
         </div>
@@ -184,8 +184,8 @@ const Settlements = () => {
               {settlements.map((s) => {
                 const isWithdrawal = s._type === 'withdrawal';
                 const franchiseName = isWithdrawal
-                  ? (s.franchise?.store_name || s.store?.store_name || '—')
-                  : (s.franchise?.store_name || '—');
+                  ? (s.franchise?.store_name ? `${s.franchise.store_name} (${s.franchise.franchise_id || s.franchise.store_id || ''})` : s.store?.store_name || '-')
+                  : (s.franchise?.store_name ? `${s.franchise.store_name} (${s.franchise.franchise_id || s.franchise.store_id || ''})` : '-');
                 const amount = isWithdrawal ? s.amount : s.final_payout;
                 const status = s.status || 'pending';
                 const note = s.admin_note || s.note || s.remarks || '—';
@@ -316,7 +316,7 @@ const Settlements = () => {
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 0 }}>
                   <h4 style={{ margin: '0 0 8px 0', color: '#334155' }}>Franchisee (Receiver):</h4>
-                  <p style={{ margin: 0, fontWeight: 500 }}>{selectedSettlement.franchise?.store_name}</p>
+                  <p style={{ margin: 0, fontWeight: 500 }}>{selectedSettlement.franchise?.store_name} ({selectedSettlement.franchise?.franchise_id || selectedSettlement.franchise?.store_id})</p>
                   <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>{selectedSettlement.franchise?.owner_name}</p>
                 </div>
               </div>
