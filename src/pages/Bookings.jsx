@@ -11,6 +11,7 @@ import { getAllBookings, approveBooking, rejectBooking, updateBookingStatus, pay
 import useApi from '../services/useApi';
 import api from '../services/api';
 import './Bookings.css';
+import BookingInvoiceModal from '../components/BookingInvoiceModal';
 
 const STATUS_CONFIG = {
   Active:    { cls: 'badge-success', icon: <CircleCheck size={12} /> },
@@ -1314,7 +1315,7 @@ const Bookings = () => {
         document.body
       )}
       {/* Invoice Modal — Premium Design */}
-      {showInvoiceModal && createPortal(
+      {showInvoiceModal && !selectedInvoice && createPortal(
         <div className="modal-overlay" onClick={() => setShowInvoiceModal(false)} style={{ backdropFilter: 'blur(6px)' }}>
           <div onClick={(e) => e.stopPropagation()} style={{
             background: '#fff',
@@ -1337,163 +1338,6 @@ const Bookings = () => {
                 <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>There are no invoices generated for this booking yet. Invoices are generated when a payment is made.</p>
                 <button onClick={() => setShowInvoiceModal(false)} style={{ padding: '10px 24px', background: '#f1f5f9', color: '#475569', borderRadius: '8px', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Close</button>
               </div>
-            ) : selectedInvoice ? (
-              <>
-                {/* Header gradient */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #10b981 100%)',
-                  borderRadius: '20px 20px 0 0',
-                  padding: '28px 28px 20px 28px',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  {/* Decorative circles */}
-                  <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
-                  <div style={{ position: 'absolute', top: 10, right: 50, width: 60, height: 60, borderRadius: '50%', background: 'rgba(16,185,129,0.15)' }} />
-                  
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                        <div style={{ background: 'rgba(16,185,129,0.2)', borderRadius: '8px', padding: '8px', display: 'flex' }}>
-                          <Receipt size={22} color="#10b981" />
-                        </div>
-                        <div>
-                          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Payment Receipt</div>
-                          <div style={{ color: '#fff', fontWeight: 700, fontSize: '18px', letterSpacing: '0.5px' }}>{selectedInvoice.invoice_number}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <button onClick={() => {
-                      if (invoiceList.length > 1) {
-                        setSelectedInvoice(null);
-                      } else {
-                        setShowInvoiceModal(false);
-                      }
-                    }} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '8px', padding: '8px', cursor: 'pointer', color: '#fff', display: 'flex' }}>
-                      <X size={18} />
-                    </button>
-                  </div>
-
-                  {/* Status pill */}
-                  <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1 }}>
-                    <div style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '6px',
-                      background: selectedInvoice.status === 'paid' ? 'rgba(16,185,129,0.25)' : 'rgba(245,158,11,0.25)',
-                      border: `1px solid ${selectedInvoice.status === 'paid' ? 'rgba(16,185,129,0.5)' : 'rgba(245,158,11,0.5)'}`,
-                      borderRadius: '20px', padding: '5px 14px'
-                    }}>
-                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: selectedInvoice.status === 'paid' ? '#10b981' : '#f59e0b' }} />
-                      <span style={{ color: selectedInvoice.status === 'paid' ? '#10b981' : '#f59e0b', fontSize: '12px', fontWeight: 600, letterSpacing: '0.5px' }}>
-                        {selectedInvoice.status === 'paid' ? 'PAYMENT SUCCESSFUL' : 'PAYMENT PENDING'}
-                      </span>
-                    </div>
-                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>
-                      {new Date(selectedInvoice.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div style={{ padding: '24px 28px' }}>
-                  {/* Billed To / Issued By */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                    <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', borderLeft: '3px solid #10b981' }}>
-                      <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>Billed To</div>
-                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px', marginBottom: '4px' }}>{selectedInvoice.user?.name || '—'}</div>
-                      <div style={{ color: '#64748b', fontSize: '12px', lineHeight: '1.6' }}>
-                        {selectedInvoice.user?.mobile && <div>📞 {selectedInvoice.user.mobile}</div>}
-                        {selectedInvoice.user?.email && <div>✉️ {selectedInvoice.user.email}</div>}
-                      </div>
-                    </div>
-                    <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', borderLeft: '3px solid #3b82f6' }}>
-                      <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>Issued By</div>
-                      <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '15px', marginBottom: '4px' }}>
-                        {selectedInvoice.franchise ? selectedInvoice.franchise.store_name : 'EV Rental Platform'}
-                      </div>
-                      <div style={{ color: '#64748b', fontSize: '12px', lineHeight: '1.6' }}>
-                        {selectedInvoice.booking?.booking_id && <div>🔖 Booking: {selectedInvoice.booking.booking_id}</div>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Line items */}
-                  <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
-                    <div style={{ background: '#f1f5f9', padding: '10px 16px', display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '1px' }}>Description</span>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</span>
-                    </div>
-
-                    <div style={{ padding: '0 16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px dashed #e2e8f0' }}>
-                        <div>
-                          <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '14px' }}>
-                            {selectedInvoice.installment_id ? `Installment Payment #${selectedInvoice.installment_no}` : 'Vehicle Rental Charge'}
-                          </div>
-                          <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Booking ID: {selectedInvoice.booking?.booking_id || '—'}</div>
-                        </div>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(Number(selectedInvoice.total_amount || 0) - (Number(selectedInvoice.total_amount || 0) * 5 / 105)).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                      </div>
-
-                      {(selectedInvoice.total_amount > 0) && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px dashed #e2e8f0' }}>
-                          <div>
-                            <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '14px' }}>GST / Taxes (5%)</div>
-                            <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Applied as per government norms</div>
-                          </div>
-                          <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '14px' }}>₹{(Number(selectedInvoice.total_amount || 0) * 5 / 105).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        </div>
-                      )}
-
-                      {(selectedInvoice.discount_amount > 0) && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px dashed #e2e8f0' }}>
-                          <div>
-                            <div style={{ fontWeight: 500, color: '#10b981', fontSize: '14px' }}>🎉 Discount Applied</div>
-                            <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}>Offer / Coupon savings</div>
-                          </div>
-                          <div style={{ fontWeight: 600, color: '#10b981', fontSize: '14px' }}>- ₹{(selectedInvoice.discount_amount).toLocaleString('en-IN')}</div>
-                        </div>
-                      )}
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', background: '#fff' }}>
-                        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '16px' }}>Total Paid</div>
-                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '20px' }}>₹{(selectedInvoice.total_amount || 0).toLocaleString('en-IN')}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ textAlign: 'center', padding: '12px', background: '#f8fafc', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
-                    <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>
-                      🔒 This is a computer-generated invoice. No physical signature is required. <br/>
-                      For disputes or queries, contact support with Invoice No. <strong>{selectedInvoice.invoice_number}</strong>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Footer actions */}
-                <div style={{ padding: '16px 28px 24px 28px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                  <button onClick={() => {
-                    if (invoiceList.length > 1) {
-                      setSelectedInvoice(null);
-                    } else {
-                      setShowInvoiceModal(false);
-                    }
-                  }} style={{
-                    padding: '10px 20px', borderRadius: '10px', border: '1px solid #e2e8f0',
-                    background: '#fff', color: '#475569', fontWeight: 600, cursor: 'pointer', fontSize: '14px'
-                  }}>
-                    {invoiceList.length > 1 ? 'Back to List' : 'Close'}
-                  </button>
-                  <button onClick={() => printInvoice(selectedInvoice)} style={{
-                    padding: '10px 22px', borderRadius: '10px', border: 'none',
-                    background: 'linear-gradient(135deg, #0f172a, #10b981)',
-                    color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '14px',
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    boxShadow: '0 4px 15px rgba(16,185,129,0.3)'
-                  }}>
-                    <Download size={16} /> Print / Save PDF
-                  </button>
-                </div>
-              </>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
                 <div style={{ padding: '24px 28px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
@@ -1537,6 +1381,22 @@ const Bookings = () => {
         </div>,
         document.body
       )}
+
+      {showInvoiceModal && selectedInvoice && (
+        <BookingInvoiceModal
+          invoice={selectedInvoice}
+          onClose={() => {
+            if (invoiceList.length > 1) {
+              setSelectedInvoice(null);
+            } else {
+              setSelectedInvoice(null);
+              setShowInvoiceModal(false);
+            }
+          }}
+          onPrint={() => printInvoice(selectedInvoice)}
+        />
+      )}
+
       {showExtendModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowExtendModal(false)}>
           <div className="modal-content bk-modal" style={{ maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
@@ -1669,4 +1529,3 @@ const Bookings = () => {
 };
 
 export default Bookings;
-
