@@ -4,7 +4,7 @@ import { FileSignature, FileText, Clock,
   Building2, X, MapPin, Plus, Search, TrendingUp,
   Users, Car, XCircle, CheckCircle, Eye, DollarSign, 
   KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle,
-  History, Pencil, Navigation, Crosshair, ExternalLink
+  History, Pencil, Navigation, Crosshair, ExternalLink, Download
 } from 'lucide-react';
 import { 
   getFranchiseEnquiries, getAllStores, createStore, deleteStore, getStoreById,
