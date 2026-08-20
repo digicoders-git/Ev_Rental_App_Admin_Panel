@@ -81,6 +81,8 @@ const Vehicles = () => {
           category: v.category?.name || v.vehicle_type || 'N/A',
           status: v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : (v.status === 'out_of_order' ? 'Out of Order' : 'Maintenance')),
           driverName: v.driver_name || '—',
+          driverId: v.driver_id || '—',
+          debug_did: console.log('Admin Vehicle driver_id:', v.driver_id),
           bookingStartDate: v.booking_start_date || null,
           submissionDate: v.submission_date || null,
           submissionStatus: v.submission_status || (v.is_busy ? 'Booked' : (v.status === 'active' ? 'Available' : v.status)),
@@ -432,7 +434,12 @@ const Vehicles = () => {
                       <span className="reg-badge">{v.regNo}</span>
                       <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginTop: '4px' }}>{v.vehicleId || 'N/A'}</div>
                     </td>
-                    <td style={{ fontWeight: 600, color: '#334155' }}>{v.driverName || '—'}</td>
+                    <td style={{ fontWeight: 600, color: '#334155' }}>
+                      <div>{v.driverName || '—'}</div>
+                      {v.driverId && v.driverId !== '—' && v.driverId !== 'N/A' && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '4px' }}>{v.driverId}</div>
+                      )}
+                    </td>
                     <td style={{ fontWeight: 600, color: '#334155' }}>
                       {v.bookingStartDate ? new Date(v.bookingStartDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                     </td>

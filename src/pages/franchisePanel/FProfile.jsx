@@ -4,6 +4,7 @@ import { User, Shield, CreditCard, LogOut, Save, Eye, EyeOff, X, Loader, CheckCi
 import { useNavigate } from 'react-router-dom';
 import { updateFranchiseProfile, changeFranchisePassword, getFranchiseProfile } from '../../services/apiServices';
 import useApi from '../../services/useApi';
+import { Landmark } from 'lucide-react';
 
 const FProfile = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
@@ -30,6 +31,10 @@ const FProfile = ({ setIsAuthenticated }) => {
       state: data.state || '',
       latitude: data.latitude || '',
       longitude: data.longitude || '',
+      gstin: data.gstin || '',
+      bank_details: JSON.stringify(data.bank_details || {
+        account_holder_name: '', bank_name: '', account_number: '', ifsc_code: '', branch_name: ''
+      })
     });
 
     // Fetch fresh data
@@ -47,6 +52,10 @@ const FProfile = ({ setIsAuthenticated }) => {
         state: freshData.state || '',
         latitude: freshData.latitude || '',
         longitude: freshData.longitude || '',
+        gstin: freshData.gstin || '',
+        bank_details: JSON.stringify(freshData.bank_details || {
+          account_holder_name: '', bank_name: '', account_number: '', ifsc_code: '', branch_name: ''
+        })
       });
     });
   }, []);
@@ -90,8 +99,9 @@ const FProfile = ({ setIsAuthenticated }) => {
 
   const TABS = [
     { key: 'profile', label: 'Profile Details', icon: <User size={16} /> },
-    { key: 'password', label: 'Security', icon: <Shield size={16} /> },
+    { key: 'bank', label: 'Bank & GST', icon: <Landmark size={16} /> },
     { key: 'store', label: 'Store Info', icon: <CreditCard size={16} /> },
+    { key: 'password', label: 'Security', icon: <Shield size={16} /> },
   ];
 
   return (
@@ -174,6 +184,50 @@ const FProfile = ({ setIsAuthenticated }) => {
           <div style={{ marginTop: '1.5rem' }}>
             <button className="btn btn-primary" disabled={loading} onClick={handleProfileSave}>
               {loading ? <Loader size={16} className="spinner" /> : <><Save size={16} /> Save Changes</>}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bank & GST Tab */}
+      {tab === 'bank' && (
+        <div className="card">
+          <h3 style={{ marginBottom: '1.5rem' }}>Bank & GST Details</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+            These details will be used for your weekly payouts and automatically printed on your Settlement Bills.
+          </p>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ gridColumn: '1/-1', marginBottom: '0.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>GSTIN (If Applicable)</label>
+              <input type="text" value={form.gstin || ''} onChange={e => setForm(p => ({ ...p, gstin: e.target.value.toUpperCase() }))}
+                style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} placeholder="e.g. 09XXXXX1234X1ZX" />
+            </div>
+
+            {[
+              { key: 'account_holder_name', label: 'Account Holder Name' },
+              { key: 'bank_name', label: 'Bank Name' },
+              { key: 'account_number', label: 'Account Number' },
+              { key: 'ifsc_code', label: 'IFSC Code' },
+              { key: 'branch_name', label: 'Branch Name', fullWidth: true },
+            ].map(f => {
+              const currentBankDetails = form.bank_details ? JSON.parse(form.bank_details) : {};
+              return (
+                <div key={f.key} style={f.fullWidth ? { gridColumn: '1/-1' } : {}}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>{f.label}</label>
+                  <input type="text" value={currentBankDetails[f.key] || ''} 
+                    onChange={e => {
+                      const updatedBankDetails = { ...currentBankDetails, [f.key]: e.target.value };
+                      setForm(p => ({ ...p, bank_details: JSON.stringify(updatedBankDetails) }));
+                    }}
+                    style={{ width: '100%', padding: '0.625rem 0.875rem', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.875rem', background: 'var(--surface)' }} />
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: '1.5rem' }}>
+            <button className="btn btn-primary" disabled={loading} onClick={handleProfileSave}>
+              {loading ? <Loader size={16} className="spinner" /> : <><Save size={16} /> Save Bank Details</>}
             </button>
           </div>
         </div>

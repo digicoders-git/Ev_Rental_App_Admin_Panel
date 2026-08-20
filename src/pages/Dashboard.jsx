@@ -94,9 +94,10 @@ const Dashboard = () => {
   const kpis = [
     { title: 'Total Vehicles', value: stats.fleet?.total || 0, icon: Car, color: 'blue', sub: 'Across all hubs' },
     { title: 'Active Rides', value: stats.bookings?.active || 0, icon: Zap, color: 'green', sub: 'In progress now' },
-    { title: 'Weekly Income', value: `₹${(stats.revenue?.weekly || 0).toLocaleString()}`, icon: IndianRupee, color: 'emerald', sub: 'Last 7 days' },
+    { title: 'Net Profit (Tris)', value: `₹${(stats.revenue?.netProfit || 0).toLocaleString('en-IN', {maximumFractionDigits: 0})}`, icon: IndianRupee, color: 'emerald', sub: '8% Service Fee' },
+    { title: 'Weekly Income', value: `₹${(stats.revenue?.weekly || 0).toLocaleString()}`, icon: IndianRupee, color: 'blue', sub: 'Last 7 days' },
     { title: 'Monthly Income', value: `₹${(stats.revenue?.monthly || 0).toLocaleString()}`, icon: IndianRupee, color: 'purple', sub: 'Last 30 days' },
-    { title: 'Yearly Income', value: `₹${(stats.revenue?.yearly || 0).toLocaleString()}`, icon: IndianRupee, color: 'orange', sub: 'Last 365 days' },
+    { title: 'Total Revenue', value: `₹${(stats.revenue?.total || 0).toLocaleString()}`, icon: IndianRupee, color: 'orange', sub: 'All Franchises' },
     { title: 'Available Fleet', value: stats.fleet?.available || 0, icon: Activity, color: 'blue', sub: 'Ready for booking' },
     { title: 'Pending KYC', value: stats.users?.kyc_pending || 0, icon: Clock, color: 'purple', sub: 'Verification required' },
     { title: 'Docs Expiring', value: stats.documents?.expiring || 0, icon: FileWarning, color: 'red', sub: 'Action required' },

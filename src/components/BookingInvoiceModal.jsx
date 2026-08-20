@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Download, Printer } from 'lucide-react';
 
@@ -59,8 +59,21 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
   const asset = invoice.booking?.vehicle?.registration_number || 'N/A';
   const amountInWords = convertNumberToWords(totalAmount);
   const isPaid = invoice.status === 'paid';
-  const franchiseState = (invoice.franchise?.state || invoice.booking?.franchise?.state || 'uttar pradesh').toLowerCase().trim();
-  const isUP = ['uttar pradesh', 'up', 'u.p.', 'u p'].includes(franchiseState);
+  const customerStateRaw = invoice.user?.state || invoice.franchise?.state || invoice.booking?.franchise?.state || 'uttar pradesh';
+  const customerState = customerStateRaw.toLowerCase().trim();
+  const isUP = ['uttar pradesh', 'up', 'u.p.', 'u p'].includes(customerState);
+  const placeOfSupplyText = isUP ? 'Uttar Pradesh (09)' : (invoice.user?.state || 'Other State');
+
+  const handleWhatsApp = () => {
+    const mobile = invoice.user?.mobile || '';
+    if (!mobile) return alert("Customer mobile number not found!");
+    // Remove any +91 or 91 if it already exists, to prevent duplicate country codes, but assuming standard 10 digits
+    let cleanMobile = mobile.replace(/\D/g, '');
+    if (cleanMobile.length === 10) cleanMobile = '91' + cleanMobile;
+    
+    const text = `Hello ${invoice.user?.name || 'Customer'},\n\nYour invoice for EV Rental Order #${orderId} is generated.\nTaxable Amount: ₹${taxableAmount.toFixed(2)}\nTotal Amount: ₹${totalAmount}\nBalance Due: ₹${isPaid ? '0' : totalAmount}\n\nThank you for choosing Tris Electric!`;
+    window.open(`https://wa.me/${cleanMobile}?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose} style={{
@@ -82,6 +95,12 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
       <div style={{ width: '100%', maxWidth: '850px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
         {/* Modal Controls */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '15px' }} onClick={(e) => e.stopPropagation()}>
+          <button onClick={handleWhatsApp} style={{
+            padding: '8px 16px', background: '#25D366', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600
+          }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            Send on WhatsApp
+          </button>
           <button onClick={() => { onClose(); onPrint(invoice._id, invoice.invoice_number); }} style={{
             padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600
           }}>
@@ -131,7 +150,7 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
               <div style={{ display: 'flex' }}><span style={{ width: '90px' }}>Terms</span><span>: Due on Receipt</span></div>
               <div style={{ display: 'flex' }}><span style={{ width: '90px' }}>Due Date</span><span>: {dateStr}</span></div>
               <div style={{ display: 'flex' }}><span style={{ width: '90px' }}>P.O. #</span><span>: {invoice.invoice_number}</span></div>
-              <div style={{ display: 'flex' }}><span style={{ width: '90px' }}>Place Of Supply</span><span>: Uttar Pradesh (09)</span></div>
+              <div style={{ display: 'flex' }}><span style={{ width: '90px' }}>Place Of Supply</span><span>: {placeOfSupplyText}</span></div>
             </div>
           </div>
         </div>
@@ -209,23 +228,18 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
                 <span>Total Taxable Amount</span>
                 <span>{taxableAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
-              {isUP ? (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
-                    <span style={{ fontWeight: 'bold' }}>CGST 2.5%</span>
-                    <span>{gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
-                    <span style={{ fontWeight: 'bold' }}>SGST 2.5%</span>
-                    <span>{gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                  </div>
-                </>
-              ) : (
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
-                  <span style={{ fontWeight: 'bold' }}>IGST 5%</span>
-                  <span>{(gstAmount * 2).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                </div>
-              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
+                <span style={{ fontWeight: 'bold' }}>CGST {isUP ? '2.5%' : '0%'}</span>
+                <span>{isUP ? gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
+                <span style={{ fontWeight: 'bold' }}>SGST {isUP ? '2.5%' : '0%'}</span>
+                <span>{isUP ? gstAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #cbd5e1' }}>
+                <span style={{ fontWeight: 'bold' }}>IGST {!isUP ? '5%' : '0%'}</span>
+                <span>{!isUP ? (gstAmount * 2).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}</span>
+              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '1px solid #000', fontSize: '16px', fontWeight: 'bold' }}>
                 <span>Total</span>
                 <span>₹{totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>

@@ -328,6 +328,9 @@ const FRides = () => {
                       <td>
                         <div style={{ fontWeight: 500 }}>{b.vehicle?.vehicle_name || 'N/A'}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.vehicle?.registration_number}</div>
+                        {b.user?.driver_id && (
+                           <div style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '4px', fontWeight: 600 }}>{b.user.driver_id}</div>
+                        )}
                       </td>
                       <td>
                         <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>{b.vehicle?.vehicle_id || 'N/A'}</div>

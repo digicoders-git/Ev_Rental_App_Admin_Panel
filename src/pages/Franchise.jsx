@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FileSignature, FileText, Clock, 
   Building2, X, MapPin, Plus, Search, TrendingUp,
   Users, Car, XCircle, CheckCircle, Eye, DollarSign, 
   KeyRound, Eye as EyeIcon, EyeOff, Phone, Mail, User, Lock, Loader2, Trash2, AlertTriangle,
-  History, Pencil, Navigation, Crosshair, ExternalLink, Download
+  History, Pencil, Crosshair, ExternalLink, Download
 } from 'lucide-react';
 import { 
   getFranchiseEnquiries, getAllStores, createStore, deleteStore, getStoreById,
@@ -202,11 +202,44 @@ const Franchise = () => {
   const [adminNote, setAdminNote] = useState('');
   const [newWithdrawalStatus, setNewWithdrawalStatus] = useState('processing');
 
-  const handleReleaseFunds = (franchiseId) => {
-    if (!window.confirm("Are you sure you want to release the full wallet balance for this franchise?")) return;
-    call(() => releaseFranchiseFundsAdmin({ franchiseId }), () => {
+  const [showReleaseModal, setShowReleaseModal] = useState(false);
+  const [releasePartner, setReleasePartner] = useState(null);
+  const [releaseMode, setReleaseMode] = useState('full'); // 'full', 'custom', 'date'
+  const [customReleaseAmount, setCustomReleaseAmount] = useState('');
+  const [releaseStartDate, setReleaseStartDate] = useState('');
+  const [releaseEndDate, setReleaseEndDate] = useState('');
+
+  const handleReleaseFunds = (franchise) => {
+    setReleasePartner(franchise);
+    setReleaseMode('full');
+    setCustomReleaseAmount('');
+    setReleaseStartDate('');
+    setReleaseEndDate('');
+    setShowReleaseModal(true);
+  };
+
+  const submitReleaseFunds = () => {
+    if (!releasePartner) return;
+    
+    const payload = { franchiseId: releasePartner._id };
+    
+    if (releaseMode === 'custom') {
+      if (!customReleaseAmount || customReleaseAmount <= 0) {
+        return alert("Please enter a valid amount.");
+      }
+      payload.amount = customReleaseAmount;
+    } else if (releaseMode === 'date') {
+      if (!releaseStartDate || !releaseEndDate) {
+        return alert("Please select both start and end dates.");
+      }
+      payload.startDate = releaseStartDate;
+      payload.endDate = releaseEndDate;
+    }
+
+    call(() => releaseFranchiseFundsAdmin(payload), () => {
       fetchData();
       alert("Funds released successfully! Settlement initiated.");
+      setShowReleaseModal(false);
     }, (err) => alert(err.message || "Failed to release funds"));
   };
 
@@ -498,8 +531,15 @@ const Franchise = () => {
                       <td>
                         <button 
                           className="btn btn-sm btn-primary" 
-                          onClick={() => handleReleaseFunds(s._id)}
-                          disabled={!s.wallet_balance || s.wallet_balance <= 0}
+                          onClick={() => handleReleaseFunds(s)}
+                          style={{
+                            backgroundColor: '#059669',
+                            color: 'white',
+                            border: 'none',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
                         >
                           Release Funds
                         </button>
@@ -832,6 +872,37 @@ const Franchise = () => {
                         display: 'inline-block'
                       }}>{selectedPartner.store?.status}</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bank & GST Details Section */}
+              <div className="veh-detail-section" style={{ marginTop: '1.5rem', padding: '1.25rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div className="veh-detail-section-title" style={{ color: '#3b82f6', marginBottom: '1rem', borderBottom: '2px solid #bfdbfe', paddingBottom: '0.5rem' }}>Bank & GST Details</div>
+                <div className="veh-detail-rows" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div className="veh-info-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>GSTIN</label>
+                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{selectedPartner.store?.gstin || '—'}</span>
+                  </div>
+                  <div className="veh-info-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Account Holder</label>
+                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{selectedPartner.store?.bank_details?.account_holder_name || '—'}</span>
+                  </div>
+                  <div className="veh-info-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Bank Name</label>
+                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{selectedPartner.store?.bank_details?.bank_name || '—'}</span>
+                  </div>
+                  <div className="veh-info-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Account Number</label>
+                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{selectedPartner.store?.bank_details?.account_number || '—'}</span>
+                  </div>
+                  <div className="veh-info-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>IFSC Code</label>
+                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{selectedPartner.store?.bank_details?.ifsc_code || '—'}</span>
+                  </div>
+                  <div className="veh-info-item">
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Branch Name</label>
+                    <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-main)' }}>{selectedPartner.store?.bank_details?.branch_name || '—'}</span>
                   </div>
                 </div>
               </div>
@@ -1749,6 +1820,105 @@ const Franchise = () => {
         billData={selectedBill} 
         franchiseName={selectedBill?.franchise?.store_name} 
       />
+      {/* Release Funds Modal */}
+      {showReleaseModal && releasePartner && createPortal(
+        <div className="modal-overlay" onClick={() => setShowReleaseModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px', borderRadius: '12px' }}>
+            <div className="modal-header">
+              <h3>Release Funds - {releasePartner.store_name}</h3>
+              <button className="btn-close" onClick={() => setShowReleaseModal(false)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                <button 
+                  onClick={() => setReleaseMode('full')} 
+                  style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: releaseMode === 'full' ? '#e0f2fe' : '#fff', color: releaseMode === 'full' ? '#0284c7' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  Full Wallet
+                </button>
+                <button 
+                  onClick={() => setReleaseMode('custom')} 
+                  style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: releaseMode === 'custom' ? '#e0f2fe' : '#fff', color: releaseMode === 'custom' ? '#0284c7' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  Custom
+                </button>
+                <button 
+                  onClick={() => setReleaseMode('date')} 
+                  style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: releaseMode === 'date' ? '#e0f2fe' : '#fff', color: releaseMode === 'date' ? '#0284c7' : '#475569', fontWeight: 'bold', cursor: 'pointer' }}
+                >
+                  Date Range
+                </button>
+              </div>
+
+              {releaseMode === 'full' && (
+                <div style={{ textAlign: 'center', padding: '20px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>Current Wallet Balance</p>
+                  <h2 style={{ margin: '10px 0 0 0', color: '#0f172a', fontSize: '2rem' }}>₹{releasePartner.wallet_balance?.toLocaleString('en-IN') || 0}</h2>
+                  <p style={{ marginTop: '10px', fontSize: '0.8rem', color: '#ef4444' }}>This will release the maximum available funds in the wallet.</p>
+                </div>
+              )}
+
+              {releaseMode === 'custom' && (
+                <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#334155' }}>Amount to Release (₹)</label>
+                  <input 
+                    type="number" 
+                    value={customReleaseAmount} 
+                    onChange={e => setCustomReleaseAmount(e.target.value)} 
+                    placeholder="Enter amount"
+                    style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '1.1rem' }}
+                  />
+                  <p style={{ marginTop: '10px', fontSize: '0.8rem', color: '#64748b' }}>Available Balance: ₹{releasePartner.wallet_balance?.toLocaleString('en-IN') || 0}</p>
+                </div>
+              )}
+
+              {releaseMode === 'date' && (
+                <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <p style={{ margin: '0 0 15px 0', fontSize: '0.9rem', color: '#64748b' }}>Releases all revenue earned within this date range.</p>
+                  <div style={{ display: 'flex', gap: '15px' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#334155', fontSize: '0.85rem' }}>From Date</label>
+                      <input 
+                        type="date" 
+                        value={releaseStartDate} 
+                        onChange={e => setReleaseStartDate(e.target.value)} 
+                        style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#334155', fontSize: '0.85rem' }}>To Date</label>
+                      <input 
+                        type="date" 
+                        value={releaseEndDate} 
+                        onChange={e => setReleaseEndDate(e.target.value)} 
+                        style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', padding: '15px 20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setShowReleaseModal(false)}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#fff', color: '#334155', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={submitReleaseFunds}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: '#059669', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Confirm Release
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </div>
   );
 };

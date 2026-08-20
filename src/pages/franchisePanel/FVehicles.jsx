@@ -264,7 +264,12 @@ const FVehicles = () => {
                       <div style={{ fontFamily: 'monospace', fontWeight: 500 }}>{v.registration_number || 'N/A'}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginTop: '4px' }}>{v.vehicle_id || 'N/A'}</div>
                     </td>
-                    <td style={{ fontWeight: 600, color: '#334155' }}>{v.driver_name || '—'}</td>
+                    <td style={{ fontWeight: 600, color: '#334155' }}>
+                      <div>{v.driver_name || '—'}</div>
+                      {v.driver_id && v.driver_id !== '—' && v.driver_id !== 'N/A' && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '4px' }}>{v.driver_id}</div>
+                      )}
+                    </td>
                     <td style={{ fontWeight: 600, color: '#334155' }}>
                       {v.booking_start_date ? new Date(v.booking_start_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                     </td>
