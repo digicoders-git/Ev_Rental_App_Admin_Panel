@@ -114,6 +114,7 @@ const Users = () => {
             name: u.name || '',
             email: u.email || '',
             phone: u.mobile || u.phone || '',
+            has_active_ride: u.has_active_ride || false,
             assigned_vehicle: u.assigned_vehicle || null,
             booking_date: u.booking_date ? new Date(u.booking_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A',
             paid_amount: u.paid_amount || 0,
