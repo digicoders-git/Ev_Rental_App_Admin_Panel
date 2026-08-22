@@ -171,40 +171,7 @@ const Notifications = () => {
                 />
               </div>
 
-              {/* Image Upload */}
-              <div className="form-group">
-                <label>Notification Image <span style={{ fontWeight: 400, textTransform: 'none', color: '#94a3b8' }}>(optional graphic)</span></label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={handleImageChange}
-                />
-                {!imagePreview ? (
-                  <button
-                    type="button"
-                    className="notif-image-upload-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <ImageIcon size={18} />
-                    <span>Click to upload a banner / graphic</span>
-                    <span className="notif-image-hint">PNG, JPG up to 5MB</span>
-                  </button>
-                ) : (
-                  <div className="notif-image-preview-wrap">
-                    <img src={imagePreview} alt="Preview" className="notif-image-preview" />
-                    <button
-                      type="button"
-                      className="notif-image-remove-btn"
-                      onClick={clearImage}
-                      title="Remove image"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                )}
-              </div>
+
 
               <div className="form-info">
                 <Users size={14} />
