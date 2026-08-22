@@ -307,6 +307,7 @@ const Users = () => {
                 <th>#</th>
                 <th>User</th>
                 <th>Phone</th>
+                <th>Ride Status</th>
                 <th>Vehicle Name</th>
                 <th>Vehicle Number</th>
                 <th>Booking Date</th>
@@ -324,12 +325,12 @@ const Users = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={16} className="usr-empty-row"><Loader2 size={24} className="spin" /><p>Loading users...</p></td></tr>
+                <tr><td colSpan={17} className="usr-empty-row"><Loader2 size={24} className="spin" /><p>Loading users...</p></td></tr>
               ) : error ? (
-                <tr><td colSpan={16} className="usr-empty-row" style={{ color: '#ef4444' }}><p>{error}</p></td></tr>
+                <tr><td colSpan={17} className="usr-empty-row" style={{ color: '#ef4444' }}><p>{error}</p></td></tr>
               ) : paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={16} className="usr-empty-row">
+                  <td colSpan={17} className="usr-empty-row">
                     <UsersIcon size={28} /><p>No users found.</p>
                   </td>
                 </tr>
@@ -350,6 +351,17 @@ const Users = () => {
                       </div>
                     </td>
                     <td className="td-muted">{u.phone}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', color: 'var(--text-color)' }}>
+                      {u.has_active_ride ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500' }}>
+                          <CheckCircle size={12} /> Active Ride
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(156, 163, 175, 0.1)', color: '#6b7280', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500' }}>
+                          No Active Ride
+                        </span>
+                      )}
+                    </td>
                     <td>
                       {u.assigned_vehicle ? (
                         <span className="badge badge-success" style={{ fontSize: '0.8rem', padding: '4px 8px' }}>

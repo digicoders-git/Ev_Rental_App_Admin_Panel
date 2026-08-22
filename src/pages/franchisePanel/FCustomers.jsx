@@ -95,6 +95,7 @@ const FCustomers = () => {
             totalRides: myBookings.length,
             totalSpent,
             lastRide,
+            has_active_ride: myBookings.some(b => b.booking_status === 'ongoing' || b.booking_status === 'confirmed'),
             bookings: myBookings
           };
         });
@@ -202,6 +203,7 @@ const FCustomers = () => {
                   <th>KYC Status</th>
                   <th>Total Rides</th>
                   <th>Spent</th>
+                  <th>Ride Status</th>
                   <th>Last Ride</th>
                   <th>Notes / Remarks</th>
                   <th>Actions</th>
@@ -228,8 +230,19 @@ const FCustomers = () => {
                     </td>
                     <td><span style={{ fontWeight: 700, color: 'var(--primary)' }}>{c.totalRides}</span></td>
                     <td style={{ fontWeight: 600 }}>₹{c.totalSpent.toLocaleString()}</td>
-                    <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      {c.lastRide ? new Date(c.lastRide).toLocaleDateString('en-IN') : 'N/A'}
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', color: 'var(--text-color)' }}>
+                      {c.has_active_ride ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500' }}>
+                          <CheckCircle size={12} /> Active Ride
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(156, 163, 175, 0.1)', color: '#6b7280', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: '500' }}>
+                          No Active Ride
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', color: 'var(--text-color)' }}>
+                      {c.lastRide ? new Date(c.lastRide).toLocaleDateString() : 'N/A'}
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
