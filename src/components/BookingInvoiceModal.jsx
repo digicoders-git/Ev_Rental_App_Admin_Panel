@@ -264,15 +264,16 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
                 <div style={{
                   width: '90px', height: '90px', borderRadius: '50%', border: '2px solid #1e3a8a',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute',
-                  color: '#1e3a8a', fontSize: '9px', fontWeight: 'bold', textAlign: 'center', opacity: 0.8
+                  color: '#1e3a8a', fontSize: '8px', fontWeight: 'bold', textAlign: 'center', opacity: 0.8
                 }}>
                   <div style={{
                      width: '75px', height: '75px', borderRadius: '50%', border: '1px solid #1e3a8a',
                      display: 'flex', alignItems: 'center', justifyContent: 'center'
                   }}>
-                    <div style={{ transform: 'rotate(-20deg)', letterSpacing: '1px' }}>
-                      TRIS ELECTRIC<br/><br/>
-                      JUNGLEBAN<br/>ENTERPRISES
+                    <div style={{ transform: 'rotate(-20deg)', letterSpacing: '0.5px', lineHeight: '1.6' }}>
+                      <div>TRIS ELECTRIC</div>
+                      <div>JUNGLEBAN</div>
+                      <div>ENTERPRISES</div>
                     </div>
                   </div>
                 </div>
