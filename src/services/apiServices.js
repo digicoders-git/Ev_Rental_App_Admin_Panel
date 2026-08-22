@@ -143,7 +143,12 @@ export const updateTicket        = (id, data) => api.put(`/support/admin/ticket/
 export const getNotifications  = ()   => api.get('/notifications');
 export const markRead          = (id) => api.patch(`/notifications/${id}/read`);
 export const markAllRead       = ()   => api.patch('/notifications/read-all');
-export const broadcastNotif    = (data) => api.post('/notifications/broadcast', data);
+export const broadcastNotif    = (data) => {
+  const isFormData = data instanceof FormData;
+  return api.post('/notifications/broadcast', data, {
+    headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
+  });
+};
 export const getBroadcastHistory = () => api.get('/notifications/broadcast-history');
 
 /* ── REPORTS ── */
