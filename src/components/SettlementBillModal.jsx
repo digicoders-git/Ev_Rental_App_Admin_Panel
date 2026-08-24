@@ -22,17 +22,21 @@ function numberToWords(num) {
 const SettlementBillModal = ({ show, onClose, billData, franchiseName }) => {
   if (!show || !billData) return null;
 
-  const {
-    withdrawal_id,
-    amount,
-    createdAt,
-    franchise,
-  } = billData;
+  const isWithdrawal = billData._type === 'withdrawal' || !!billData.withdrawal_id;
+  const billId = billData.withdrawal_id || billData.settlement_id || 'N/A';
+  const createdAt = billData.createdAt || billData.date_to || new Date();
+  const franchise = billData.franchise;
 
-  const net_payable = amount || 0;
-  const service_fee_percentage_val = billData.service_fee_percentage || 8;
-  const gross_amount = net_payable / (1 - (service_fee_percentage_val / 100));
-  const service_fee_val = gross_amount - net_payable;
+  const net_payable = isWithdrawal ? (billData.amount || 0) : (billData.final_payout || 0);
+  const service_fee_percentage_val = isWithdrawal ? (billData.service_fee_percentage || 8) : (billData.platform_fee_percentage || 8);
+  
+  const gross_amount = isWithdrawal 
+    ? (net_payable / (1 - (service_fee_percentage_val / 100))) 
+    : (billData.total_collected || (net_payable / (1 - (service_fee_percentage_val / 100))));
+
+  const service_fee_val = isWithdrawal 
+    ? (gross_amount - net_payable)
+    : (billData.commission_deducted || (gross_amount - net_payable));
 
   const d = new Date(createdAt);
   const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -74,7 +78,7 @@ const SettlementBillModal = ({ show, onClose, billData, franchiseName }) => {
       const html2pdf = (await import('html2pdf.js')).default;
       const opt = {
         margin:       5,
-        filename:     `Settlement_Bill_${withdrawal_id}.pdf`,
+        filename:     `Settlement_Bill_${billId}.pdf`,
         image:        { type: 'jpeg', quality: 1 },
         html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -121,7 +125,7 @@ const SettlementBillModal = ({ show, onClose, billData, franchiseName }) => {
                   <div className="t-meta-row">
                     <div className="t-meta-label">Settlement Bill No.</div>
                     <div className="t-meta-colon">:</div>
-                    <div className="t-meta-value">{withdrawal_id || 'N/A'}</div>
+                    <div className="t-meta-value">{billId}</div>
                   </div>
                   <div className="t-meta-row">
                     <div className="t-meta-label">Settlement Date</div>
@@ -306,7 +310,7 @@ const SettlementBillModal = ({ show, onClose, billData, franchiseName }) => {
             <div className="t-signatory">
               <p>for TRIS ELECTRIC</p>
               <p className="t-signatory-sub">JUNGLEBAN ENTERPRISES</p>
-              <div className="t-stamp">
+              <div className="t-stamp" style={{ position: 'relative', display: 'inline-block' }}>
                 <svg width="100" height="100" viewBox="0 0 100 100" className="t-stamp-svg">
                   <circle cx="50" cy="50" r="45" stroke="#1d4ed8" strokeWidth="1.5" fill="none" />
                   <circle cx="50" cy="50" r="32" stroke="#1d4ed8" strokeWidth="0.5" fill="none" />
@@ -319,6 +323,8 @@ const SettlementBillModal = ({ show, onClose, billData, franchiseName }) => {
                     <textPath href="#curve-bot" startOffset="50%" textAnchor="middle">JUNGLEBAN ENT.</textPath>
                   </text>
                 </svg>
+                {/* Signature overlay */}
+                <img src="/signature.png" alt="Signature" style={{ position: 'absolute', bottom: '-15px', left: '50%', transform: 'translateX(-50%)', width: '90px', zIndex: 10, opacity: 0.9 }} />
               </div>
             </div>
           </div>
