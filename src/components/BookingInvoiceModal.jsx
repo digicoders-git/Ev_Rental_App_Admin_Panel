@@ -277,6 +277,8 @@ const BookingInvoiceModal = ({ invoice, onClose, onPrint }) => {
                     </div>
                   </div>
                 </div>
+                {/* Signature */}
+                <img src="/signature.png" alt="Signature" style={{ position: 'absolute', bottom: '-20px', width: '90px', zIndex: 10, opacity: 0.9 }} />
               </div>
               
               <div style={{ borderTop: '1px dashed #000', paddingTop: '8px', fontSize: '13px', width: '180px', margin: '0 auto' }}>
