@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { Receipt, Download, Loader2, IndianRupee, X, FileText, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { getSettlements, generateSettlement, getAllStores, getAllWithdrawalsAdmin } from '../services/apiServices';
 import SettlementBillModal from '../components/SettlementBillModal';
-import useApi from '../services/useApi';
 
 const Settlements = () => {
   const [settlements, setSettlements] = useState([]);
@@ -15,6 +14,7 @@ const Settlements = () => {
   const [selectedSettlement, setSelectedSettlement] = useState(null);
 
   useEffect(() => {
+    
     fetchData();
   }, []);
 
